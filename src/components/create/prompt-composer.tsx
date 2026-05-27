@@ -292,7 +292,7 @@ export function PromptComposer() {
               id="advanced-song-options"
               className="overflow-hidden"
             >
-              <div className="mt-4 rounded-2xl border border-sand/10 bg-sand/7 p-3 text-sand">
+              <div className="mt-3 rounded-2xl border border-sand/10 bg-sand/7 p-2.5 text-sand sm:p-3">
                 <OptionGroup title="Genre preset">
                   {GENRE_PRESETS.map((genre) => (
                     <ChoiceButton
@@ -306,7 +306,7 @@ export function PromptComposer() {
                 </OptionGroup>
 
                 <OptionGroup title="Traditional instruments">
-                  <div className="grid w-full grid-cols-2 gap-2.5 md:grid-cols-5">
+                  <div className="grid w-full grid-cols-2 gap-2 md:grid-cols-5">
                     {TRADITIONAL_INSTRUMENTS.map((instrument) => (
                       <InstrumentCard
                         key={instrument}
@@ -319,7 +319,7 @@ export function PromptComposer() {
                 </OptionGroup>
 
                 <OptionGroup title="Modern instruments">
-                  <div className="grid w-full grid-cols-2 gap-2.5 md:grid-cols-4">
+                  <div className="grid w-full grid-cols-2 gap-2 md:grid-cols-4">
                     {MODERN_INSTRUMENTS.map((instrument) => (
                       <InstrumentCard
                         key={instrument}
@@ -332,7 +332,7 @@ export function PromptComposer() {
                 </OptionGroup>
 
                 <OptionGroup title="Visibility">
-                  <div className="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
                     <VisibilityOption
                       active={visibility === "private"}
                       description="Saved only to your library"
@@ -350,24 +350,24 @@ export function PromptComposer() {
                   </div>
                 </OptionGroup>
 
-                <div className="mt-4 flex flex-col gap-3 border-t border-sand/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mt-3 flex flex-col gap-2 border-t border-sand/10 pt-3 sm:flex-row sm:items-center sm:justify-between">
                   <button
                     type="button"
                     onClick={() => setInstrumentalOnly((current) => !current)}
-                    className="flex w-full items-center justify-between rounded-full border border-sand/15 bg-charcoal/20 p-1 text-left sm:w-72"
+                    className="flex h-10 w-full items-center justify-between rounded-full border border-sand/15 bg-charcoal/20 p-1 text-left sm:w-64"
                     aria-pressed={instrumentalOnly}
                   >
-                    <span className="px-4 text-sm font-bold">
+                    <span className="px-3 text-sm font-bold">
                       Instrumental Only
                     </span>
                     <span
-                      className={`flex h-9 w-16 items-center rounded-full p-1 transition ${
+                      className={`flex h-8 w-14 items-center rounded-full p-1 transition ${
                         instrumentalOnly ? "bg-saffron" : "bg-sand/15"
                       }`}
                     >
                       <span
-                        className={`size-7 rounded-full bg-sand transition ${
-                          instrumentalOnly ? "translate-x-7" : "translate-x-0"
+                        className={`size-6 rounded-full bg-sand transition ${
+                          instrumentalOnly ? "translate-x-6" : "translate-x-0"
                         }`}
                       />
                     </span>
@@ -375,9 +375,9 @@ export function PromptComposer() {
 
                   <button
                     type="button"
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-saffron/30 bg-saffron/10 px-4 py-3 text-sm font-bold text-saffron transition hover:bg-saffron/15"
+                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-sand/15 bg-sand/7 px-3 text-sm font-bold text-sand/72 transition hover:border-saffron/25 hover:bg-saffron/10 hover:text-saffron sm:w-auto"
                   >
-                    <Sparkles className="size-4" aria-hidden="true" />
+                    <Sparkles className="size-4 text-saffron" aria-hidden="true" />
                     Generate Lyrics with AI
                   </button>
                 </div>
@@ -431,14 +431,14 @@ function VisibilityOption({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex items-center gap-3 rounded-2xl border p-3 text-left transition ${
+      className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition ${
         active
           ? "border-saffron bg-saffron text-sand shadow-[0_12px_30px_rgba(227,122,44,0.2)]"
           : "border-sand/12 bg-sand/8 text-sand/72 hover:border-terracotta/45 hover:bg-sand/12 hover:text-sand"
       }`}
     >
       <span
-        className={`flex size-10 shrink-0 items-center justify-center rounded-full border ${
+        className={`flex size-9 shrink-0 items-center justify-center rounded-full border ${
           active
             ? "border-sand/20 bg-sand/12"
             : "border-sand/10 bg-charcoal/30 text-saffron"
@@ -449,7 +449,7 @@ function VisibilityOption({
       <span className="min-w-0">
         <span className="block text-sm font-black">{label}</span>
         <span
-          className={`mt-0.5 block text-xs font-semibold leading-5 ${
+          className={`mt-0.5 block text-xs font-semibold leading-4 ${
             active ? "text-sand/82" : "text-sand/52"
           }`}
         >
@@ -574,11 +574,11 @@ function OptionGroup({
   children: React.ReactNode
 }) {
   return (
-    <div className="mt-6 first:mt-0">
-      <p className="mb-3 text-xs font-black uppercase tracking-[0.22em] text-sand/50">
+    <div className="mt-4 first:mt-0">
+      <p className="mb-2 text-xs font-black uppercase tracking-[0.2em] text-sand/50">
         {title}
       </p>
-      <div className="flex flex-wrap gap-2">{children}</div>
+      <div className="flex flex-wrap gap-1.5">{children}</div>
     </div>
   )
 }
@@ -597,7 +597,7 @@ function ChoiceButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-full border px-3 py-2 text-sm font-bold transition ${
+      className={`inline-flex min-h-9 items-center rounded-full border px-2.5 py-1.5 text-[13px] font-bold leading-none transition sm:px-3 ${
         active
           ? "border-saffron bg-saffron text-sand shadow-[0_10px_26px_rgba(227,122,44,0.22)]"
           : "border-sand/12 bg-sand/8 text-sand/72 hover:bg-sand/12 hover:text-sand"
