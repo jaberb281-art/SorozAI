@@ -111,6 +111,7 @@ export function PromptComposer() {
     )
   }
 
+  // MOCK: replace with api-client.generateSong() + polling api-client.getGenerationStatus() when backend is ready
   function handleCreate() {
     if (!instrumentalOnly && prompt.trim().length === 0) {
       setValidation("Add a prompt or turn on Instrumental Only.")
@@ -361,14 +362,12 @@ export function PromptComposer() {
                       Instrumental Only
                     </span>
                     <span
-                      className={`flex h-8 w-14 items-center rounded-full p-1 transition ${
-                        instrumentalOnly ? "bg-saffron" : "bg-sand/15"
-                      }`}
+                      className={`flex h-8 w-14 items-center rounded-full p-1 transition ${instrumentalOnly ? "bg-saffron" : "bg-sand/15"
+                        }`}
                     >
                       <span
-                        className={`size-6 rounded-full bg-sand transition ${
-                          instrumentalOnly ? "translate-x-6" : "translate-x-0"
-                        }`}
+                        className={`size-6 rounded-full bg-sand transition ${instrumentalOnly ? "translate-x-6" : "translate-x-0"
+                          }`}
                       />
                     </span>
                   </button>
@@ -431,27 +430,24 @@ function VisibilityOption({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition ${
-        active
+      className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition ${active
           ? "border-saffron bg-saffron text-sand shadow-[0_12px_30px_rgba(227,122,44,0.2)]"
           : "border-sand/12 bg-sand/8 text-sand/72 hover:border-terracotta/45 hover:bg-sand/12 hover:text-sand"
-      }`}
+        }`}
     >
       <span
-        className={`flex size-9 shrink-0 items-center justify-center rounded-full border ${
-          active
+        className={`flex size-9 shrink-0 items-center justify-center rounded-full border ${active
             ? "border-sand/20 bg-sand/12"
             : "border-sand/10 bg-charcoal/30 text-saffron"
-        }`}
+          }`}
       >
         {icon}
       </span>
       <span className="min-w-0">
         <span className="block text-sm font-black">{label}</span>
         <span
-          className={`mt-0.5 block text-xs font-semibold leading-4 ${
-            active ? "text-sand/82" : "text-sand/52"
-          }`}
+          className={`mt-0.5 block text-xs font-semibold leading-4 ${active ? "text-sand/82" : "text-sand/52"
+            }`}
         >
           {description}
         </span>
@@ -541,13 +537,12 @@ function GenerationPipeline({
             return (
               <span
                 key={stage}
-                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition ${
-                  isCurrent
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition ${isCurrent
                     ? "border-saffron bg-saffron text-sand"
                     : isComplete
                       ? "border-saffron/35 bg-saffron/10 text-saffron"
                       : "border-sand/10 bg-sand/7 text-sand/45"
-                }`}
+                  }`}
               >
                 {isComplete ? (
                   <CheckCircle2 className="size-3.5" aria-hidden="true" />
@@ -597,11 +592,10 @@ function ChoiceButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`inline-flex min-h-9 items-center rounded-full border px-2.5 py-1.5 text-[13px] font-bold leading-none transition sm:px-3 ${
-        active
+      className={`inline-flex min-h-9 items-center rounded-full border px-2.5 py-1.5 text-[13px] font-bold leading-none transition sm:px-3 ${active
           ? "border-saffron bg-saffron text-sand shadow-[0_10px_26px_rgba(227,122,44,0.22)]"
           : "border-sand/12 bg-sand/8 text-sand/72 hover:bg-sand/12 hover:text-sand"
-      }`}
+        }`}
     >
       {children}
     </button>

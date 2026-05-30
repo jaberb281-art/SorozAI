@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Apple, Mail, Phone, Sparkles } from "lucide-react"
+import { Apple, Mail, Phone } from "lucide-react"
 
 import { AuthCard } from "@/components/auth/auth-card"
 import { AuthShell } from "@/components/auth/auth-shell"
@@ -27,10 +27,11 @@ const AUTH_OPTIONS = [
 ]
 
 export default function SignInPage() {
-  const [message, setMessage] = useState("")
+  const router = useRouter()
 
-  function showPlaceholder() {
-    setMessage("Authentication will be connected later.")
+  // MOCK: real auth will call api-client.signIn() then redirect — for now simulate sign-in
+  function handleSignIn() {
+    router.push("/dashboard")
   }
 
   return (
@@ -44,7 +45,7 @@ export default function SignInPage() {
             <button
               key={option.label}
               type="button"
-              onClick={showPlaceholder}
+              onClick={handleSignIn}
               aria-label={option.label}
               className="inline-flex h-12 w-full items-center justify-center gap-3 rounded-full border border-sand/15 bg-sand/8 px-5 text-sm font-bold text-sand transition hover:border-saffron/35 hover:bg-sand/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
             >
@@ -54,15 +55,6 @@ export default function SignInPage() {
               {option.label}
             </button>
           ))}
-
-          {message ? (
-            <p
-              role="status"
-              className="rounded-2xl border border-saffron/25 bg-saffron/10 px-4 py-3 text-sm font-semibold text-saffron"
-            >
-              {message}
-            </p>
-          ) : null}
         </div>
 
         <p className="mt-5 text-center text-xs font-semibold leading-5 text-sand/58">

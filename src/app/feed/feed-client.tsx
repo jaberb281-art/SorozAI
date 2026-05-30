@@ -85,11 +85,10 @@ export function FeedClient({ songs }: FeedClientProps) {
                   type="button"
                   onClick={() => setActiveFilter(filter)}
                   aria-pressed={activeFilter === filter}
-                  className={`shrink-0 rounded-full border px-4 py-2 text-sm font-black transition ${
-                    activeFilter === filter
-                      ? "border-saffron bg-saffron text-sand shadow-[0_12px_30px_rgba(227,122,44,0.22)]"
-                      : "border-sand/12 bg-sand/8 text-sand/70 hover:bg-sand/12 hover:text-sand"
-                  }`}
+                  className={`shrink-0 rounded-full border px-4 py-2 text-sm font-black transition ${activeFilter === filter
+                    ? "border-saffron bg-saffron text-sand shadow-[0_12px_30px_rgba(227,122,44,0.22)]"
+                    : "border-sand/12 bg-sand/8 text-sand/70 hover:bg-sand/12 hover:text-sand"
+                    }`}
                 >
                   {filter}
                 </button>
@@ -105,7 +104,7 @@ export function FeedClient({ songs }: FeedClientProps) {
             ))}
           </div>
         ) : (
-          <div className="mt-6 rounded-[1.5rem] border border-terracotta/25 bg-terracotta/10 p-6 text-center shadow-[0_20px_56px_rgba(0,0,0,0.25)] backdrop-blur-2xl">
+          <div className="mt-6 rounded-[1.5rem] border border-terracotta/25 bg-terracotta/10 p-4 text-center shadow-[0_20px_56px_rgba(0,0,0,0.25)] backdrop-blur-2xl">
             <div className="mx-auto flex size-14 items-center justify-center rounded-full border border-saffron/30 bg-saffron/15 text-saffron shadow-[0_0_28px_rgba(227,122,44,0.18)]">
               <Search className="size-6" aria-hidden="true" />
             </div>
@@ -154,4 +153,4 @@ function filterPublicSongs(
 
     return matchesQuery && matchesFilter
   })
-}
+} 

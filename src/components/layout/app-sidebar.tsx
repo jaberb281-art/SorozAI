@@ -6,7 +6,7 @@ import {
     BookOpen,
     Compass,
     DollarSign,
-    LogIn,
+    Home,
     Mic2,
     Music,
     PlusCircle,
@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 
 const NAV_ITEMS = [
+    { href: "/dashboard", label: "Home", icon: Home },
     { href: "/create", label: "Create", icon: PlusCircle },
     { href: "/library", label: "Library", icon: BookOpen },
     { href: "/feed", label: "Explore", icon: Compass },
@@ -67,16 +68,16 @@ export function AppSidebar() {
                             href={item.href}
                             aria-current={isActive ? "page" : undefined}
                             className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition ${isActive
-                                    ? "bg-saffron/12 text-saffron"
-                                    : "hover:bg-white/[0.04]"
+                                ? "bg-saffron/12 text-saffron"
+                                : "hover:bg-white/[0.04]"
                                 }`}
                         >
                             <Icon
-                                className={`size-4 shrink-0 transition ${isActive ? "text-saffron" : "text-[#EDE3D3]/60 group-hover:text-[#E37A2C]/85"}`}
+                                className={`size-4 shrink-0 transition ${isActive ? "text-saffron" : "text-sand/60 group-hover:text-saffron/85"}`}
                                 aria-hidden="true"
                             />
                             <span
-                                className={`transition ${isActive ? "text-saffron" : "text-[#EDE3D3]/70 group-hover:text-[#EDE3D3]/90"}`}
+                                className={`transition ${isActive ? "text-saffron" : "text-sand/70 group-hover:text-sand/90"}`}
                             >
                                 {item.label}
                             </span>
@@ -95,7 +96,7 @@ export function AppSidebar() {
             <div className="border-t border-sand/8 p-3 pb-[calc(0.75rem+72px)]">
                 <div className="rounded-2xl border border-sand/10 bg-sand/6 p-3">
                     <div className="mb-2 flex items-center justify-between">
-                        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#EDE3D3]/58">
+                        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-sand/58">
                             {MOCK_CREDITS.tier} plan
                         </span>
                         <Link
@@ -105,11 +106,11 @@ export function AppSidebar() {
                             Upgrade
                         </Link>
                     </div>
-                    <div className="mb-1.5 flex items-center justify-between text-xs font-bold text-[#EDE3D3]/62">
+                    <div className="mb-1.5 flex items-center justify-between text-xs font-bold text-sand/62">
                         <span>Songs this month</span>
                         <span className="text-sand">
                             {MOCK_CREDITS.remaining}
-                            <span className="text-[#EDE3D3]/45">/{MOCK_CREDITS.limit}</span>
+                            <span className="text-sand/45">/{MOCK_CREDITS.limit}</span>
                         </span>
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-sand/10">
@@ -127,14 +128,6 @@ export function AppSidebar() {
                         />
                     </div>
                 </div>
-
-                <Link
-                    href="/auth/sign-in"
-                    className="group mt-2 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-[#EDE3D3]/60 transition hover:bg-white/[0.04] hover:text-[#EDE3D3]/80"
-                >
-                    <LogIn className="size-4 shrink-0 text-[#EDE3D3]/50 transition group-hover:text-[#E37A2C]/80" aria-hidden="true" />
-                    Sign in
-                </Link>
             </div>
         </aside>
     )

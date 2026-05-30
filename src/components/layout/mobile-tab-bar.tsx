@@ -2,10 +2,10 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BookOpen, Compass, PlusCircle, User } from "lucide-react"
+import { BookOpen, Compass, Home, User } from "lucide-react"
 
 const MOBILE_NAV = [
-    { href: "/create", label: "Create", icon: PlusCircle },
+    { href: "/dashboard", label: "Home", icon: Home },
     { href: "/library", label: "Library", icon: BookOpen },
     { href: "/feed", label: "Explore", icon: Compass },
     { href: "/account", label: "Account", icon: User },
