@@ -10,10 +10,13 @@ import {
   Radio,
   SlidersHorizontal,
   Sparkles,
+  SquarePlay,
   Waves,
 } from "lucide-react"
 
 import { LandingPrompt } from "@/components/home/landing-prompt"
+
+// ── Data ────────────────────────────────────────────────────────────────────
 
 const exampleSongs = [
   {
@@ -21,116 +24,132 @@ const exampleSongs = [
     genre: "Zahirok",
     instruments: "Suroz + Damboora",
     duration: "3:18",
-    stats: "12K plays, 1.8K likes",
+    stats: "35K plays · 606 likes",
+    coverImage: "/covers/makran-evening.png",
   },
   {
     title: "Desert Pulse",
     genre: "Hip-Hop Fusion",
     instruments: "Drums + Bass",
-    duration: "2:42",
-    stats: "8.4K plays, 920 likes",
+    duration: "2:58",
+    stats: "16K plays · 461 likes",
+    coverImage: "/covers/desert-pulse.png",
   },
   {
-    title: "Wedding Doholl",
-    genre: "Celebration Folk",
-    instruments: "Doholl + Benju",
+    title: "Wedding Doholl Nights",
+    genre: "Wedding",
+    instruments: "Doholl + Rubab",
     duration: "3:05",
-    stats: "15K plays, 2.1K likes",
+    stats: "22K plays · 549 likes",
+    coverImage: "/covers/wedding-doholl.png",
   },
   {
-    title: "Sufi Damboora",
-    genre: "Spiritual Folk",
-    instruments: "Damboora + Soft vocals",
+    title: "Sufi Breath",
+    genre: "Sufi",
+    instruments: "Damboora + Suroz",
     duration: "4:01",
-    stats: "9.7K plays, 1.4K likes",
+    stats: "27K plays · 642 likes",
+    coverImage: "/covers/sufi-dambora.png",
+  },
+]
+
+const productRoutes = [
+  {
+    title: "Create from a prompt",
+    body: "Write a memory, mood, or lyric and turn it into a Balochi-inspired song.",
+    href: "/create",
+    icon: PenLine,
+  },
+  {
+    title: "Explore public songs",
+    body: "Discover what the Zahirok community is creating across genres and styles.",
+    href: "/feed",
+    icon: Compass,
+  },
+  {
+    title: "Try Hooks",
+    body: "Browse short music previews in a TikTok-style viewer with swipe navigation.",
+    href: "/hooks",
+    icon: SquarePlay,
+  },
+  {
+    title: "Open Studio",
+    body: "Advanced multi-track creation tools for serious Balochi producers.",
+    href: "/studio",
+    icon: SlidersHorizontal,
+  },
+]
+
+const features = [
+  {
+    title: "Prompt-first creation",
+    body: "Write a memory, poem, or lyric idea and Zahirok shapes it into a song direction.",
+    icon: PenLine,
+  },
+  {
+    title: "Balochi genre presets",
+    body: "Start with Zahirok, wedding, Sufi, lullaby, or modern fusion styles rooted in Makkuran tradition.",
+    icon: Music2,
+  },
+  {
+    title: "Traditional instruments",
+    body: "Shape your sound with Suroz, Damboora, Rubab, Tamburag, and Doholl-inspired textures.",
+    icon: Radio,
+  },
+  {
+    title: "Explore and remix",
+    body: "Browse public songs, remix ideas, and discover what other creators are making on the feed.",
+    icon: Compass,
+  },
+  {
+    title: "Voice of Balochistan",
+    body: "Future contributors can help improve Balochi pronunciation and vocal quality with consent.",
+    icon: Mic2,
+  },
+  {
+    title: "Affordable pricing",
+    body: "Start free with 5 songs per month. Upgrade only when you need longer tracks and cleaner exports.",
+    icon: Sparkles,
   },
 ]
 
 const culturalCards = [
   {
-    title: "Balochi genres",
-    body: "Shape ideas around Zahirok, folk songs, wedding energy, Sufi moods, and modern fusion.",
-    icon: Music2,
+    title: "Makkuran-first dialect",
+    body: "The MVP is built around Makkuran phrasing, pronunciation, and folk melody patterns.",
+    icon: BookOpen,
   },
   {
     title: "Traditional instruments",
-    body: "Prompt with Suroz, Damboora, Benju, Doholl, and regional textures that feel rooted.",
+    body: "Prompt with Suroz, Damboora, Doholl, Rubab, and regional textures that feel rooted.",
     icon: Radio,
   },
   {
-    title: "Dialect-aware future",
-    body: "Built toward pronunciation and phrasing that can respect Makrani, Rakhshani, and Sulaimani voices.",
-    icon: BookOpen,
-  },
-  {
-    title: "Community voice contribution",
-    body: "A consent-first path for the community to improve vocal quality over time.",
-    icon: Mic2,
-  },
-]
-
-const productFeatures = [
-  {
-    title: "Balochi genre presets",
-    body: "Start with Zahirok, wedding, Sufi, lullaby, or modern fusion styles.",
+    title: "Balochi genres",
+    body: "Shape ideas around Zahirok folk, wedding energy, Sufi moods, Naat devotion, and modern fusion.",
     icon: Music2,
   },
   {
-    title: "Traditional instrument textures",
-    body: "Shape your sound with Suroz, Damboora, Rubab, Tamburag, and Doholl-inspired options.",
-    icon: Radio,
-  },
-  {
-    title: "Prompt-first creation",
-    body: "Write a memory, poem, lyric idea, or mood and turn it into a song direction.",
-    icon: PenLine,
-  },
-  {
-    title: "Lyrics or instrumental",
-    body: "Create with your own lyrics or keep it instrumental for cinematic background music.",
-    icon: SlidersHorizontal,
-  },
-  {
-    title: "Private or public songs",
-    body: "Save ideas privately or share finished tracks with the ZahiRok community.",
-    icon: CheckCircle2,
-  },
-  {
-    title: "Remix and explore",
-    body: "Open public songs, remix ideas, and discover what other creators are making.",
-    icon: Compass,
-  },
-  {
-    title: "Voice of Balochistan",
-    body: "Future contributors can help improve pronunciation and vocal quality with consent.",
+    title: "Community voice",
+    body: "A consent-first path for the community to improve vocal quality over time.",
     icon: Mic2,
-  },
-  {
-    title: "Built for affordable creators",
-    body: "Start free and upgrade only when you need longer songs and cleaner exports.",
-    icon: Sparkles,
-  },
-  {
-    title: "Future dialect support",
-    body: "Designed with Makrani, Rakhshani, Sulaimani, and mixed regional voices in mind.",
-    icon: BookOpen,
   },
 ]
 
 const steps = [
   {
     title: "Write your prompt or lyrics",
-    body: "Start with a memory, poem, place, or full lyric idea.",
+    body: "Start with a memory, poem, place, or full lyric idea in Makkuran style.",
     icon: PenLine,
   },
   {
     title: "Choose genre and instruments",
-    body: "Guide the feeling with cultural styles and studio controls.",
+    body: "Guide the feeling with Zahirok folk, wedding, Sufi, or fusion presets.",
     icon: SlidersHorizontal,
   },
   {
     title: "Generate, save, and share",
-    body: "Create a preview, keep it in your library, or share it with listeners.",
+    body: "Create a preview, keep it in your library, or share it with listeners on the feed.",
     icon: Sparkles,
   },
 ]
@@ -157,90 +176,100 @@ const pricingPreview = [
 ]
 
 const footerLinks = [
+  { label: "Create", href: "/create" },
   { label: "Explore", href: "/feed" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Voice of Balochistan", href: "/voice-of-balochistan" },
-  { label: "Terms", href: "#" },
-  { label: "Privacy", href: "#" },
+  { label: "Sign in", href: "/auth/sign-in" },
+  { label: "Terms", href: "/terms" },
+  { label: "Privacy", href: "/privacy" },
 ]
+
+// ── Page ────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-charcoal text-sand">
+      {/* ── HERO ── */}
       <section className="relative isolate overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_18%_6%,rgba(227,122,44,0.22),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(26,58,92,0.72),transparent_36%),linear-gradient(145deg,#111111_0%,#222222_48%,#111827_100%)]" />
-        <div className="absolute inset-0 -z-10 opacity-[0.12] [background-image:linear-gradient(rgba(237,227,211,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(237,227,211,0.18)_1px,transparent_1px)] [background-size:46px_46px]" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/hero/zahirok-hero-bg.png" alt="" aria-hidden="true" className="absolute inset-0 -z-20 h-full w-full object-cover opacity-[0.18]" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_18%_6%,rgba(227,122,44,0.22),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(26,58,92,0.72),transparent_36%),linear-gradient(145deg,rgba(17,17,17,0.92)_0%,rgba(26,23,20,0.88)_48%,rgba(17,24,39,0.92)_100%)]" />
+        <div className="absolute inset-0 -z-10 opacity-[0.08] [background-image:linear-gradient(rgba(237,227,211,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(237,227,211,0.18)_1px,transparent_1px)] [background-size:42px_42px]" />
 
+        {/* Header */}
         <header className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex min-w-0 items-center gap-3 rounded-full">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-saffron/35 bg-saffron/15 text-saffron shadow-[0_0_24px_rgba(227,122,44,0.22)]">
+          <Link href="/" className="flex min-w-0 items-center gap-2.5" aria-label="Zahirok home">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-saffron/30 bg-saffron/12 text-saffron shadow-[0_0_20px_rgba(227,122,44,0.18)]">
               <Music2 className="size-4" aria-hidden="true" />
             </span>
-            <span className="truncate text-xs font-black uppercase tracking-[0.24em] sm:tracking-[0.28em]">
-              ZahiRok AI
+            <span className="text-[1rem] font-extrabold uppercase leading-none tracking-[0.08em] text-white">
+              Zahirok
             </span>
           </Link>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <nav className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <Link
+              href="/feed"
+              className="hidden rounded-full px-3 py-2 text-sm font-semibold text-sand/60 transition hover:bg-white/[0.04] hover:text-sand md:inline-flex"
+            >
+              Explore
+            </Link>
             <Link
               href="/auth/sign-in"
-              className="hidden rounded-full px-3 py-2 text-sm font-semibold text-sand/72 transition hover:bg-white/[0.04] hover:text-saffron sm:inline-flex"
+              className="hidden rounded-full px-3 py-2 text-sm font-semibold text-sand/60 transition hover:bg-white/[0.04] hover:text-saffron sm:inline-flex"
             >
               Sign in
             </Link>
             <Link
               href="/create"
-              className="inline-flex h-10 items-center justify-center rounded-full bg-saffron px-4 text-sm font-black text-sand shadow-[0_16px_36px_rgba(227,122,44,0.24)] transition hover:bg-terracotta"
+              className="inline-flex h-10 items-center justify-center rounded-full bg-saffron px-4 text-sm font-black text-charcoal shadow-[0_14px_32px_rgba(227,122,44,0.24)] transition hover:bg-terracotta"
             >
               Create Song
             </Link>
-          </div>
+          </nav>
         </header>
 
-        <div className="mx-auto flex min-h-[calc(84vh-4.25rem)] max-w-5xl flex-col items-center justify-center px-4 pb-12 pt-8 text-center sm:px-6 sm:pb-16 lg:px-8 lg:pb-18 lg:pt-8">
+        {/* Hero content */}
+        <div className="mx-auto flex min-h-[calc(80vh-4rem)] max-w-5xl flex-col items-center justify-center px-4 pb-12 pt-6 text-center sm:px-6 sm:pb-16 lg:px-8">
           <div className="w-full max-w-4xl">
             <p className="inline-flex items-center gap-2 rounded-full border border-saffron/25 bg-saffron/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-saffron sm:text-xs">
               <Waves className="size-3.5" aria-hidden="true" />
-              Cinematic Balochi AI Studio
+              Balochi AI Music Studio
             </p>
-            <h1 className="mx-auto mt-5 max-w-4xl text-[2.375rem] font-black leading-tight tracking-[-0.02em] text-sand sm:text-5xl md:text-6xl md:leading-[0.98] lg:text-[4.5rem] lg:leading-[0.96]">
+            <h1 className="mx-auto mt-5 max-w-4xl text-[2.25rem] font-black leading-[1.08] tracking-[-0.02em] text-sand sm:text-5xl md:text-6xl lg:text-[4.5rem] lg:leading-[0.96]">
               Bring your Balochi sound to life
             </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-base font-medium leading-7 text-sand/76 sm:text-lg sm:leading-8">
-              Create Balochi-inspired music from lyrics, poetry, memories, and
-              prompts.
+            <p className="mx-auto mt-4 max-w-2xl text-base font-medium leading-7 text-sand/70 sm:text-lg sm:leading-8">
+              Create songs from lyrics, poetry, memories, and prompts — shaped by Makkuran melodies, Damboora, Suroz, and Doholl-inspired sounds.
             </p>
 
             <LandingPrompt />
 
-            <div className="mx-auto mt-5 grid max-w-5xl gap-3 text-left md:grid-cols-2">
-              <HeroPromoCard
-                href="/voice-of-balochistan"
-                icon={Mic2}
-                title="Voice of Balochistan"
-                body="Help improve Balochi pronunciation and vocal quality with clear consent."
-                cta="Learn more"
-                variant="voice"
-              />
-              <HeroPromoCard
-                href="/feed"
-                icon={Compass}
-                title="Explore public songs"
-                body="Hear songs shared by ZahiRok creators and discover new Balochi-inspired ideas."
-                cta="Explore feed"
-                variant="feed"
-              />
+            {/* Product route cards */}
+            <div className="mx-auto mt-6 grid max-w-4xl gap-3 text-left sm:grid-cols-2 lg:grid-cols-4">
+              {productRoutes.map((route) => (
+                <Link
+                  key={route.title}
+                  href={route.href}
+                  className="group rounded-2xl border border-sand/10 bg-sand/[0.05] p-4 transition hover:-translate-y-0.5 hover:border-saffron/30 hover:bg-sand/[0.08]"
+                >
+                  <route.icon className="size-5 text-saffron" aria-hidden="true" />
+                  <h3 className="mt-3 text-sm font-black text-sand">{route.title}</h3>
+                  <p className="mt-1.5 text-xs font-medium leading-[1.5] text-sand/50">{route.body}</p>
+                </Link>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-sand/8 bg-[#191919] px-4 py-16 sm:px-6 lg:px-8">
+      {/* ── SONG EXAMPLES ── */}
+      <section className="border-y border-sand/8 bg-[#161616] px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeading
             eyebrow="SONG EXAMPLES"
             title="Hear Balochi ideas become songs"
-            body="From Zahirok melodies to wedding Doholl, Sufi Damboora, and modern Balochi fusion - ZahiRok turns memory into music."
+            body="From Zahirok melodies to wedding Doholl, Sufi Damboora, and modern fusion — Zahirok turns memory into music."
           />
           <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {exampleSongs.map((song) => (
@@ -250,27 +279,29 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── PRODUCT FEATURES ── */}
       <section className="px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeading
-            eyebrow="Creator studio"
-            title="Everything you need to create Balochi music your way"
-            body="From Zahirok melodies to wedding Doholl, Sufi Damboora, and modern fusion - ZahiRok gives creators a simple studio for Balochi-inspired songs."
+            eyebrow="CREATOR TOOLS"
+            title="Everything you need to create Balochi music"
+            body="Prompt-first creation, traditional instruments, community discovery, and an upgrade path when you're ready."
           />
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {productFeatures.map((feature) => (
-              <ProductFeatureCard key={feature.title} {...feature} />
+            {features.map((feature) => (
+              <FeatureCard key={feature.title} {...feature} />
             ))}
           </div>
         </div>
       </section>
 
+      {/* ── CULTURAL PROMISE ── */}
       <section className="px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeading
-            eyebrow="Cultural promise"
+            eyebrow="CULTURAL PROMISE"
             title="Built for the sound of Balochistan"
-            body="ZahiRok is shaped around cultural memory, regional instruments, and future-ready tools for creators."
+            body="Zahirok is shaped around cultural memory, regional instruments, and tools designed for Makkuran creators."
           />
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {culturalCards.map((card) => (
@@ -280,10 +311,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-sand/8 bg-[#191919] px-4 py-16 sm:px-6 lg:px-8">
+      {/* ── HOW IT WORKS ── */}
+      <section className="border-y border-sand/8 bg-[#161616] px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeading
-            eyebrow="How it works"
+            eyebrow="HOW IT WORKS"
             title="From idea to song"
             body="A simple prompt-first flow for turning memories, lyrics, and cultural references into a song preview."
           />
@@ -295,6 +327,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── VOICE OF BALOCHISTAN ── */}
       <section className="px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-6 rounded-[2rem] border border-saffron/18 bg-saffron/[0.08] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
@@ -305,8 +338,7 @@ export default function HomePage() {
               Your voice is the future of our sound
             </h2>
             <p className="mt-4 max-w-3xl text-base font-medium leading-7 text-sand/74">
-              Future contributors can help improve Balochi pronunciation,
-              rhythm, and vocal quality with clear consent.
+              Future contributors can help improve Balochi pronunciation, rhythm, and vocal quality with clear consent.
             </p>
           </div>
           <Link
@@ -318,13 +350,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-sand/8 bg-[#191919] px-4 py-16 sm:px-6 lg:px-8">
+      {/* ── PRICING ── */}
+      <section className="border-y border-sand/8 bg-[#161616] px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <SectionHeading
-              eyebrow="Pricing"
+              eyebrow="PRICING"
               title="Start free, grow when you need more"
-              body="Simple tiers for exploring, creating, and publishing more Balochi music ideas."
+              body="Simple tiers for exploring, creating, and publishing Balochi music."
             />
             <Link
               href="/pricing"
@@ -353,6 +386,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── FINAL CTA ── */}
       <section className="px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <p className="mx-auto flex size-12 items-center justify-center rounded-full border border-saffron/25 bg-saffron/12 text-saffron">
@@ -363,26 +397,27 @@ export default function HomePage() {
           </h2>
           <Link
             href="/create"
-            className="mt-7 inline-flex h-12 items-center justify-center rounded-full bg-saffron px-6 text-sm font-black text-sand shadow-[0_18px_42px_rgba(227,122,44,0.24)] transition hover:bg-terracotta"
+            className="mt-7 inline-flex h-12 items-center justify-center rounded-full bg-saffron px-6 text-sm font-black text-charcoal shadow-[0_18px_42px_rgba(227,122,44,0.24)] transition hover:bg-terracotta"
           >
             Create Song
           </Link>
         </div>
       </section>
 
-      <footer className="border-t border-sand/8 bg-[#151515] px-4 py-10 sm:px-6 lg:px-8">
+      {/* ── FOOTER ── */}
+      <footer className="border-t border-sand/8 bg-[#131313] px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.28em] text-sand">
-              ZahiRok AI
+              Zahirok
             </p>
-            <p className="mt-3 max-w-md text-sm font-semibold leading-6 text-sand/58">
-              Built for Balochi music, memory, and future creators.
+            <p className="mt-3 max-w-md text-sm font-semibold leading-6 text-sand/50">
+              Balochi AI music studio — built for memory, melody, and future creators.
             </p>
           </div>
           <nav
             aria-label="Footer navigation"
-            className="flex flex-wrap gap-4 text-sm font-bold text-sand/64"
+            className="flex flex-wrap gap-4 text-sm font-bold text-sand/55"
           >
             {footerLinks.map((link) => (
               <Link key={link.label} href={link.href} className="transition hover:text-sand">
@@ -395,6 +430,8 @@ export default function HomePage() {
     </main>
   )
 }
+
+// ── Sub-components ──────────────────────────────────────────────────────────
 
 function SectionHeading({
   body,
@@ -417,14 +454,14 @@ function SectionHeading({
 }
 
 function ExampleSongCard({
-  className = "",
+  coverImage,
   duration,
   genre,
   instruments,
   stats,
   title,
 }: {
-  className?: string
+  coverImage?: string
   duration: string
   genre: string
   instruments: string
@@ -435,112 +472,49 @@ function ExampleSongCard({
     <Link
       href="/feed"
       aria-label={`Explore songs like ${title}`}
-      className={`group relative block rounded-[1.65rem] border border-sand/12 bg-[linear-gradient(145deg,rgba(237,227,211,0.1),rgba(237,227,211,0.045))] p-4 shadow-[0_28px_70px_rgba(0,0,0,0.3)] backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-saffron/35 hover:bg-sand/[0.09] sm:p-5 ${className}`}
+      className="group relative block overflow-hidden rounded-[1.65rem] border border-sand/12 bg-[linear-gradient(145deg,rgba(237,227,211,0.08),rgba(237,227,211,0.035))] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:border-saffron/35 hover:bg-sand/[0.08] sm:p-5"
     >
-      <div className="pointer-events-none absolute inset-x-4 top-0 h-24 rounded-full bg-saffron/10 blur-2xl transition group-hover:bg-saffron/16" />
+      {/* Cover image background */}
+      {coverImage && (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={coverImage}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover opacity-[0.15] transition group-hover:opacity-[0.22]"
+        />
+      )}
+      <div className="pointer-events-none absolute inset-x-4 top-0 h-20 rounded-full bg-saffron/8 blur-2xl transition group-hover:bg-saffron/14" />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-[0.2em] text-saffron">
             {genre}
           </p>
-          <h3 className="mt-2 line-clamp-2 text-2xl font-black leading-tight text-sand">
+          <h3 className="mt-2 line-clamp-2 text-xl font-black leading-tight text-sand sm:text-2xl">
             {title}
           </h3>
-          <p className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-saffron">
+          <p className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-saffron/80">
             {instruments}
           </p>
         </div>
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-saffron text-sand shadow-[0_14px_28px_rgba(227,122,44,0.24)] transition group-hover:bg-terracotta">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-saffron text-charcoal shadow-[0_10px_24px_rgba(227,122,44,0.24)] transition group-hover:bg-terracotta sm:size-11">
           <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
         </span>
       </div>
-      <div className="mt-6 flex h-24 items-end gap-1 rounded-2xl border border-sand/10 bg-charcoal/32 px-3 py-3" aria-hidden="true">
-        {Array.from({ length: 36 }, (_, index) => (
+      <div className="mt-5 flex h-20 items-end gap-1 rounded-xl border border-sand/8 bg-charcoal/30 px-3 py-2.5" aria-hidden="true">
+        {Array.from({ length: 32 }, (_, i) => (
           <span
-            key={index}
-            className={`w-full rounded-full transition ${
-              index < 10 ? "bg-saffron" : "bg-sand/62"
-            }`}
-            style={{ height: `${18 + ((index * 19) % 56)}px` }}
+            key={i}
+            className={`w-full rounded-full transition ${i < 10 ? "bg-saffron" : "bg-sand/50"}`}
+            style={{ height: `${14 + ((i * 19) % 48)}px` }}
           />
         ))}
       </div>
-      <div className="mt-5 flex items-center justify-between gap-3 text-xs font-bold text-sand/62">
+      <div className="mt-4 flex items-center justify-between gap-3 text-xs font-bold text-sand/55">
         <span>{stats}</span>
-        <span className="rounded-full border border-sand/10 bg-sand/7 px-2 py-1 text-sand/72">
+        <span className="rounded-full border border-sand/10 bg-sand/7 px-2 py-1 text-sand/65">
           {duration}
         </span>
-      </div>
-    </Link>
-  )
-}
-
-function HeroPromoCard({
-  body,
-  cta,
-  href,
-  icon: Icon,
-  title,
-  variant,
-}: {
-  body: string
-  cta: string
-  href: string
-  icon: React.ComponentType<{ className?: string; "aria-hidden"?: "true" }>
-  title: string
-  variant: "voice" | "feed"
-}) {
-  return (
-    <Link
-      href={href}
-      className="group grid gap-4 overflow-hidden rounded-[1.45rem] border border-sand/12 bg-sand/[0.055] p-3 shadow-[0_18px_48px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:border-saffron/35 hover:bg-sand/[0.08] sm:grid-cols-[1fr_9rem] sm:items-center"
-    >
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-saffron/12 text-saffron">
-            <Icon className="size-4" aria-hidden="true" />
-          </span>
-          <h2 className="text-base font-black text-sand">{title}</h2>
-        </div>
-        <p className="mt-2 text-sm font-semibold leading-6 text-sand/66">
-          {body}
-        </p>
-        <p className="mt-3 text-xs font-black uppercase tracking-[0.16em] text-saffron">
-          {cta}
-        </p>
-      </div>
-
-      <div className="relative h-24 overflow-hidden rounded-2xl border border-sand/10 bg-charcoal/42">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_15%,rgba(227,122,44,0.22),transparent_42%)]" />
-        {variant === "voice" ? (
-          <div className="absolute inset-x-3 bottom-4 flex h-14 items-center justify-center gap-1" aria-hidden="true">
-            {Array.from({ length: 20 }, (_, index) => (
-              <span
-                key={index}
-                className="w-1 rounded-full bg-saffron/75"
-                style={{ height: `${10 + ((index * 13) % 34)}px` }}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="absolute inset-3 rounded-xl border border-sand/10 bg-sand/8 p-2" aria-hidden="true">
-            <div className="flex items-center justify-between">
-              <span className="h-2 w-16 rounded-full bg-sand/28" />
-              <span className="flex size-7 items-center justify-center rounded-full bg-saffron text-sand">
-                <Play className="ml-0.5 size-3 fill-current" aria-hidden="true" />
-              </span>
-            </div>
-            <div className="mt-3 flex h-8 items-end gap-1">
-              {Array.from({ length: 18 }, (_, index) => (
-                <span
-                  key={index}
-                  className="w-full rounded-full bg-sand/58"
-                  style={{ height: `${7 + ((index * 11) % 24)}px` }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </Link>
   )
@@ -556,232 +530,13 @@ function FeatureCard({
   title: string
 }) {
   return (
-    <article className="rounded-[1.5rem] border border-sand/12 bg-sand/[0.07] p-5">
+    <article className="rounded-[1.5rem] border border-sand/10 bg-sand/[0.06] p-5">
       <span className="flex size-10 items-center justify-center rounded-full bg-saffron/12 text-saffron">
         <Icon className="size-4" aria-hidden="true" />
       </span>
-      <h3 className="mt-5 text-lg font-black text-sand">{title}</h3>
-      <p className="mt-3 text-sm font-semibold leading-6 text-sand/68">{body}</p>
+      <h3 className="mt-4 text-base font-black text-sand">{title}</h3>
+      <p className="mt-2 text-sm font-semibold leading-6 text-sand/60">{body}</p>
     </article>
-  )
-}
-
-function ProductFeatureCard({
-  body,
-  icon: Icon,
-  title,
-}: {
-  body: string
-  icon: React.ComponentType<{ className?: string; "aria-hidden"?: "true" }>
-  title: string
-}) {
-  const isFeatured =
-    title === "Prompt-first creation" ||
-    title === "Traditional instrument textures" ||
-    title === "Voice of Balochistan"
-
-  return (
-    <article
-      className={`group rounded-[1.65rem] border border-sand/12 bg-[linear-gradient(145deg,rgba(237,227,211,0.095),rgba(237,227,211,0.04))] p-4 shadow-[0_22px_60px_rgba(0,0,0,0.24)] transition duration-300 hover:-translate-y-1 hover:border-saffron/35 sm:p-5 ${
-        isFeatured ? "relative overflow-hidden" : ""
-      }`}
-    >
-      {isFeatured ? (
-        <div className="pointer-events-none absolute inset-x-6 top-0 h-24 rounded-full bg-saffron/10 blur-2xl transition group-hover:bg-saffron/16" />
-      ) : null}
-      <FeatureVisual title={title} />
-      <div className="relative mt-5 flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-saffron/12 text-saffron">
-          <Icon className="size-4" aria-hidden="true" />
-        </span>
-        <div>
-          <h3 className="text-lg font-black leading-tight text-sand">{title}</h3>
-          <p className="mt-2 text-sm font-semibold leading-6 text-sand/68">
-            {body}
-          </p>
-        </div>
-      </div>
-    </article>
-  )
-}
-
-function FeatureVisual({ title }: { title: string }) {
-  if (title === "Balochi genre presets") {
-    return (
-      <div className="relative overflow-hidden rounded-2xl border border-sand/10 bg-charcoal/38 p-3">
-        <div className="flex flex-wrap gap-2">
-          {["Zahirok", "Wedding", "Sufi", "Fusion"].map((chip) => (
-            <span
-              key={chip}
-              className="rounded-full border border-saffron/25 bg-saffron/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-saffron"
-            >
-              {chip}
-            </span>
-          ))}
-        </div>
-        <div className="mt-4 grid gap-2">
-          <div className="h-3 rounded-full bg-sand/18" />
-          <div className="h-3 w-2/3 rounded-full bg-sand/12" />
-        </div>
-      </div>
-    )
-  }
-
-  if (title === "Traditional instrument textures") {
-    return (
-      <div className="relative overflow-hidden rounded-2xl border border-sand/10 bg-[radial-gradient(circle_at_30%_20%,rgba(227,122,44,0.22),transparent_35%),rgba(237,227,211,0.06)] p-3">
-        <div className="flex items-end gap-1.5" aria-hidden="true">
-          {Array.from({ length: 18 }, (_, index) => (
-            <span
-              key={index}
-              className="h-16 w-full rounded-full bg-saffron/70"
-              style={{ height: `${18 + ((index * 13) % 44)}px` }}
-            />
-          ))}
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {["Suroz", "Damboora", "Doholl"].map((chip) => (
-            <span key={chip} className="rounded-full bg-charcoal/45 px-2.5 py-1 text-[11px] font-bold text-sand/72">
-              {chip}
-            </span>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (title === "Prompt-first creation") {
-    return (
-      <div className="rounded-2xl border border-sand/10 bg-charcoal/42 p-3">
-        <div className="rounded-xl bg-sand/8 px-3 py-2 text-xs font-semibold leading-5 text-sand/60">
-          A song about Makran evenings...
-        </div>
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <span className="h-2 flex-1 rounded-full bg-sand/12" />
-          <span className="rounded-full bg-saffron px-3 py-1.5 text-[11px] font-black text-sand">
-            Create
-          </span>
-        </div>
-      </div>
-    )
-  }
-
-  if (title === "Lyrics or instrumental") {
-    return (
-      <div className="rounded-2xl border border-sand/10 bg-charcoal/38 p-3">
-        <div className="grid grid-cols-2 gap-2">
-          <span className="rounded-full bg-saffron px-3 py-2 text-center text-xs font-black text-sand">
-            Lyrics
-          </span>
-          <span className="rounded-full border border-sand/12 bg-sand/8 px-3 py-2 text-center text-xs font-bold text-sand/68">
-            Instrumental
-          </span>
-        </div>
-        <div className="mt-3 grid gap-2">
-          <div className="h-2 rounded-full bg-sand/18" />
-          <div className="h-2 w-4/5 rounded-full bg-sand/12" />
-          <div className="h-2 w-2/3 rounded-full bg-sand/12" />
-        </div>
-      </div>
-    )
-  }
-
-  if (title === "Private or public songs") {
-    return (
-      <div className="rounded-2xl border border-sand/10 bg-charcoal/38 p-3">
-        <div className="grid grid-cols-2 gap-2">
-          <span className="rounded-full border border-sand/12 bg-sand/8 px-3 py-2 text-center text-xs font-bold text-sand/68">
-            Private
-          </span>
-          <span className="rounded-full bg-saffron/90 px-3 py-2 text-center text-xs font-black text-sand">
-            Public
-          </span>
-        </div>
-        <div className="mt-3 h-10 rounded-xl bg-sand/8" />
-      </div>
-    )
-  }
-
-  if (title === "Remix and explore") {
-    return (
-      <div className="rounded-2xl border border-sand/10 bg-charcoal/38 p-3">
-        <div className="flex items-center justify-between gap-3">
-          <span className="flex size-9 items-center justify-center rounded-full bg-saffron text-sand">
-            <Play className="ml-0.5 size-3.5 fill-current" aria-hidden="true" />
-          </span>
-          <span className="rounded-full border border-sand/12 bg-sand/8 px-3 py-1.5 text-xs font-bold text-sand/72">
-            Remix
-          </span>
-        </div>
-        <div className="mt-3 flex h-10 items-end gap-1" aria-hidden="true">
-          {Array.from({ length: 20 }, (_, index) => (
-            <span
-              key={index}
-              className="w-full rounded-full bg-sand/60"
-              style={{ height: `${8 + ((index * 17) % 30)}px` }}
-            />
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (title === "Voice of Balochistan") {
-    return (
-      <div className="rounded-2xl border border-sand/10 bg-[radial-gradient(circle_at_50%_10%,rgba(227,122,44,0.2),transparent_38%),rgba(237,227,211,0.06)] p-3">
-        <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-saffron/15 text-saffron">
-          <Mic2 className="size-5" aria-hidden="true" />
-        </div>
-        <div className="mt-3 flex h-9 items-center justify-center gap-1" aria-hidden="true">
-          {Array.from({ length: 22 }, (_, index) => (
-            <span
-              key={index}
-              className="w-1 rounded-full bg-saffron/70"
-              style={{ height: `${8 + ((index * 11) % 26)}px` }}
-            />
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (title === "Built for affordable creators") {
-    return (
-      <div className="rounded-2xl border border-sand/10 bg-charcoal/38 p-3">
-        <div className="flex flex-wrap gap-2">
-          {["Free", "Basic", "Pro"].map((chip) => (
-            <span key={chip} className="rounded-full bg-sand/8 px-3 py-1.5 text-xs font-black text-sand/72">
-              {chip}
-            </span>
-          ))}
-        </div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-sand/10">
-          <div className="h-full w-2/3 rounded-full bg-saffron" />
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-sand/10 bg-charcoal/38 p-3">
-      <div className="grid grid-cols-3 gap-2">
-        {["Makrani", "Rakhshani", "Sulaimani"].map((chip) => (
-          <span key={chip} className="rounded-full bg-sand/8 px-2 py-1.5 text-center text-[11px] font-bold text-sand/68">
-            {chip}
-          </span>
-        ))}
-      </div>
-      <div className="mt-4 grid grid-cols-5 gap-2" aria-hidden="true">
-        {Array.from({ length: 15 }, (_, index) => (
-          <span
-            key={index}
-            className={`size-2 rounded-full ${
-              index % 3 === 0 ? "bg-saffron" : "bg-sand/20"
-            }`}
-          />
-        ))}
-      </div>
-    </div>
   )
 }
 

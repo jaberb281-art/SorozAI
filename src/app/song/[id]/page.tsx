@@ -10,22 +10,50 @@ import { SongPlayer } from "@/components/songs/song-player"
 import { SongSocialPanel } from "@/components/songs/song-social-panel"
 import { SongStatusBadge } from "@/components/songs/song-status-badge"
 import { getSongById } from "@/lib/api-client"
+import { getMockSongById } from "@/lib/mock-songs"
+import type { Song } from "@/lib/types"
+
+// ── Local type ────────────────────────────────────────────────────────────────
+
+// Extends Song with display-only fields not yet in the backend Song type
+type LocalSong = Song & {
+    dialect?: string
+    creator?: string
+    coverImage?: string
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 type SongDetailPageProps = {
-    params: Promise<{
-        id: string
-    }>
+    params: Promise<{ id: string }>
 }
 
 export default async function SongDetailPage({ params }: SongDetailPageProps) {
     const { id } = await params
-    const songDetail = await getSongById(id)
 
-    if (!songDetail) {
+    // Step 1: try the real api-client (covers song-1, song-2 from legacy MOCK_SONGS)
+    const songDetail = await getSongById(id)
+    const apiSong = songDetail?.song as LocalSong | undefined
+
+    // Step 2: fall back to the unified mock data source
+    // MOCK: replace with api-client.getSongById() once backend supports all song IDs
+    const mockSong = getMockSongById(id)
+    const mockLocal: LocalSong | undefined = mockSong
+        ? { ...mockSong, dialect: mockSong.dialect, creator: mockSong.creator }
+        : undefined
+
+    const song: LocalSong | undefined = apiSong ?? mockLocal
+
+    if (!song) {
         notFound()
     }
 
-    const { song } = songDetail
+    // Derive social stats: prefer api response, fall back to song fields
+    const socialStats = songDetail?.socialStats ?? {
+        plays: song.plays,
+        likes: song.likes,
+        remixes: song.remixes,
+    }
 
     return (
         <div className="relative min-h-screen overflow-x-hidden bg-charcoal text-sand">
@@ -53,6 +81,11 @@ export default async function SongDetailPage({ params }: SongDetailPageProps) {
                                 <h1 className="mt-3 text-3xl font-black leading-tight text-sand sm:text-4xl md:text-5xl">
                                     {song.title}
                                 </h1>
+                                {song.creator && (
+                                    <p className="mt-2 text-sm font-bold text-sand/55">
+                                        by {song.creator}
+                                    </p>
+                                )}
                             </div>
                             <SongStatusBadge status={song.status} />
                         </div>
@@ -62,6 +95,7 @@ export default async function SongDetailPage({ params }: SongDetailPageProps) {
                         </div>
                     </div>
 
+                    {/* Metadata sidebar */}
                     <aside className="rounded-[1.5rem] border border-sand/15 bg-sand/10 p-2.5 shadow-[0_20px_56px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
                         <div className="rounded-[1.15rem] border border-sand/10 bg-charcoal/50 p-4">
                             <p className="text-xs font-black uppercase tracking-[0.22em] text-sand/50">
@@ -69,10 +103,16 @@ export default async function SongDetailPage({ params }: SongDetailPageProps) {
                             </p>
                             <div className="mt-4 grid gap-3">
                                 <MetadataCard label="Genre" value={song.genrePreset} />
+
+                                {song.dialect && (
+                                    <MetadataCard label="Dialect" value={song.dialect} />
+                                )}
+
                                 <MetadataCard
                                     label="Instruments"
                                     value={song.instruments.join(", ")}
                                 />
+
                                 <MetadataCard
                                     label="Visibility"
                                     value={song.isPublic ? "Public" : "Private"}
@@ -84,9 +124,22 @@ export default async function SongDetailPage({ params }: SongDetailPageProps) {
                                         )
                                     }
                                 />
+
                                 <MetadataCard label="Duration" value={song.duration} />
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <MetadataCard
+                                        label="Plays"
+                                        value={socialStats.plays.toLocaleString()}
+                                    />
+                                    <MetadataCard
+                                        label="Likes"
+                                        value={socialStats.likes.toLocaleString()}
+                                    />
+                                </div>
+
                                 <MetadataCard
-                                    label="Created date"
+                                    label="Created"
                                     value={new Intl.DateTimeFormat("en", {
                                         month: "long",
                                         day: "numeric",
@@ -99,24 +152,27 @@ export default async function SongDetailPage({ params }: SongDetailPageProps) {
                 </div>
 
                 <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+                    {/* Lyrics / Prompt */}
                     <section className="rounded-[1.5rem] border border-sand/15 bg-sand/10 p-2.5 shadow-[0_20px_56px_rgba(0,0,0,0.26)] backdrop-blur-2xl">
                         <div className="rounded-[1.15rem] border border-sand/10 bg-charcoal/50 p-4 sm:p-5">
                             <p className="text-xs font-black uppercase tracking-[0.22em] text-saffron">
                                 Lyrics / Prompt
                             </p>
                             <div className="mt-4 text-base leading-8 text-sand/78">
-                                <span className="block font-black text-sand">
-                                    Prompt
-                                </span>
+                                <span className="block font-black text-sand">Prompt</span>
                                 <span className="mt-2 block text-sand/72">
-                                    {song.prompt}
+                                    {song.prompt || "No prompt provided."}
                                 </span>
-                                <span className="mt-6 block font-black text-sand">
-                                    Lyrics
-                                </span>
-                                <span className="mt-2 block text-sand/72">
-                                    {song.lyrics}
-                                </span>
+                                {song.lyrics && (
+                                    <>
+                                        <span className="mt-6 block font-black text-sand">
+                                            Lyrics
+                                        </span>
+                                        <span className="mt-2 block text-sand/72">
+                                            {song.lyrics}
+                                        </span>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </section>
@@ -127,6 +183,8 @@ export default async function SongDetailPage({ params }: SongDetailPageProps) {
         </div>
     )
 }
+
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function MetadataCard({
     icon,

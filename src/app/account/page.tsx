@@ -1,6 +1,5 @@
 import Link from "next/link"
 import {
-  AlertTriangle,
   BadgeDollarSign,
   CreditCard,
   Crown,
@@ -13,6 +12,7 @@ import {
   UserRound,
 } from "lucide-react"
 
+import { AccountActions, DeleteAccountButton, PlanUpgradeButton, UpgradeButton } from "@/components/account/account-actions"
 import { getAccount } from "@/lib/api-client"
 
 const plans = [
@@ -98,10 +98,7 @@ export default async function AccountPage() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <PlaceholderButton>Edit profile</PlaceholderButton>
-                <PlaceholderButton muted>Sign out</PlaceholderButton>
-              </div>
+              <AccountActions />
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -150,12 +147,7 @@ export default async function AccountPage() {
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-saffron px-4 text-sm font-black text-sand transition hover:bg-terracotta"
-              >
-                Upgrade to Basic
-              </button>
+              <UpgradeButton />
               <Link
                 href="/pricing"
                 className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-sand/15 px-4 text-sm font-bold text-sand transition hover:bg-sand/10"
@@ -208,13 +200,9 @@ export default async function AccountPage() {
                 This will permanently remove your account and songs when backend
                 is connected.
               </p>
-              <button
-                type="button"
-                className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-terracotta/45 bg-terracotta/15 px-4 text-sm font-black text-sand transition hover:bg-terracotta"
-              >
-                <AlertTriangle className="size-4" aria-hidden="true" />
-                Delete account
-              </button>
+              <div className="mt-6">
+                <DeleteAccountButton />
+              </div>
             </div>
           </section>
         </div>
@@ -230,27 +218,6 @@ function AccountPanel({ children }: { children: React.ReactNode }) {
         {children}
       </div>
     </section>
-  )
-}
-
-function PlaceholderButton({
-  children,
-  muted = false,
-}: {
-  children: React.ReactNode
-  muted?: boolean
-}) {
-  return (
-    <button
-      type="button"
-      className={`inline-flex h-10 items-center justify-center rounded-full px-4 text-sm font-bold transition ${
-        muted
-          ? "border border-sand/15 text-sand/76 hover:bg-sand/10 hover:text-sand"
-          : "bg-saffron text-sand shadow-[0_12px_30px_rgba(227,122,44,0.2)] hover:bg-terracotta"
-      }`}
-    >
-      {children}
-    </button>
   )
 }
 
@@ -319,18 +286,18 @@ function PlanCard({
             </li>
           ))}
         </ul>
-        <button
-          type="button"
-          disabled={current}
-          aria-label={`${action} for ${name} plan`}
-          className={`mt-5 inline-flex h-11 w-full items-center justify-center rounded-full px-4 text-sm font-black transition ${
-            current
-              ? "cursor-default border border-sand/10 bg-sand/7 text-sand/52"
-              : "bg-saffron text-sand hover:bg-terracotta"
-          }`}
-        >
-          {action}
-        </button>
+        {current ? (
+          <button
+            type="button"
+            disabled
+            aria-label={`${action} for ${name} plan`}
+            className="mt-5 inline-flex h-11 w-full cursor-default items-center justify-center rounded-full border border-sand/10 bg-sand/7 px-4 text-sm font-black text-sand/52"
+          >
+            {action}
+          </button>
+        ) : (
+          <PlanUpgradeButton planName={name} />
+        )}
       </div>
     </article>
   )

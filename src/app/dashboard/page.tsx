@@ -1,224 +1,488 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
-import { Compass, Mic2, Play, Sparkles } from "lucide-react"
+import { useRouter } from "next/navigation"
+import {
+    AudioWaveform,
+    ChevronRight,
+    Compass,
+    Music2,
+    Pause,
+    Play,
+    Plus,
+    Search,
+} from "lucide-react"
 
-import { PromptComposer } from "@/components/create/prompt-composer"
+import { usePlaySong } from "@/hooks/use-play-song"
+import { formatCount, getFeedSongs, toPlayerSong, type MockSong } from "@/lib/mock-songs"
+import type { Song } from "@/lib/types"
 
-// MOCK: replace with api-client.getLibrary() or api-client.getExploreFeed() when backend is ready
-const recentExamples = [
+// ── Mock data ────────────────────────────────────────────────────────────────
+
+// MOCK: replace with api-client.getHomeFeed() when backend is ready
+const FEED = getFeedSongs()
+
+type CollectionSong = {
+    id: string
+    title: string
+    artist: string
+    genre: string
+    duration: string
+    plays: number
+    color: string
+    coverImage?: string
+}
+
+function feedToCollectionSong(s: MockSong, color: string): CollectionSong {
+    return { id: s.id, title: s.title, artist: s.creator, genre: s.genrePreset, duration: s.duration, plays: s.plays, color, coverImage: s.coverImage }
+}
+
+const COLLECTIONS = [
     {
-        title: "Makran Evening",
-        genre: "Zahirok",
-        instruments: "Suroz + Damboora",
-        duration: "3:18",
+        id: "col-for-you",
+        title: "For You",
+        subtitle: "Picked for your taste",
+        songs: [
+            feedToCollectionSong(FEED[0]!, "bg-saffron/60"),
+            feedToCollectionSong(FEED[4]!, "bg-indigo-deep/80"),
+        ],
+        collage: ["bg-saffron/50", "bg-terracotta/50", "bg-indigo-deep/60", "bg-saffron/30"],
     },
     {
-        title: "Desert Pulse",
-        genre: "Hip-Hop Fusion",
-        instruments: "Drums + Bass",
-        duration: "2:42",
+        id: "col-studio",
+        title: "Made with Studio",
+        subtitle: "Created by the community",
+        songs: [
+            feedToCollectionSong(FEED[3]!, "bg-zinc-500/50"),
+            feedToCollectionSong(FEED[1]!, "bg-purple-600/50"),
+        ],
+        collage: ["bg-indigo-deep/70", "bg-purple-600/40", "bg-zinc-500/40", "bg-terracotta/40"],
     },
     {
+        id: "col-best",
+        title: "Best of Zahirok",
+        subtitle: "All-time community favorites",
+        songs: [
+            feedToCollectionSong(FEED[2]!, "bg-terracotta/50"),
+            feedToCollectionSong(FEED[5]!, "bg-emerald-700/50"),
+        ],
+        collage: ["bg-terracotta/50", "bg-saffron/40", "bg-emerald-700/40", "bg-indigo-deep/50"],
+    },
+] as const
+
+// MOCK: replace with api-client.getMoodPlaylists() when backend is ready
+const MOOD_CARDS = [
+    {
+        id: "mood-late-night",
+        title: "Late Night Zahirok",
+        gradient:
+            "linear-gradient(135deg,rgba(26,58,92,0.8) 0%,rgba(26,22,18,0.95) 100%)",
+        coverImage: "/covers/turbat-night.png",
+    },
+    {
+        id: "mood-cinematic",
+        title: "Cinematic Balochi",
+        gradient:
+            "linear-gradient(135deg,rgba(91,49,155,0.6) 0%,rgba(26,22,18,0.95) 100%)",
+        coverImage: "/covers/sufi-dambora.png",
+    },
+    {
+        id: "mood-romantic",
+        title: "Romantic",
+        gradient:
+            "linear-gradient(135deg,rgba(183,62,31,0.6) 0%,rgba(227,122,44,0.25) 100%)",
+        coverImage: "/covers/makran-evening.png",
+    },
+    {
+        id: "mood-morning",
+        title: "Morning Drive",
+        gradient:
+            "linear-gradient(135deg,rgba(227,122,44,0.55) 0%,rgba(26,58,92,0.4) 100%)",
+        coverImage: "/covers/coastal-lullaby.png",
+    },
+    {
+        id: "mood-wedding",
         title: "Wedding Doholl",
-        genre: "Celebration Folk",
-        instruments: "Doholl + Benju",
-        duration: "3:05",
+        gradient:
+            "linear-gradient(135deg,rgba(227,122,44,0.7) 0%,rgba(183,62,31,0.5) 100%)",
+        coverImage: "/covers/wedding-doholl.png",
     },
-    {
-        title: "Sufi Damboora",
-        genre: "Spiritual Folk",
-        instruments: "Damboora + Soft vocals",
-        duration: "4:01",
-    },
-]
+] as const
+
+// MOCK: bridge collection song → Song for the global player store
+import { getMockSongById } from "@/lib/mock-songs"
+
+function toSong(s: CollectionSong): Song {
+    // Try to get the full MockSong from the unified source
+    const mock = getMockSongById(s.id)
+    if (mock) return toPlayerSong(mock)
+
+    return {
+        id: s.id,
+        title: s.title,
+        prompt: "",
+        genrePreset: s.genre as Song["genrePreset"],
+        instruments: [],
+        lyrics: "",
+        status: "completed",
+        audioUrl: "/mock/audio-placeholder.mp3",
+        mp3Url: "/mock/audio-placeholder.mp3",
+        wavUrl: "/mock/audio-placeholder.wav",
+        isPublic: true,
+        createdAt: new Date().toISOString(),
+        duration: s.duration,
+        plays: s.plays,
+        likes: 0,
+        remixes: 0,
+    }
+}
+
+function formatPlays(n: number): string {
+    return formatCount(n)
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+    const router = useRouter()
+    const [prompt, setPrompt] = useState("")
+    const [optionsNote, setOptionsNote] = useState(false)
+    const [promptNote, setPromptNote] = useState("")
+    const { playSong, isCurrentSong, isPlaying } = usePlaySong()
+
+    // MOCK: replace with api-client.generateSong({ prompt }) when backend is ready
+    function handleCreate() {
+        const trimmed = prompt.trim()
+        if (!trimmed) {
+            setPromptNote("Describe a song idea first.")
+            return
+        }
+        setPromptNote("")
+        router.push(`/create?prompt=${encodeURIComponent(trimmed)}`)
+    }
+
+    function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault()
+            handleCreate()
+        }
+    }
+
+    function handlePlaySong(s: CollectionSong) {
+        playSong(toSong(s))
+    }
+
     return (
         <div className="relative min-h-screen overflow-x-hidden bg-charcoal text-sand">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(227,122,44,0.2),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(26,58,92,0.7),transparent_34%),linear-gradient(135deg,var(--charcoal)_0%,var(--deep-indigo)_46%,var(--charcoal)_100%)]" />
-            <div className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:linear-gradient(90deg,rgba(237,227,211,0.42)_1px,transparent_1px),linear-gradient(rgba(237,227,211,0.32)_1px,transparent_1px)] [background-size:34px_34px]" />
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-charcoal/82 to-transparent" />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-charcoal to-transparent" />
+            {/* Background */}
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_8%,rgba(227,122,44,0.18),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(26,58,92,0.6),transparent_34%),linear-gradient(135deg,var(--charcoal)_0%,var(--deep-indigo)_46%,var(--charcoal)_100%)]" />
+            <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:linear-gradient(90deg,rgba(237,227,211,0.3)_1px,transparent_1px),linear-gradient(rgba(237,227,211,0.25)_1px,transparent_1px)] [background-size:40px_40px]" />
 
-            <section className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center px-5 pb-8 pt-6 text-center md:px-8 md:pb-10 md:pt-8">
-                <p className="inline-flex items-center gap-2 rounded-full border border-saffron/25 bg-saffron/10 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-saffron shadow-[0_0_28px_rgba(227,122,44,0.16)] md:px-4 md:py-2 md:text-[11px]">
-                    <Sparkles className="size-3.5" aria-hidden="true" />
-                    Home
-                </p>
+            {/* Content */}
+            <div className="relative z-10 mx-auto w-full max-w-5xl px-4 pb-[160px] pt-5 md:px-6 md:pb-[100px] md:pt-6">
 
-                <h1 className="mt-3 max-w-2xl text-3xl font-black leading-[1.08] text-sand sm:text-[2.35rem] md:text-4xl">
-                    Bring your Balochi sound to life
-                </h1>
-
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-sand/72 md:text-base md:leading-7">
-                    Describe a song idea, choose your style, and create a
-                    Balochi-inspired track.
-                </p>
-
-                <PromptComposer />
-
-                <div className="mt-6 grid w-full gap-3 text-left md:grid-cols-2">
-                    <DashboardPromoCard
-                        href="/voice-of-balochistan"
-                        icon={Mic2}
-                        title="Voice of Balochistan"
-                        body="Help improve Balochi pronunciation and vocal quality with clear consent."
-                        cta="Learn more"
-                        variant="voice"
-                    />
-                    <DashboardPromoCard
-                        href="/feed"
-                        icon={Compass}
-                        title="Explore public songs"
-                        body="Hear songs shared by ZahiRok creators and discover new Balochi-inspired ideas."
-                        cta="Explore feed"
-                        variant="feed"
-                    />
+                {/* ── Top bar: compact search pill ── */}
+                <div className="flex items-center justify-end">
+                    <button
+                        type="button"
+                        aria-label="Search"
+                        onClick={() => router.push("/feed")}
+                        className="inline-flex h-9 items-center gap-2 rounded-full border border-sand/10 bg-sand/[0.05] px-4 text-sm font-semibold text-sand/40 transition hover:border-sand/18 hover:text-sand/60"
+                    >
+                        <Search className="size-4" aria-hidden="true" />
+                        Search
+                    </button>
                 </div>
 
-                <section className="mt-8 w-full text-left">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                        <div>
-                            <p className="text-xs font-black uppercase tracking-[0.22em] text-saffron">
-                                Recent examples
-                            </p>
-                            <h2 className="mt-2 text-2xl font-black text-sand">
-                                Recent ZahiRok examples
-                            </h2>
-                        </div>
-                        <Link
-                            href="/feed"
-                            className="inline-flex h-10 items-center justify-center rounded-full border border-sand/15 bg-sand/8 px-4 text-sm font-bold text-sand transition hover:bg-sand/12"
-                        >
-                            View feed
-                        </Link>
-                    </div>
+                {/* ── Hero ── */}
+                <section className="mx-auto mt-10 max-w-2xl text-center md:mt-14">
+                    <h1 className="text-[2rem] font-black leading-[1.1] tracking-tight text-sand sm:text-[2.6rem] md:text-[3rem]">
+                        Bring your sound to life
+                    </h1>
 
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                        {recentExamples.map((song) => (
-                            <RecentExampleCard key={song.title} {...song} />
+                    {/* Compact prompt composer — single flat card */}
+                    <div className="mx-auto mt-6 max-w-xl rounded-xl border border-sand/10 bg-charcoal/60 shadow-[0_16px_48px_rgba(0,0,0,0.3)]">
+                        <div className="px-4 pt-3">
+                            <textarea
+                                value={prompt}
+                                onChange={(e) => setPrompt(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Describe the Balochi song you want to create…"
+                                aria-label="Song prompt"
+                                rows={1}
+                                className="w-full resize-none bg-transparent text-sm leading-6 text-sand outline-none placeholder:text-sand/35"
+                            />
+                        </div>
+                        <div className="flex items-center justify-between px-3 pb-3 pt-1">
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    aria-label="Add options"
+                                    onClick={() => setOptionsNote((v) => !v)}
+                                    className="flex size-9 items-center justify-center rounded-full text-sand/40 transition hover:bg-sand/8 hover:text-sand/70"
+                                >
+                                    <Plus className="size-5" aria-hidden="true" />
+                                </button>
+                                {optionsNote && (
+                                    <span role="status" className="absolute bottom-full left-0 mb-2 whitespace-nowrap rounded-lg border border-saffron/25 bg-[#1a1a1c] px-3 py-1.5 text-xs font-semibold text-saffron shadow-lg">
+                                        Upload / options coming soon.
+                                    </span>
+                                )}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleCreate}
+                                className="inline-flex h-10 items-center gap-2 rounded-full bg-saffron px-5 text-sm font-black text-sand shadow-[0_12px_32px_rgba(227,122,44,0.25)] transition hover:bg-terracotta"
+                            >
+                                <AudioWaveform className="size-4" aria-hidden="true" />
+                                Create
+                            </button>
+                        </div>
+                    </div>
+                    {promptNote && (
+                        <p role="status" className="mx-auto mt-3 max-w-xl text-center text-xs font-semibold text-saffron">
+                            {promptNote}
+                        </p>
+                    )}
+                </section>
+
+                {/* ── Featured collections (horizontal cards) ── */}
+                <section className="mt-12 md:mt-16">
+                    <div className="grid gap-4 lg:grid-cols-3">
+                        {COLLECTIONS.map((col) => (
+                            <CollectionCard
+                                key={col.id}
+                                collection={col}
+                                onPlaySong={handlePlaySong}
+                                isCurrentSong={isCurrentSong}
+                                isPlaying={isPlaying}
+                            />
                         ))}
                     </div>
                 </section>
-            </section>
+
+                {/* ── For Every Mood ── */}
+                <section className="mt-12 md:mt-16">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-black text-sand sm:text-2xl">
+                            For Every Mood
+                        </h2>
+                        <Link
+                            href="/feed"
+                            className="inline-flex items-center gap-1 text-sm font-bold text-sand/50 transition hover:text-saffron"
+                        >
+                            See all
+                            <ChevronRight className="size-4" aria-hidden="true" />
+                        </Link>
+                    </div>
+                    <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+                        {MOOD_CARDS.map((mood) => (
+                            <MoodCard key={mood.id} mood={mood} />
+                        ))}
+                    </div>
+                </section>
+
+                {/* ── Explore CTA ── */}
+                <section className="mt-12 md:mt-16">
+                    <Link
+                        href="/feed"
+                        className="group flex items-center justify-between gap-4 rounded-2xl border border-saffron/20 bg-saffron/[0.07] p-5 shadow-[0_16px_48px_rgba(0,0,0,0.2)] transition hover:border-saffron/35 hover:bg-saffron/[0.1] sm:p-6"
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-saffron/30 bg-saffron/15 text-saffron">
+                                <Compass className="size-5" aria-hidden="true" />
+                            </span>
+                            <div>
+                                <p className="text-base font-black text-sand sm:text-lg">
+                                    Explore more songs on Zahirok
+                                </p>
+                                <p className="mt-0.5 text-sm font-semibold text-sand/55">
+                                    Discover what the community is creating.
+                                </p>
+                            </div>
+                        </div>
+                        <ChevronRight
+                            className="size-5 shrink-0 text-saffron/60 transition group-hover:translate-x-1 group-hover:text-saffron"
+                            aria-hidden="true"
+                        />
+                    </Link>
+                </section>
+            </div>
         </div>
     )
 }
 
-function DashboardPromoCard({
-    body,
-    cta,
-    href,
-    icon: Icon,
-    title,
-    variant,
+// ── CollectionCard (horizontal layout) ───────────────────────────────────────
+
+function CollectionCard({
+    collection,
+    onPlaySong,
+    isCurrentSong,
+    isPlaying,
 }: {
-    body: string
-    cta: string
-    href: string
-    icon: React.ComponentType<{ className?: string; "aria-hidden"?: "true" }>
-    title: string
-    variant: "voice" | "feed"
+    collection: (typeof COLLECTIONS)[number]
+    onPlaySong: (s: CollectionSong) => void
+    isCurrentSong: (s: Song) => boolean
+    isPlaying: boolean
 }) {
     return (
-        <Link
-            href={href}
-            className="group grid gap-4 overflow-hidden rounded-[1.45rem] border border-sand/12 bg-sand/[0.06] p-3 shadow-[0_18px_48px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:border-saffron/35 hover:bg-sand/[0.085] sm:grid-cols-[1fr_9rem] sm:items-center"
-        >
-            <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-saffron/12 text-saffron">
-                        <Icon className="size-4" aria-hidden="true" />
-                    </span>
-                    <h2 className="text-base font-black text-sand">{title}</h2>
+        <article className="group overflow-hidden rounded-2xl border border-sand/10 bg-sand/[0.06] shadow-[0_16px_48px_rgba(0,0,0,0.25)] transition hover:border-saffron/25">
+            {/* Top: collage + play button + title */}
+            <div className="flex items-center gap-3 p-3 pb-0">
+                {/* 2x2 album art collage */}
+                <div className="relative grid size-20 shrink-0 grid-cols-2 grid-rows-2 gap-0.5 overflow-hidden rounded-lg">
+                    {collection.collage.map((bg, i) => {
+                        const songImg = collection.songs[i % collection.songs.length]?.coverImage
+                        return (
+                            <div key={i} className={`${bg} relative flex items-center justify-center`}>
+                                {songImg ? (
+                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                    <img src={songImg} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
+                                ) : (
+                                    <Music2 className="size-3 text-sand/30" aria-hidden="true" />
+                                )}
+                            </div>
+                        )
+                    })}
+                    {/* Play overlay */}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (collection.songs[0]) onPlaySong(collection.songs[0])
+                        }}
+                        aria-label={`Play ${collection.title}`}
+                        className="absolute inset-0 flex items-center justify-center bg-charcoal/20 opacity-0 transition group-hover:opacity-100"
+                    >
+                        <span className="flex size-9 items-center justify-center rounded-full bg-saffron text-sand shadow-[0_6px_18px_rgba(227,122,44,0.4)]">
+                            <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
+                        </span>
+                    </button>
                 </div>
-                <p className="mt-2 text-sm font-semibold leading-6 text-sand/66">
-                    {body}
-                </p>
-                <p className="mt-3 text-xs font-black uppercase tracking-[0.16em] text-saffron">
-                    {cta}
-                </p>
+                <div className="min-w-0">
+                    <h3 className="text-base font-black text-sand">{collection.title}</h3>
+                    <p className="mt-0.5 text-xs font-semibold text-sand/40">
+                        {collection.subtitle}
+                    </p>
+                </div>
             </div>
 
-            <div className="relative h-24 overflow-hidden rounded-2xl border border-sand/10 bg-charcoal/42">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_15%,rgba(227,122,44,0.22),transparent_42%)]" />
-                {variant === "voice" ? (
-                    <div className="absolute inset-x-3 bottom-4 flex h-14 items-center justify-center gap-1" aria-hidden="true">
-                        {Array.from({ length: 20 }, (_, index) => (
-                            <span
-                                key={index}
-                                className="w-1 rounded-full bg-saffron/75"
-                                style={{ height: `${10 + ((index * 13) % 34)}px` }}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="absolute inset-3 rounded-xl border border-sand/10 bg-sand/8 p-2" aria-hidden="true">
-                        <div className="flex items-center justify-between">
-                            <span className="h-2 w-16 rounded-full bg-sand/28" />
-                            <span className="flex size-7 items-center justify-center rounded-full bg-saffron text-sand">
-                                <Play className="ml-0.5 size-3 fill-current" aria-hidden="true" />
-                            </span>
+            {/* Song rows */}
+            <div className="mt-2 grid gap-0.5 px-3 pb-1">
+                {collection.songs.map((song) => {
+                    const songObj = toSong(song)
+                    const isCurrent = isCurrentSong(songObj)
+                    const isThisPlaying = isCurrent && isPlaying
+
+                    return (
+                        <div
+                            key={song.id}
+                            className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition ${isCurrent
+                                ? "bg-saffron/10"
+                                : "hover:bg-sand/[0.06]"
+                                }`}
+                        >
+                            {/* Mini thumbnail */}
+                            <div className={`relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md ${song.color}`}>
+                                {song.coverImage ? (
+                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                    <img src={song.coverImage} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
+                                ) : (
+                                    <Music2 className="size-3.5 text-sand/40" aria-hidden="true" />
+                                )}
+                            </div>
+                            {/* Play button */}
+                            <button
+                                type="button"
+                                onClick={() => onPlaySong(song)}
+                                aria-label={`${isThisPlaying ? "Pause" : "Play"} ${song.title}`}
+                                className={`flex size-7 shrink-0 items-center justify-center rounded-full transition ${isThisPlaying
+                                    ? "bg-saffron text-sand"
+                                    : "bg-sand/8 text-sand/40 hover:bg-saffron hover:text-sand"
+                                    }`}
+                            >
+                                {isThisPlaying ? (
+                                    <Pause className="size-3 fill-current" aria-hidden="true" />
+                                ) : (
+                                    <Play className="ml-px size-3 fill-current" aria-hidden="true" />
+                                )}
+                            </button>
+                            {/* Title + artist */}
+                            <div className="min-w-0 flex-1">
+                                <p className={`truncate text-sm font-bold leading-tight ${isCurrent ? "text-saffron" : "text-sand"}`}>
+                                    {song.title}
+                                </p>
+                                <p className="truncate text-[11px] font-semibold leading-tight text-sand/35">
+                                    {song.artist}
+                                </p>
+                            </div>
+                            {/* Plays + genre badge */}
+                            <div className="hidden shrink-0 items-center gap-2 sm:flex">
+                                <span className="text-[11px] font-semibold tabular-nums text-sand/30">
+                                    <Play className="mr-0.5 inline size-2.5 fill-current align-[-1px]" aria-hidden="true" />
+                                    {formatPlays(song.plays)}
+                                </span>
+                                <span className="rounded-full border border-sand/10 bg-sand/[0.06] px-2 py-0.5 text-[10px] font-bold text-sand/40">
+                                    {song.genre}
+                                </span>
+                            </div>
                         </div>
-                        <div className="mt-3 flex h-8 items-end gap-1">
-                            {Array.from({ length: 18 }, (_, index) => (
-                                <span
-                                    key={index}
-                                    className="w-full rounded-full bg-sand/58"
-                                    style={{ height: `${7 + ((index * 11) % 24)}px` }}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                )}
+                    )
+                })}
             </div>
-        </Link>
+
+            {/* See more */}
+            <div className="border-t border-sand/8 px-3 py-2.5">
+                <Link
+                    href="/feed"
+                    className="flex w-full items-center justify-center gap-1 text-xs font-bold text-sand/40 transition hover:text-saffron"
+                >
+                    See more
+                    <ChevronRight className="size-3.5" aria-hidden="true" />
+                </Link>
+            </div>
+        </article>
     )
 }
 
-function RecentExampleCard({
-    duration,
-    genre,
-    instruments,
-    title,
-}: {
-    duration: string
-    genre: string
-    instruments: string
-    title: string
-}) {
+// ── MoodCard (landscape, title below) ────────────────────────────────────────
+
+function MoodCard({ mood }: { mood: (typeof MOOD_CARDS)[number] }) {
     return (
-        <Link
-            href="/feed"
-            className="group rounded-[1.25rem] border border-sand/12 bg-sand/[0.065] p-3 transition hover:-translate-y-0.5 hover:border-saffron/35 hover:bg-sand/[0.09]"
-            aria-label={`Explore ${title}`}
-        >
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-saffron">
-                        {genre}
-                    </p>
-                    <h3 className="mt-1 line-clamp-2 text-base font-black text-sand">
-                        {title}
-                    </h3>
-                </div>
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-saffron text-sand">
-                    <Play className="ml-0.5 size-3.5 fill-current" aria-hidden="true" />
-                </span>
-            </div>
-            <div className="mt-4 flex h-12 items-end gap-1" aria-hidden="true">
-                {Array.from({ length: 22 }, (_, index) => (
-                    <span
-                        key={index}
-                        className={`w-full rounded-full ${index < 7 ? "bg-saffron" : "bg-sand/58"
-                            }`}
-                        style={{ height: `${8 + ((index * 17) % 34)}px` }}
+        <Link href="/feed" className="group">
+            {/* Landscape card */}
+            <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-sand/10 shadow-[0_12px_36px_rgba(0,0,0,0.2)] transition group-hover:-translate-y-1 group-hover:border-saffron/30">
+                <div
+                    className="absolute inset-0"
+                    style={{ background: mood.gradient }}
+                    aria-hidden="true"
+                />
+                {mood.coverImage && (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                        src={mood.coverImage}
+                        alt=""
+                        aria-hidden="true"
+                        className="absolute inset-0 h-full w-full object-cover opacity-40 transition group-hover:opacity-55"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }}
                     />
-                ))}
+                )}
+                {!mood.coverImage && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-[0.08]" aria-hidden="true">
+                        <Music2 className="size-14" />
+                    </div>
+                )}
+                {/* Hover play button */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100">
+                    <span className="flex size-10 items-center justify-center rounded-full bg-saffron/90 text-sand shadow-[0_8px_20px_rgba(227,122,44,0.35)]">
+                        <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
+                    </span>
+                </div>
             </div>
-            <div className="mt-3 flex items-center justify-between gap-3 text-xs font-bold text-sand/62">
-                <span className="truncate">{instruments}</span>
-                <span>{duration}</span>
-            </div>
+            {/* Title below */}
+            <p className="mt-2 text-sm font-bold leading-tight text-sand/70 transition group-hover:text-sand">
+                {mood.title}
+            </p>
         </Link>
     )
 }

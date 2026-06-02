@@ -26,8 +26,8 @@ html {
 
 body {
   margin: 0;
-  background: var(--sand);
-  color: var(--charcoal);
+  background: var(--charcoal);
+  color: var(--sand);
 }
 
 a {

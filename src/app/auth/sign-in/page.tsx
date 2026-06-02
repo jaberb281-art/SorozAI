@@ -1,90 +1,159 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useState } from "react"
 import Link from "next/link"
-import { Apple, Mail, Phone } from "lucide-react"
-
-import { AuthCard } from "@/components/auth/auth-card"
-import { AuthShell } from "@/components/auth/auth-shell"
-
-const AUTH_OPTIONS = [
-  {
-    label: "Continue with Google",
-    icon: <span className="text-sm font-black" aria-hidden="true">G</span>,
-  },
-  {
-    label: "Continue with Apple",
-    icon: <Apple className="size-4" aria-hidden="true" />,
-  },
-  {
-    label: "Continue with Phone",
-    icon: <Phone className="size-4" aria-hidden="true" />,
-  },
-  {
-    label: "Continue with Email",
-    icon: <Mail className="size-4" aria-hidden="true" />,
-  },
-]
+import { useRouter } from "next/navigation"
+import { Apple, ArrowRight, Eye, EyeOff, X } from "lucide-react"
 
 export default function SignInPage() {
   const router = useRouter()
+  const [showResetNote, setShowResetNote] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
-  // MOCK: real auth will call api-client.signIn() then redirect — for now simulate sign-in
-  function handleSignIn() {
+  // MOCK: replace with real auth provider later
+  function handleMockAuth() {
     router.push("/dashboard")
   }
 
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    handleMockAuth()
+  }
+
   return (
-    <AuthShell>
-      <AuthCard
-        title="Welcome to ZahiRok AI"
-        subtitle="Sign in to create, save, and share Balochi-inspired songs."
-      >
-        <div className="mt-5 grid gap-3">
-          {AUTH_OPTIONS.map((option) => (
-            <button
-              key={option.label}
-              type="button"
-              onClick={handleSignIn}
-              aria-label={option.label}
-              className="inline-flex h-12 w-full items-center justify-center gap-3 rounded-full border border-sand/15 bg-sand/8 px-5 text-sm font-bold text-sand transition hover:border-saffron/35 hover:bg-sand/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#111111] px-4 py-8 text-white">
+      <AuthBackground />
+
+      <section className="relative z-10 w-full max-w-[550px] rounded-[28px] border border-white/16 bg-black/96 px-6 py-10 shadow-[0_28px_90px_rgba(0,0,0,0.62)] sm:px-12 sm:py-14">
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          aria-label="Close sign in"
+          className="absolute right-5 top-5 inline-flex size-9 items-center justify-center rounded-full text-white/62 transition hover:bg-white/[0.06] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+        >
+          <X className="size-5" aria-hidden={true} />
+        </button>
+
+        <div className="text-center">
+          <h1 className="text-3xl font-black tracking-tight">Log In</h1>
+          <p className="mt-3 text-base font-semibold text-white/58">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/auth/sign-up"
+              className="font-black text-saffron underline-offset-2 transition hover:text-saffron/80 hover:underline"
             >
-              <span className="flex size-7 items-center justify-center rounded-full bg-sand/10 text-saffron">
-                {option.icon}
-              </span>
-              {option.label}
-            </button>
-          ))}
+              Sign up
+            </Link>
+          </p>
         </div>
 
-        <p className="mt-5 text-center text-xs font-semibold leading-5 text-sand/58">
-          By continuing, you agree to our{" "}
-          <Link
-            href="#"
-            className="font-black text-saffron transition hover:text-terracotta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
-          >
-            Privacy Policy
-          </Link>{" "}
-          and{" "}
-          <Link
-            href="#"
-            className="font-black text-saffron transition hover:text-terracotta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
-          >
-            Terms of Use
-          </Link>
-          .
-        </p>
+        <div className="mt-8 grid gap-4">
+          <SocialButton label="Continue with Google" onClick={handleMockAuth}>
+            <span className="text-3xl font-black leading-none" aria-hidden={true}>
+              <span className="text-[#4285f4]">G</span>
+            </span>
+          </SocialButton>
+          <SocialButton label="Continue with Apple" onClick={handleMockAuth}>
+            <Apple className="size-8 fill-current" aria-hidden={true} />
+          </SocialButton>
+        </div>
 
-        <p className="mt-5 text-center text-sm font-medium text-sand/78">
-          New here?{" "}
-          <Link
-            href="/auth/sign-up"
-            className="rounded-full font-black text-saffron transition hover:text-terracotta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+        <Divider />
+
+        <form onSubmit={handleSubmit} className="grid gap-4">
+          <input
+            type="email"
+            name="email"
+            placeholder="*Email Address"
+            autoComplete="email"
+            className="h-[60px] rounded-2xl border border-white/42 bg-transparent px-4 text-base font-semibold text-white outline-none placeholder:text-white/56 transition focus:border-saffron"
+          />
+
+          <label className="relative block">
+            <span className="sr-only">Password</span>
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              autoComplete="current-password"
+              className="h-[60px] w-full rounded-2xl border border-white/42 bg-transparent px-4 pr-14 text-base font-semibold text-white outline-none placeholder:text-white/56 transition focus:border-saffron"
+            />
+            <button
+              type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-4 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-white/72 transition hover:bg-white/[0.06] hover:text-white"
+            >
+              {showPassword ? <Eye className="size-5" aria-hidden={true} /> : <EyeOff className="size-5" aria-hidden={true} />}
+            </button>
+          </label>
+
+          {/* MOCK: replace with real password reset flow later */}
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setShowResetNote(true)}
+              className="text-sm font-black text-saffron underline underline-offset-2 transition hover:text-saffron/80"
+            >
+              Forgot Password?
+            </button>
+            {showResetNote && (
+              <p className="mt-2 text-xs font-semibold text-sand/50">
+                Password reset is not connected yet.
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className="mt-5 inline-flex h-[60px] items-center justify-center gap-4 rounded-full bg-saffron px-6 text-2xl font-black text-black transition hover:bg-saffron/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
           >
-            Create an account
-          </Link>
-        </p>
-      </AuthCard>
-    </AuthShell>
+            Log in
+            <ArrowRight className="size-8" aria-hidden={true} />
+          </button>
+        </form>
+      </section>
+    </main>
+  )
+}
+
+function AuthBackground() {
+  return (
+    <>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_10%,rgba(227,122,44,0.22),transparent_24%),radial-gradient(circle_at_78%_82%,rgba(183,62,31,0.18),transparent_26%),linear-gradient(135deg,#101010_0%,#191919_52%,#0c0c0c_100%)]" />
+      <div className="absolute inset-0 opacity-25 blur-[2px] [background-image:linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:42px_42px]" />
+      <div className="absolute left-1/2 top-1/2 h-[420px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-saffron/10 blur-[110px]" />
+    </>
+  )
+}
+
+function SocialButton({
+  children,
+  label,
+  onClick,
+}: {
+  children: React.ReactNode
+  label: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex h-[60px] items-center justify-center gap-7 rounded-full border border-white/50 bg-transparent px-6 text-lg font-black text-white transition hover:border-saffron hover:bg-white/[0.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+    >
+      <span className="flex w-9 items-center justify-center">{children}</span>
+      {label}
+    </button>
+  )
+}
+
+function Divider() {
+  return (
+    <div className="my-6 flex items-center gap-5">
+      <span className="h-px flex-1 bg-white/18" />
+      <span className="text-sm font-bold text-white/55">or</span>
+      <span className="h-px flex-1 bg-white/18" />
+    </div>
   )
 }

@@ -10,10 +10,22 @@ const DEFAULT_PROMPT =
 export function LandingPrompt() {
   const router = useRouter()
   const [prompt, setPrompt] = useState("")
+  const [note, setNote] = useState("")
+  const [optionsNote, setOptionsNote] = useState(false)
+
+  function handleCreate() {
+    const trimmed = prompt.trim()
+    if (!trimmed) {
+      setNote("Describe a song idea first.")
+      return
+    }
+    setNote("")
+    router.push(`/create?prompt=${encodeURIComponent(trimmed)}`)
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    router.push("/create")
+    handleCreate()
   }
 
   function handleTextareaKeyDown(
@@ -21,7 +33,7 @@ export function LandingPrompt() {
   ) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault()
-      router.push("/create")
+      handleCreate()
     }
   }
 
@@ -37,7 +49,7 @@ export function LandingPrompt() {
         <textarea
           id="landing-song-prompt"
           value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
+          onChange={(event) => { setPrompt(event.target.value); setNote("") }}
           onKeyDown={handleTextareaKeyDown}
           aria-label="Describe the Balochi song you want to create"
           rows={2}
@@ -46,17 +58,32 @@ export function LandingPrompt() {
         />
         <div className="mt-3 flex flex-col gap-2 border-t border-sand/10 pt-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              aria-label="Add options"
-              className="flex size-10 shrink-0 items-center justify-center rounded-full border border-sand/15 text-sand/80 transition hover:bg-sand/10 hover:text-sand"
-            >
-              <Plus className="size-4" aria-hidden="true" />
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="Add options"
+                onClick={() => setOptionsNote((v) => !v)}
+                className="flex size-10 shrink-0 items-center justify-center rounded-full border border-sand/15 text-sand/80 transition hover:bg-sand/10 hover:text-sand"
+              >
+                <Plus className="size-4" aria-hidden="true" />
+              </button>
+              {optionsNote && (
+                <span role="status" className="absolute bottom-full left-0 mb-2 whitespace-nowrap rounded-lg border border-saffron/25 bg-[#1a1a1c] px-3 py-1.5 text-xs font-semibold text-saffron shadow-lg">
+                  Upload / options coming soon.
+                </span>
+              )}
+            </div>
             <button
               type="button"
               aria-label="Open advanced creation options"
-              onClick={() => router.push("/create")}
+              onClick={() => {
+                const trimmed = prompt.trim()
+                if (trimmed) {
+                  router.push(`/create?prompt=${encodeURIComponent(trimmed)}`)
+                } else {
+                  router.push("/create")
+                }
+              }}
               className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full border border-sand/15 px-4 text-sm font-bold text-sand/82 transition hover:bg-sand/10 hover:text-sand sm:flex-none"
             >
               <SlidersHorizontal className="size-4" aria-hidden="true" />
@@ -67,6 +94,7 @@ export function LandingPrompt() {
             <button
               type="button"
               aria-label="Enhance prompt"
+              onClick={() => setNote("Prompt enhancement coming soon.")}
               className="inline-flex h-10 items-center justify-center rounded-full border border-sand/15 px-3 text-sand/78 transition hover:bg-sand/10 hover:text-sand"
             >
               <WandSparkles className="size-4" aria-hidden="true" />
@@ -81,6 +109,11 @@ export function LandingPrompt() {
             </button>
           </div>
         </div>
+        {note && (
+          <p role="status" className="mt-2 text-center text-xs font-semibold text-saffron">
+            {note}
+          </p>
+        )}
       </div>
     </form>
   )

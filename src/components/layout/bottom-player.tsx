@@ -121,7 +121,7 @@ export function BottomPlayer() {
         `${min}:${String(sec).padStart(2, "0")}`
 
     return (
-        <div className="fixed bottom-14 left-0 right-0 z-[85] border-t border-sand/10 bg-charcoal/96 backdrop-blur-2xl md:bottom-0 md:left-[220px]">
+        <div className="fixed bottom-14 left-0 right-0 z-[85] border-t border-sand/10 bg-charcoal/96 backdrop-blur-2xl transition-[left] duration-200 md:bottom-0 md:left-[var(--app-sidebar-width,210px)]">
             <div className="mx-auto flex max-w-7xl items-center gap-3 px-3 py-2 md:gap-5 md:px-6 md:py-3">
 
                 {/* Song info */}

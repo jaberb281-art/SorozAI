@@ -1,48 +1,58 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import {
-  Check,
   ChevronDown,
-  Download,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  Filter,
+  Heart,
   Loader2,
+  Mic2,
+  Music2,
+  Pause,
   Play,
-  Share2,
+  Plus,
+  Search,
+  SlidersHorizontal,
   Sparkles,
-  X,
+  Wand2,
 } from "lucide-react"
 
-import {
-  GENRE_PRESETS,
-  MODERN_INSTRUMENTS,
-  TRADITIONAL_INSTRUMENTS,
-} from "@/lib/music-options"
-import type { GenrePreset, Instrument } from "@/lib/types"
-import { InstrumentCard } from "@/components/create/instrument-card"
+import { usePlaySong } from "@/hooks/use-play-song"
+import type { GenrePreset, Instrument, Song } from "@/lib/types"
 
-// ── Page-local types ──────────────────────────────────────────────────────────
-
-type Dialect = "Makrani" | "Rakhshani" | "Sulaimani"
-type Visibility = "private" | "public"
+// MVP: only Makkuran dialect is supported in first release
+const MVP_DIALECT = "Makkuran" as const
+type Dialect = typeof MVP_DIALECT
 type StudioStatus = "idle" | "queued" | "generating" | "mixing" | "done"
+type LyricsMode = "Write" | "Prompt" | "Instrumental"
+type CreateMode = "Simple" | "Advanced"
+type InputTab = "Audio" | "Voice" | "Inspo"
 
 interface GeneratedSong {
+  id: string
   title: string
+  prompt: string
+  lyrics: string
   genre: GenrePreset
   dialect: Dialect
+  instruments: Instrument[]
   duration: string
+  createdAt: string
+  isPublic: boolean
+  likes: number
+  plays: number
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const DIALECTS: Dialect[] = ["Makrani", "Rakhshani", "Sulaimani"]
-
 const STATUS_LABELS: Record<StudioStatus, string> = {
-  idle: "",
-  queued: "Your track is queued…",
-  generating: "Generating melody…",
-  mixing: "Mixing instruments…",
-  done: "Track ready!",
+  idle: "Ready",
+  queued: "Queued",
+  generating: "Generating melody",
+  mixing: "Mixing instruments",
+  done: "Track ready",
 }
 
 const GENERATION_STAGES: Exclude<StudioStatus, "idle" | "done">[] = [
@@ -51,56 +61,145 @@ const GENERATION_STAGES: Exclude<StudioStatus, "idle" | "done">[] = [
   "mixing",
 ]
 
-const VISIBILITY_META = {
-  private: { emoji: "🔒", label: "Private", description: "Only you" },
-  public: { emoji: "🌍", label: "Public", description: "Everyone" },
+const MOCK_TITLES = [
+  "Makran Evening",
+  "Coastal Zahirok",
+  "Suroz at Dawn",
+  "Damboora Night",
+  "Memory of Gwadar",
+  "Kech Valley Song",
+] as const
+
+const INPUT_TAB_ICONS = {
+  Audio: Music2,
+  Voice: Mic2,
+  Inspo: Sparkles,
 } as const
 
-// MOCK: replace with api-client.generateSong() title from backend when ready
-const MOCK_TITLES: Partial<Record<GenrePreset, string[]>> = {
-  Zahirok: ["Makran Evening", "Desert Wind", "Coastal Drift"],
-  Liko: ["Coastal Rhythm", "Ocean Beat", "Tide Song"],
-  Sout: ["Mountain Echo", "Highland Call", "Valley Hymn"],
-  Naat: ["Sacred Ground", "Holy Verse", "Devotion"],
-  "Modern Balochi Pop": ["New Horizon", "City Lights", "Urban Balochi"],
-  Wedding: ["Joyful Doholl", "Wedding Dance", "Celebration"],
-  Lullaby: ["Soft Cradle", "Quiet Night", "Sleep Song"],
-  Sufi: ["Inner Journey", "Sufi Breath", "Wandering Soul"],
-  "Hip-Hop Fusion": ["Street Zahirok", "Concrete Desert", "Balochi Bars"],
-  "Custom Prompt": ["Untitled Track", "New Creation", "My Song"],
+const STYLE_SUGGESTIONS = ["Zahirok folk", "Damboora", "Suroz", "Warm vocals"]
+
+const MODEL_OPTIONS = [
+  { id: "v1", label: "v1", tag: "Current", available: true },
+  { id: "v1-folk", label: "v1 Folk Preview", tag: "Coming soon", available: false },
+  { id: "v1-studio", label: "v1 Studio Draft", tag: "Coming soon", available: false },
+] as const
+
+// MOCK: Makkuran/Balochi-inspired lyric fragments for the Wand button
+const MOCK_LYRIC_IDEAS = [
+  "\n[Verse]\nThe Makran wind carries forgotten names\nDamboora strings echo across the dunes",
+  "\n[Chorus]\nO Gwadar, your tides sing the old songs\nEvery wave a verse, every shore a home",
+  "\n[Bridge]\nSuroz cries at dawn, the valley listens\nStones remember what the people forgot",
+  "\n[Verse]\nFrom Turbat to the coast, the road hums\nA melody older than the hills themselves",
+  "\n[Chorus]\nBalochi hearts beat in Makkuran time\nThe rhythm of the land, the pulse of the sea",
+] as const
+
+function getMockTitle(): string {
+  return MOCK_TITLES[Math.floor(Math.random() * MOCK_TITLES.length)]
 }
 
-function getMockTitle(genre: GenrePreset | ""): string {
-  if (!genre) return "Untitled Track"
-  const list = MOCK_TITLES[genre] ?? ["Untitled Track"]
-  return list[Math.floor(Math.random() * list.length)]
+function getRandomLyricIdea(): string {
+  return MOCK_LYRIC_IDEAS[Math.floor(Math.random() * MOCK_LYRIC_IDEAS.length)]
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+function makeGeneratedSong({
+  prompt,
+  lyrics,
+}: {
+  prompt: string
+  lyrics: string
+}): GeneratedSong {
+  return {
+    id: `mock-create-${Date.now()}`,
+    title: getMockTitle(),
+    prompt,
+    lyrics,
+    genre: "Zahirok",
+    dialect: MVP_DIALECT,
+    instruments: ["Damboora", "Suroz"],
+    duration: "3:24",
+    createdAt: new Date().toISOString(),
+    isPublic: false,
+    likes: 0,
+    plays: 0,
+  }
+}
 
+// MOCK: bridge generated song to Song for the global player store
+function toPlayerSong(song: GeneratedSong): Song {
+  return {
+    id: song.id,
+    title: song.title,
+    prompt: song.prompt,
+    genrePreset: song.genre,
+    instruments: song.instruments,
+    lyrics: song.lyrics,
+    status: "completed",
+    audioUrl: "/mock/audio-placeholder.mp3",
+    mp3Url: "/mock/audio-placeholder.mp3",
+    wavUrl: "/mock/audio-placeholder.wav",
+    isPublic: song.isPublic,
+    createdAt: song.createdAt,
+    duration: song.duration,
+    plays: song.plays,
+    likes: song.likes,
+    remixes: 0,
+  }
+}
+
+// Wrap in Suspense because useSearchParams requires it in Next.js 16
 export default function CreatePage() {
-  // Composition state
-  const [prompt, setPrompt] = useState("")
-  const [lyrics, setLyrics] = useState("")
-  const [showLyrics, setShowLyrics] = useState(false)
-  const [selectedGenre, setSelectedGenre] = useState<GenrePreset | "">("")
-  const [dialect, setDialect] = useState<Dialect>("Makrani")
-  const [selectedInstruments, setSelectedInstruments] = useState<Instrument[]>([
-    "Suroz",
-    "Damboora",
-  ])
-  const [visibility, setVisibility] = useState<Visibility>("private")
-  const [instrumentalOnly, setInstrumentalOnly] = useState(false)
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
-  const [validation, setValidation] = useState("")
+  return (
+    <Suspense fallback={null}>
+      <CreatePageInner />
+    </Suspense>
+  )
+}
 
-  // Generation state
+function CreatePageInner() {
+  const searchParams = useSearchParams()
+  const [createMode, setCreateMode] = useState<CreateMode>("Simple")
+  const [inputTab, setInputTab] = useState<InputTab>("Audio")
+  const [lyricsMode, setLyricsMode] = useState<LyricsMode>("Write")
+  const [lyrics, setLyrics] = useState("")
+  const [stylePrompt, setStylePrompt] = useState("")
   const [status, setStatus] = useState<StudioStatus>("idle")
   const [progress, setProgress] = useState(0)
-  const [generatedSong, setGeneratedSong] = useState<GeneratedSong | null>(null)
+  const [generatedSongs, setGeneratedSongs] = useState<GeneratedSong[]>([])
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
+  const [importedPrompt, setImportedPrompt] = useState(false)
+  const [isModelOpen, setIsModelOpen] = useState(false)
+  const [modelNote, setModelNote] = useState("")
+  const [panelNote, setPanelNote] = useState("")
+  const [sortLabel, setSortLabel] = useState<"Newest" | "Oldest">("Newest")
+  const [toolbarNote, setToolbarNote] = useState("")
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pendingGenerationRef = useRef({ prompt: "", lyrics: "" })
+  const { playSong, isCurrentSong, isPlaying } = usePlaySong()
+  const prefilled = useRef(false)
 
-  // MOCK: replace with api-client.generateSong() + polling api-client.getGenerationStatus() when backend is ready
+  // Prefill style prompt from dashboard ?prompt= query param (once only)
+  useEffect(() => {
+    if (prefilled.current) return
+    const incoming = searchParams.get("prompt")
+    if (incoming) {
+      prefilled.current = true
+      setStylePrompt(incoming)
+      setImportedPrompt(true)
+    }
+  }, [searchParams])
+
+  const hasCreationInput =
+    lyricsMode === "Instrumental" ||
+    lyrics.trim().length > 0 ||
+    stylePrompt.trim().length > 0
+  const isGenerating = status === "queued" || status === "generating" || status === "mixing"
+  const canCreate = hasCreationInput && !isGenerating
+  const stageIndex = GENERATION_STAGES.indexOf(
+    status as Exclude<StudioStatus, "idle" | "done">,
+  )
+  const queue = useMemo(() => generatedSongs.map(toPlayerSong), [generatedSongs])
+
+  // MOCK: replace with api-client call when backend is ready
   useEffect(() => {
     function clearTimer() {
       if (intervalRef.current) {
@@ -117,8 +216,8 @@ export default function CreatePage() {
     if (status === "queued") {
       const t = setTimeout(() => {
         setStatus("generating")
-        setProgress(8)
-      }, 1200)
+        setProgress(12)
+      }, 900)
       return () => clearTimeout(t)
     }
 
@@ -126,14 +225,14 @@ export default function CreatePage() {
       clearTimer()
       intervalRef.current = setInterval(() => {
         setProgress((prev) => {
-          if (prev >= 62) {
+          if (prev >= 64) {
             clearTimer()
             setStatus("mixing")
-            return 62
+            return 64
           }
-          return prev + 3
+          return prev + 4
         })
-      }, 160)
+      }, 170)
       return clearTimer
     }
 
@@ -143,514 +242,600 @@ export default function CreatePage() {
         setProgress((prev) => {
           if (prev >= 100) {
             clearTimer()
-            // MOCK: replace with api-client.getGeneratedSong(jobId) when backend is ready
-            setGeneratedSong({
-              title: getMockTitle(selectedGenre),
-              genre: (selectedGenre as GenrePreset) || "Zahirok",
-              dialect,
-              duration: "3:24",
-            })
+            setGeneratedSongs((songs) => [
+              makeGeneratedSong(pendingGenerationRef.current),
+              ...songs,
+            ])
             setStatus("done")
             return 100
           }
-          return prev + 2
+          return prev + 3
         })
-      }, 110)
+      }, 120)
       return clearTimer
     }
-  }, [status, selectedGenre, dialect])
-
-  function toggleInstrument(instrument: Instrument) {
-    setSelectedInstruments((prev) =>
-      prev.includes(instrument)
-        ? prev.filter((i) => i !== instrument)
-        : [...prev, instrument],
-    )
-  }
+  }, [status])
 
   function handleCreate() {
-    if (!instrumentalOnly && prompt.trim().length === 0 && lyrics.trim().length === 0) {
-      setValidation("Add a prompt or some lyrics, or turn on Instrumental Only.")
-      return
+    if (!canCreate) return
+
+    pendingGenerationRef.current = {
+      prompt: stylePrompt.trim() || "Zahirok folk with Damboora and Suroz",
+      lyrics: lyricsMode === "Instrumental" ? "" : lyrics.trim(),
     }
-    setValidation("")
-    setGeneratedSong(null)
-    setProgress(2)
-    // MOCK: replace with api-client.generateSong({ prompt, lyrics, genre: selectedGenre, dialect, instruments: selectedInstruments, isPublic: visibility === "public", instrumentalOnly }) when backend is ready
+
+    setProgress(3)
     setStatus("queued")
   }
 
-  function handleReset() {
-    setStatus("idle")
-    setProgress(0)
-    setGeneratedSong(null)
-    setPrompt("")
-    setLyrics("")
+  function handlePlay(song: GeneratedSong) {
+    playSong(toPlayerSong(song), queue)
   }
 
-  const isGenerating = status !== "idle" && status !== "done"
-  const isIdle = status === "idle"
-  const isDone = status === "done"
-  const stageIndex = GENERATION_STAGES.indexOf(
-    status as Exclude<StudioStatus, "idle" | "done">,
-  )
+  function handleWand() {
+    if (lyricsMode === "Instrumental") {
+      setPanelNote("Switch out of Instrumental to generate lyrics.")
+      return
+    }
+    setPanelNote("")
+    setLyrics((prev) => prev + getRandomLyricIdea())
+  }
+
+  function toggleLiked(songId: string) {
+    setLikedIds((cur) => {
+      const next = new Set(cur)
+      if (next.has(songId)) next.delete(songId)
+      else next.add(songId)
+      return next
+    })
+  }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-charcoal text-sand">
-      {/* Background — identical to /dashboard */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(227,122,44,0.2),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(26,58,92,0.7),transparent_34%),linear-gradient(135deg,var(--charcoal)_0%,var(--deep-indigo)_46%,var(--charcoal)_100%)]" />
-      <div className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:linear-gradient(90deg,rgba(237,227,211,0.42)_1px,transparent_1px),linear-gradient(rgba(237,227,211,0.32)_1px,transparent_1px)] [background-size:34px_34px]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-charcoal/82 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-charcoal to-transparent" />
+    <div className="relative min-h-screen overflow-x-hidden bg-[#111111] text-sand">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_6%,rgba(227,122,44,0.14),transparent_24%),radial-gradient(circle_at_82%_10%,rgba(26,58,92,0.48),transparent_28%),linear-gradient(135deg,#141414_0%,#191716_48%,#101010_100%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.045] [background-image:linear-gradient(90deg,rgba(237,227,211,0.35)_1px,transparent_1px),linear-gradient(rgba(237,227,211,0.25)_1px,transparent_1px)] [background-size:36px_36px]" />
 
-      {/* Page content */}
-      <div className="relative z-10 mx-auto w-full max-w-2xl px-4 pb-16 pt-6 md:px-6 md:pt-8">
-
-        {/* ── Heading ── */}
-        <div className="mb-6 text-center">
-          <p className="inline-flex items-center gap-2 rounded-full border border-saffron/25 bg-saffron/10 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-saffron shadow-[0_0_28px_rgba(227,122,44,0.16)]">
-            <Sparkles className="size-3.5" aria-hidden="true" />
-            Create Studio
-          </p>
-          <h1 className="mt-3 text-3xl font-black leading-[1.08] text-sand sm:text-[2.1rem]">
-            Create a Balochi song
-          </h1>
-          <p className="mt-2.5 text-sm leading-6 text-sand/65">
-            Write a prompt, add lyrics, choose style, and generate a Zahirok track.
-          </p>
-        </div>
-
-        {/* ── Studio card ── */}
-        <div className="rounded-[1.4rem] border border-sand/10 bg-charcoal/55 shadow-[0_24px_64px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-
-          {/* ════ FORM (idle + generating) ════ */}
-          {(isIdle || isGenerating) && (
-            <>
-              {/* Prompt */}
-              <div className="p-4 pb-0">
-                <label
-                  htmlFor="create-prompt"
-                  className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.2em] text-sand/45"
-                >
-                  Describe your song
-                </label>
-                <textarea
-                  id="create-prompt"
-                  value={prompt}
-                  onChange={(e) => {
-                    setPrompt(e.target.value)
-                    if (validation) setValidation("")
-                  }}
-                  disabled={isGenerating}
-                  rows={3}
-                  placeholder="A late-night drive through the Makran coast, warm breeze, the sound of Suroz fading into the distance…"
-                  className="w-full resize-none rounded-xl border border-sand/10 bg-sand/6 px-3.5 py-2.5 text-sm text-sand placeholder-sand/28 transition focus:border-saffron/35 focus:bg-sand/8 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                />
+      <main className="relative z-10 flex min-h-screen flex-col gap-4 px-3 pb-[168px] pt-3 md:grid md:grid-cols-[minmax(470px,520px)_minmax(0,1fr)] md:gap-0 md:px-0 md:pb-[96px] md:pt-0">
+        {/* ── LEFT PANEL ── */}
+        <section className="rounded-2xl border border-sand/10 bg-[#181818]/95 shadow-[0_20px_60px_rgba(0,0,0,0.34)] md:min-h-screen md:rounded-none md:border-y-0 md:border-l-0 md:border-r md:bg-[#171717]/92">
+          <div className="flex h-full flex-col p-4 md:p-5">
+            {/* Top controls */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="inline-flex h-10 items-center gap-2 rounded-full border border-sand/12 bg-black/20 px-4 text-sm font-black">
+                <Music2 className="size-4 text-saffron" aria-hidden="true" />
+                75
               </div>
 
-              {/* ── Lyrics section ── */}
-              <div className="mt-3 px-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-sand/45">
-                    Your Lyrics
-                    <span className="ml-1.5 font-semibold normal-case tracking-normal text-sand/32">
-                      (optional)
-                    </span>
-                  </span>
+              <div className="inline-flex h-10 rounded-full border border-sand/10 bg-black/20 p-1">
+                {(["Simple", "Advanced"] as const).map((mode) => (
                   <button
+                    key={mode}
                     type="button"
-                    onClick={() => setShowLyrics((v) => !v)}
-                    disabled={isGenerating}
-                    className="flex items-center gap-1 text-[11px] font-bold text-saffron/80 transition hover:text-saffron disabled:opacity-40"
+                    onClick={() => setCreateMode(mode)}
+                    aria-pressed={createMode === mode}
+                    className={`rounded-full px-3.5 text-sm font-black transition ${
+                      createMode === mode
+                        ? "bg-sand/12 text-sand"
+                        : "text-sand/50 hover:text-sand/75"
+                    }`}
                   >
-                    <ChevronDown
-                      className={`size-3.5 transition-transform duration-200 ${showLyrics ? "rotate-180" : ""}`}
-                      aria-hidden="true"
-                    />
-                    {showLyrics ? "Hide" : "Add lyrics"}
+                    {mode}
                   </button>
-                </div>
-
-                {showLyrics && (
-                  <textarea
-                    value={lyrics}
-                    onChange={(e) => {
-                      setLyrics(e.target.value)
-                      if (validation) setValidation("")
-                    }}
-                    disabled={isGenerating}
-                    rows={6}
-                    placeholder={"Write your verses here…\n\nVerse 1:\n\nChorus:\n\nVerse 2:"}
-                    className="mt-2 w-full resize-none rounded-xl border border-sand/10 bg-sand/6 px-3.5 py-2.5 font-mono text-sm leading-relaxed text-sand placeholder-sand/28 transition focus:border-saffron/35 focus:bg-sand/8 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                  />
-                )}
-              </div>
-
-              {/* ── Advanced options toggle ── */}
-              <div className="mt-3 px-4">
-                <button
-                  type="button"
-                  onClick={() => setIsAdvancedOpen((v) => !v)}
-                  disabled={isGenerating}
-                  className="flex items-center gap-1.5 text-[11px] font-bold text-sand/50 transition hover:text-sand/75 disabled:opacity-40"
-                  aria-expanded={isAdvancedOpen}
-                >
-                  <ChevronDown
-                    className={`size-3.5 transition-transform duration-200 ${isAdvancedOpen ? "rotate-180" : ""}`}
-                    aria-hidden="true"
-                  />
-                  Advanced options
-                </button>
-
-                {isAdvancedOpen && (
-                  <div className="mt-2.5 rounded-2xl border border-sand/10 bg-sand/[0.04] p-2 sm:p-2.5">
-
-                    {/* Genre preset */}
-                    <OptionGroup title="Genre">
-                      {GENRE_PRESETS.map((g) => (
-                        <ChoicePill
-                          key={g}
-                          label={g}
-                          active={selectedGenre === g}
-                          onClick={() =>
-                            setSelectedGenre((prev) => (prev === g ? "" : g))
-                          }
-                        />
-                      ))}
-                    </OptionGroup>
-
-                    {/* Dialect */}
-                    <OptionGroup title="Dialect">
-                      {DIALECTS.map((d) => (
-                        <ChoicePill
-                          key={d}
-                          label={d}
-                          active={dialect === d}
-                          onClick={() => setDialect(d)}
-                        />
-                      ))}
-                    </OptionGroup>
-
-                    {/* Traditional instruments */}
-                    <OptionGroup title="Traditional Instruments">
-                      <div className="grid w-full grid-cols-2 gap-1.5 md:grid-cols-5">
-                        {TRADITIONAL_INSTRUMENTS.map((inst) => (
-                          <InstrumentCard
-                            key={inst}
-                            instrument={inst}
-                            selected={selectedInstruments.includes(inst)}
-                            onToggle={toggleInstrument}
-                          />
-                        ))}
-                      </div>
-                    </OptionGroup>
-
-                    {/* Modern instruments */}
-                    <OptionGroup title="Modern Instruments">
-                      <div className="grid w-full grid-cols-2 gap-1.5 md:grid-cols-4">
-                        {MODERN_INSTRUMENTS.map((inst) => (
-                          <InstrumentCard
-                            key={inst}
-                            instrument={inst}
-                            selected={selectedInstruments.includes(inst)}
-                            onToggle={toggleInstrument}
-                          />
-                        ))}
-                      </div>
-                    </OptionGroup>
-
-                    {/* Visibility */}
-                    <OptionGroup title="Visibility">
-                      <div className="grid w-full grid-cols-2 gap-1.5">
-                        {(["private", "public"] as const).map((v) => {
-                          const meta = VISIBILITY_META[v]
-                          return (
-                            <button
-                              key={v}
-                              type="button"
-                              onClick={() => setVisibility(v)}
-                              aria-pressed={visibility === v}
-                              className={`flex items-center gap-2 rounded-xl border p-2 text-left transition ${visibility === v
-                                  ? "border-saffron bg-saffron text-sand shadow-[0_8px_24px_rgba(227,122,44,0.18)]"
-                                  : "border-sand/12 bg-sand/8 text-sand/72 hover:border-sand/20 hover:bg-sand/12 hover:text-sand"
-                                }`}
-                            >
-                              <span className="min-w-0">
-                                <span className="block text-[13px] font-black leading-none">
-                                  {meta.emoji} {meta.label}
-                                </span>
-                                <span
-                                  className={`mt-0.5 block text-[11px] font-semibold leading-tight ${visibility === v ? "text-sand/80" : "text-sand/48"
-                                    }`}
-                                >
-                                  {meta.description}
-                                </span>
-                              </span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </OptionGroup>
-
-                    {/* Instrumental Only + Generate Lyrics */}
-                    <div className="mt-2 flex flex-col gap-2 border-t border-sand/10 pt-2 sm:flex-row sm:items-center sm:justify-between">
-                      <button
-                        type="button"
-                        onClick={() => setInstrumentalOnly((v) => !v)}
-                        aria-pressed={instrumentalOnly}
-                        className="flex h-9 w-full items-center justify-between rounded-full border border-sand/15 bg-charcoal/20 p-1 text-left sm:w-56"
-                      >
-                        <span className="px-3 text-[13px] font-bold">
-                          Instrumental Only
-                        </span>
-                        <span
-                          className={`flex h-7 w-12 items-center rounded-full p-0.5 transition ${instrumentalOnly ? "bg-saffron" : "bg-sand/15"
-                            }`}
-                        >
-                          <span
-                            className={`size-5 rounded-full bg-sand transition-transform duration-200 ${instrumentalOnly ? "translate-x-5" : "translate-x-0"
-                              }`}
-                          />
-                        </span>
-                      </button>
-
-                      {/* MOCK: replace with api-client.generateLyrics({ prompt, genre: selectedGenre, dialect }) when backend is ready */}
-                      <button
-                        type="button"
-                        onClick={() => setShowLyrics(true)}
-                        className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-full border border-sand/12 bg-transparent px-3 text-xs font-bold text-sand/55 transition hover:border-sand/22 hover:text-sand/80 sm:w-auto"
-                      >
-                        <Sparkles
-                          className="size-3.5 text-saffron/70"
-                          aria-hidden="true"
-                        />
-                        Generate Lyrics with AI
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Validation */}
-              {validation && (
-                <div className="mx-4 mt-3 rounded-xl border border-terracotta/30 bg-terracotta/10 px-3.5 py-2.5 text-sm font-semibold text-terracotta">
-                  {validation}
-                </div>
-              )}
-
-              {/* ── Generation progress ── */}
-              {isGenerating && (
-                <div className="mx-4 mt-3 rounded-2xl border border-saffron/20 bg-saffron/8 p-3">
-                  <div className="flex items-center gap-2.5">
-                    <Loader2
-                      className="size-4 shrink-0 animate-spin text-saffron"
-                      aria-hidden="true"
-                    />
-                    <span className="text-sm font-bold text-saffron">
-                      {STATUS_LABELS[status]}
-                    </span>
-                    <span className="ml-auto text-xs font-bold tabular-nums text-sand/45">
-                      {progress}%
-                    </span>
-                  </div>
-
-                  {/* Progress bar */}
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-sand/10">
-                    <div
-                      className="h-full rounded-full bg-saffron shadow-[0_0_10px_rgba(227,122,44,0.45)] transition-all duration-300"
-                      role="progressbar"
-                      aria-valuenow={progress}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-label="Generation progress"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-
-                  {/* Stage chips */}
-                  <div className="mt-2.5 flex flex-wrap gap-1.5">
-                    {GENERATION_STAGES.map((stage, i) => {
-                      const isCurrent = stage === status
-                      const isPast = i < stageIndex
-                      return (
-                        <span
-                          key={stage}
-                          className={`rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] transition ${isCurrent
-                              ? "border-saffron/40 bg-saffron/15 text-saffron"
-                              : isPast
-                                ? "border-sand/12 bg-sand/6 text-sand/40 line-through"
-                                : "border-sand/8 bg-transparent text-sand/22"
-                            }`}
-                        >
-                          {stage}
-                        </span>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Create button */}
-              <div className="p-4 pt-3">
-                <button
-                  type="button"
-                  onClick={handleCreate}
-                  disabled={isGenerating}
-                  className="h-11 w-full rounded-full bg-saffron text-sm font-black text-sand shadow-[0_10px_28px_rgba(227,122,44,0.28)] transition hover:bg-terracotta disabled:opacity-60 disabled:shadow-none"
-                >
-                  {isGenerating ? "Generating…" : "Create"}
-                </button>
-              </div>
-            </>
-          )}
-
-          {/* ════ RESULT CARD (done) ════ */}
-          {isDone && generatedSong && (
-            <div className="p-4">
-              {/* Header */}
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Check className="size-4 text-saffron" aria-hidden="true" />
-                  <span className="text-sm font-black text-saffron">Track ready</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  aria-label="Start over"
-                  className="flex size-7 items-center justify-center rounded-full border border-sand/12 text-sand/40 transition hover:border-sand/22 hover:text-sand/65"
-                >
-                  <X className="size-3.5" aria-hidden="true" />
-                </button>
-              </div>
-
-              {/* Song info + play */}
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-black text-sand">
-                    {generatedSong.title}
-                  </h2>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    <span className="rounded-full border border-saffron/30 bg-saffron/10 px-2.5 py-0.5 text-[11px] font-black text-saffron">
-                      {generatedSong.genre}
-                    </span>
-                    <span className="rounded-full border border-sand/15 bg-sand/8 px-2.5 py-0.5 text-[11px] font-bold text-sand/65">
-                      {generatedSong.dialect}
-                    </span>
-                    <span className="rounded-full border border-sand/15 bg-sand/8 px-2.5 py-0.5 text-[11px] font-bold text-sand/65">
-                      {generatedSong.duration}
-                    </span>
-                  </div>
-                </div>
-
-                {/* MOCK: replace with real audio playback via api-client.getStreamUrl(songId) when backend is ready */}
-                <button
-                  type="button"
-                  aria-label={`Play ${generatedSong.title}`}
-                  className="flex size-12 shrink-0 items-center justify-center rounded-full bg-saffron text-sand shadow-[0_8px_20px_rgba(227,122,44,0.3)] transition hover:bg-terracotta"
-                >
-                  <Play className="ml-0.5 size-5 fill-current" aria-hidden="true" />
-                </button>
-              </div>
-
-              {/* Mock waveform */}
-              <div
-                className="mt-4 flex h-14 items-end gap-px"
-                aria-hidden="true"
-                role="presentation"
-              >
-                {Array.from({ length: 52 }, (_, i) => (
-                  <span
-                    key={i}
-                    className={`w-full rounded-full ${i < 15 ? "bg-saffron" : "bg-sand/30"
-                      }`}
-                    style={{ height: `${10 + ((i * 17 + 5) % 36)}px` }}
-                  />
                 ))}
               </div>
-              <div className="mt-1 flex justify-between text-[10px] font-bold text-sand/32">
-                <span>0:00</span>
-                <span>{generatedSong.duration}</span>
+
+              {/* Model dropdown */}
+              <div className="relative ml-auto">
+                <button
+                  type="button"
+                  onClick={() => { setIsModelOpen((v) => !v); setModelNote("") }}
+                  aria-expanded={isModelOpen}
+                  aria-haspopup="listbox"
+                  className="inline-flex h-10 items-center gap-2 rounded-full border border-sand/10 bg-black/20 px-4 text-sm font-black text-sand transition hover:border-sand/20"
+                >
+                  v1
+                  <ChevronDown className={`size-4 text-sand/45 transition-transform ${isModelOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+                </button>
+                {isModelOpen && (
+                  <div role="listbox" aria-label="Select model" className="absolute right-0 top-full z-20 mt-2 w-52 rounded-xl border border-sand/12 bg-[#1e1e20] p-1 shadow-[0_16px_48px_rgba(0,0,0,0.4)]">
+                    {MODEL_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        role="option"
+                        aria-selected={opt.id === "v1"}
+                        onClick={() => {
+                          if (opt.available) {
+                            setIsModelOpen(false)
+                            setModelNote("")
+                          } else {
+                            setModelNote("This model is not available yet.")
+                          }
+                        }}
+                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-bold transition ${
+                          opt.id === "v1"
+                            ? "bg-sand/10 text-white"
+                            : "text-sand/60 hover:bg-sand/[0.06] hover:text-sand"
+                        }`}
+                      >
+                        {opt.label}
+                        <span className={`text-[10px] font-black uppercase tracking-wider ${opt.available ? "text-saffron" : "text-sand/40"}`}>
+                          {opt.tag}
+                        </span>
+                      </button>
+                    ))}
+                    {modelNote && (
+                      <p role="status" className="mt-1 rounded-lg border border-saffron/25 bg-saffron/10 px-3 py-1.5 text-xs font-semibold text-saffron">
+                        {modelNote}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
+            </div>
 
-              {/* Action buttons */}
-              <div className="mt-4 flex gap-2">
-                {/* MOCK: replace with api-client.downloadSong(songId) when backend is ready */}
+            {/* Input tabs */}
+            <div className="mt-5 grid grid-cols-3 overflow-hidden rounded-[1.45rem] border border-sand/8 bg-black/18">
+              {(["Audio", "Voice", "Inspo"] as const).map((tab) => {
+                const Icon = INPUT_TAB_ICONS[tab]
+                const isActive = inputTab === tab
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setInputTab(tab)}
+                    aria-pressed={isActive}
+                    className={`flex h-16 items-center justify-center gap-2 border-r border-sand/8 text-sm font-black last:border-r-0 transition ${
+                      isActive
+                        ? "bg-sand/[0.08] text-sand"
+                        : "text-sand/50 hover:bg-sand/[0.04] hover:text-sand/75"
+                    }`}
+                  >
+                    {!isActive && <Plus className="size-4" aria-hidden="true" />}
+                    <Icon className={`size-4 ${isActive ? "text-saffron" : "text-saffron/70"}`} aria-hidden="true" />
+                    <span>{tab}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Tab content */}
+            {inputTab === "Audio" ? (
+              <>
+                {/* Lyrics section */}
+                <div className="mt-5 rounded-[1.35rem] border border-sand/8 bg-sand/[0.045] p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-2 text-sm font-black">
+                      <ChevronDown className="size-4 text-sand/70" aria-hidden="true" />
+                      Lyrics
+                    </div>
+                    <div className="ml-auto inline-flex rounded-full bg-black/20 p-1">
+                      {(["Write", "Prompt", "Instrumental"] as const).map((mode) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => { setLyricsMode(mode); setPanelNote("") }}
+                          aria-pressed={lyricsMode === mode}
+                          className={`rounded-full px-3 py-1.5 text-xs font-black transition ${
+                            lyricsMode === mode
+                              ? "bg-sand/12 text-sand"
+                              : "text-sand/50 hover:text-sand/75"
+                          }`}
+                        >
+                          {mode}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <textarea
+                    value={lyrics}
+                    onChange={(e) => setLyrics(e.target.value)}
+                    disabled={lyricsMode === "Instrumental" || isGenerating}
+                    rows={9}
+                    placeholder={
+                      "[Verse]\nA late evening over the Makran coast\nDamboora answers the wind\n\n[Chorus]\nSing in warm Makkuran phrasing..."
+                    }
+                    className="mt-5 h-56 w-full resize-none bg-transparent text-sm leading-6 text-sand outline-none placeholder:text-sand/30 disabled:cursor-not-allowed disabled:opacity-35"
+                  />
+
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleWand}
+                        className="inline-flex size-10 items-center justify-center rounded-full bg-sand/[0.07] text-sand/58 transition hover:bg-sand/[0.12] hover:text-sand"
+                        aria-label="Generate lyric idea"
+                      >
+                        <Wand2 className="size-4" aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPanelNote("Advanced settings are coming soon.")}
+                        className="inline-flex size-10 items-center justify-center rounded-full bg-sand/[0.07] text-sand/58 transition hover:bg-sand/[0.12] hover:text-sand"
+                        aria-label="Lyric settings"
+                      >
+                        <SlidersHorizontal className="size-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                    <span className="rounded-full border border-saffron/22 bg-saffron/8 px-3 py-1 text-[11px] font-black text-saffron">
+                      Makkuran dialect
+                    </span>
+                  </div>
+
+                  {panelNote && (
+                    <p role="status" className="mt-3 rounded-lg border border-saffron/25 bg-saffron/10 px-3 py-1.5 text-xs font-semibold text-saffron">
+                      {panelNote}
+                    </p>
+                  )}
+                </div>
+
+                {/* Styles section */}
+                <div className="mt-4 rounded-[1.35rem] border border-sand/8 bg-sand/[0.045] p-4">
+                  <div className="flex items-center gap-2 text-sm font-black">
+                    <ChevronDown className="size-4 text-sand/70" aria-hidden="true" />
+                    Styles
+                    {importedPrompt && (
+                      <span className="ml-auto text-[10px] font-bold uppercase tracking-wide text-saffron/70">
+                        Prompt imported from Dashboard
+                      </span>
+                    )}
+                  </div>
+                  <textarea
+                    value={stylePrompt}
+                    onChange={(e) => { setStylePrompt(e.target.value); setImportedPrompt(false) }}
+                    disabled={isGenerating}
+                    rows={4}
+                    placeholder="Zahirok folk, Damboora, Suroz, warm Makkuran vocals..."
+                    className="mt-4 min-h-24 w-full resize-none bg-transparent text-sm leading-6 text-sand outline-none placeholder:text-sand/30 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {STYLE_SUGGESTIONS.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() =>
+                          setStylePrompt((value) =>
+                            value ? `${value}, ${suggestion}` : suggestion,
+                          )
+                        }
+                        disabled={isGenerating}
+                        className="rounded-full border border-sand/10 bg-black/18 px-3 py-1.5 text-xs font-bold text-sand/58 transition hover:border-saffron/30 hover:text-sand disabled:opacity-40"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* Voice / Inspo placeholder */
+              <div className="mt-5 flex min-h-[320px] flex-1 items-center justify-center rounded-[1.35rem] border border-sand/8 bg-sand/[0.045] p-6 text-center">
+                <div>
+                  {inputTab === "Voice" ? (
+                    <Mic2 className="mx-auto size-10 text-saffron/50" aria-hidden="true" />
+                  ) : (
+                    <Sparkles className="mx-auto size-10 text-saffron/50" aria-hidden="true" />
+                  )}
+                  <p className="mt-4 text-sm font-semibold text-sand/55">
+                    {inputTab === "Voice"
+                      ? "Voice controls are coming soon."
+                      : "Inspiration prompts are coming soon."}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Bottom: progress + create */}
+            <div className="mt-auto pt-5">
+              <GenerationProgress
+                status={status}
+                progress={progress}
+                isGenerating={isGenerating}
+                stageIndex={stageIndex}
+              />
+
+              <button
+                type="button"
+                onClick={handleCreate}
+                disabled={!canCreate}
+                className="mt-3 inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-saffron text-base font-black text-[#171717] shadow-[0_14px_34px_rgba(227,122,44,0.22)] transition hover:bg-[#f09a4f] disabled:cursor-not-allowed disabled:bg-sand/10 disabled:text-sand/28 disabled:shadow-none"
+              >
+                {isGenerating ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Music2 className="size-4" aria-hidden="true" />
+                )}
+                Create
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ── RIGHT PANEL (Workspace) ── */}
+        <section className="flex min-h-[640px] flex-col rounded-2xl border border-sand/10 bg-[#111111]/82 shadow-[0_20px_60px_rgba(0,0,0,0.26)] md:min-h-screen md:rounded-none md:border-0 md:bg-transparent">
+          <div className="flex flex-1 flex-col px-4 py-5 md:px-5 md:py-7 xl:px-6">
+            <div className="flex flex-wrap items-center gap-2 text-lg font-black">
+              <span>Workspaces</span>
+              <ChevronRight className="size-4 text-sand/35" aria-hidden="true" />
+              <span className="text-sand/68">My Workspace</span>
+            </div>
+
+            {/* Workspace toolbar */}
+            <div className="mt-7 flex flex-wrap items-center gap-2">
+              <label className="relative min-w-[220px] flex-1">
+                <span className="sr-only">Search workspace</span>
+                <Search
+                  className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-sand/45"
+                  aria-hidden="true"
+                />
+                <input
+                  type="search"
+                  placeholder="Search"
+                  className="h-12 w-full rounded-full border border-sand/7 bg-sand/[0.055] pl-12 pr-4 text-sm font-semibold text-sand outline-none placeholder:text-sand/42 focus:border-saffron/35"
+                />
+              </label>
+
+              <button
+                type="button"
+                onClick={() => setToolbarNote("Filters coming soon.")}
+                className="inline-flex h-12 items-center gap-2 rounded-full bg-sand/[0.08] px-4 text-sm font-black text-sand transition hover:bg-sand/[0.12]"
+              >
+                <Filter className="size-4" aria-hidden="true" />
+                Filters
+                <ChevronDown className="size-4 text-sand/55" aria-hidden="true" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSortLabel((v) => v === "Newest" ? "Oldest" : "Newest")}
+                className="inline-flex h-12 items-center gap-2 rounded-full bg-sand/[0.08] px-4 text-sm font-black text-sand transition hover:bg-sand/[0.12]"
+              >
+                {sortLabel}
+                <ChevronDown className="size-4 text-sand/55" aria-hidden="true" />
+              </button>
+
+              {["Liked", "Public", "Uploads"].map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => setToolbarNote(`${chip} filter coming soon.`)}
+                  className="h-12 rounded-full border border-sand/10 px-4 text-sm font-black text-sand transition hover:border-saffron/28"
+                >
+                  {chip}
+                </button>
+              ))}
+
+              {/* Pagination — single page, disabled */}
+              <div className="ml-auto flex items-center gap-2">
                 <button
                   type="button"
                   disabled
-                  title="Download available when backend is connected"
-                  className="inline-flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-full border border-sand/10 bg-sand/5 px-3 py-2.5 text-xs font-bold text-sand/30"
+                  className="inline-flex size-11 items-center justify-center rounded-full bg-sand/[0.08] text-sand/30"
+                  aria-label="Previous page"
                 >
-                  <Download className="size-3.5" aria-hidden="true" />
-                  Download
+                  <ChevronLeft className="size-4" aria-hidden="true" />
                 </button>
-
-                {/* MOCK: replace with api-client.shareSong(songId) when backend is ready */}
+                <span className="inline-flex h-11 min-w-16 items-center justify-center rounded-full border border-sand/10 text-sm font-black">
+                  1
+                </span>
                 <button
                   type="button"
                   disabled
-                  title="Sharing available when backend is connected"
-                  className="inline-flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-full border border-sand/10 bg-sand/5 px-3 py-2.5 text-xs font-bold text-sand/30"
+                  className="inline-flex size-11 items-center justify-center rounded-full bg-sand/[0.08] text-sand/30"
+                  aria-label="Next page"
                 >
-                  <Share2 className="size-3.5" aria-hidden="true" />
-                  Share
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-saffron/25 bg-saffron/10 px-3 py-2.5 text-xs font-bold text-saffron transition hover:bg-saffron/18"
-                >
-                  Create another
+                  <ChevronRight className="size-4" aria-hidden="true" />
                 </button>
               </div>
             </div>
-          )}
-        </div>
+
+            {toolbarNote && (
+              <p role="status" className="mt-3 max-w-sm rounded-lg border border-saffron/25 bg-saffron/10 px-3 py-1.5 text-xs font-semibold text-saffron">
+                {toolbarNote}
+              </p>
+            )}
+
+            {/* Generation banner */}
+            {isGenerating && (
+              <div className="mt-5 rounded-2xl border border-saffron/18 bg-saffron/[0.06] p-4">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="size-5 animate-spin text-saffron" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-black text-saffron">
+                      {STATUS_LABELS[status]}
+                    </p>
+                    <p className="mt-0.5 text-xs font-semibold text-sand/48">
+                      Building a mock Zahirok track for this workspace.
+                    </p>
+                  </div>
+                  <span className="ml-auto text-xs font-black tabular-nums text-sand/58">
+                    {progress}%
+                  </span>
+                </div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-sand/10">
+                  <div
+                    className="h-full rounded-full bg-saffron transition-all duration-300"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Generated songs */}
+            <div className="flex flex-1 flex-col">
+              {generatedSongs.length === 0 ? (
+                <div className="flex flex-1 items-center justify-center py-24 text-center">
+                  <div>
+                    <p className="text-base font-black text-sand/55">No songs found</p>
+                    <p className="mt-2 text-sm font-semibold text-sand/38">
+                      Create your first Zahirok track from the left panel.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-5 grid gap-3">
+                  {generatedSongs.map((song) => {
+                    const playerSong = toPlayerSong(song)
+                    const active = isCurrentSong(playerSong)
+                    const playing = active && isPlaying
+                    const isLiked = likedIds.has(song.id)
+
+                    return (
+                      <article
+                        key={song.id}
+                        className="group rounded-2xl border border-sand/8 bg-sand/[0.045] p-3 transition hover:border-saffron/20 hover:bg-sand/[0.065]"
+                      >
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handlePlay(song)}
+                            aria-label={`${playing ? "Pause" : "Play"} ${song.title}`}
+                            className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-saffron text-[#151515] shadow-[0_10px_24px_rgba(227,122,44,0.18)] transition hover:bg-[#f09a4f]"
+                          >
+                            {playing ? (
+                              <Pause className="size-5 fill-current" aria-hidden="true" />
+                            ) : (
+                              <Play className="ml-0.5 size-5 fill-current" aria-hidden="true" />
+                            )}
+                          </button>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h2 className="truncate text-base font-black text-sand">
+                                {song.title}
+                              </h2>
+                              <span className="rounded-full border border-saffron/20 bg-saffron/8 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-saffron">
+                                {song.dialect}
+                              </span>
+                            </div>
+                            <p className="mt-1 truncate text-xs font-semibold text-sand/45">
+                              {song.genre} with {song.instruments.join(", ")}
+                            </p>
+                          </div>
+
+                          <div className="hidden h-10 flex-1 items-end gap-px md:flex">
+                            {Array.from({ length: 46 }, (_, i) => (
+                              <span
+                                key={i}
+                                className={`w-full rounded-full ${
+                                  i < 18 ? "bg-saffron/70" : "bg-sand/20"
+                                }`}
+                                style={{ height: `${8 + ((i * 13 + 9) % 28)}px` }}
+                              />
+                            ))}
+                          </div>
+
+                          <div className="flex items-center gap-3 text-xs font-bold text-sand/45">
+                            <span>{song.duration}</span>
+                            <button
+                              type="button"
+                              onClick={() => toggleLiked(song.id)}
+                              aria-label={isLiked ? "Unlike song" : "Like song"}
+                              aria-pressed={isLiked}
+                              className={`inline-flex size-9 items-center justify-center rounded-full transition ${
+                                isLiked
+                                  ? "bg-saffron/15 text-saffron"
+                                  : "text-sand/45 hover:bg-sand/8 hover:text-sand"
+                              }`}
+                            >
+                              <Heart className={`size-4 ${isLiked ? "fill-current" : ""}`} aria-hidden="true" />
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Challenges card */}
+            <div className="mt-6 rounded-[1.45rem] border border-sand/12 bg-sand/[0.055] p-3">
+              <div className="flex items-center gap-3">
+                <div className="inline-flex size-12 shrink-0 items-center justify-center rounded-full border border-sand/14 bg-black/18 text-sm font-black">
+                  0/1
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-black">Challenges</p>
+                    <Clock3 className="size-4 text-sand/55" aria-hidden="true" />
+                  </div>
+                  <p className="mt-0.5 text-sm font-semibold text-sand/72">
+                    Earn credits per completed creation
+                  </p>
+                </div>
+                <div className="ml-auto flex items-center gap-3 text-sm font-semibold text-sand/45">
+                  <span className="hidden sm:inline">Time left</span>
+                  <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 font-black tabular-nums text-emerald-400">
+                    09:04
+                  </span>
+                  <ChevronDown className="size-5 rotate-180 text-sand/65" aria-hidden="true" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  )
+}
+
+function GenerationProgress({
+  status,
+  progress,
+  isGenerating,
+  stageIndex,
+}: {
+  status: StudioStatus
+  progress: number
+  isGenerating: boolean
+  stageIndex: number
+}) {
+  if (!isGenerating && status !== "done") return null
+
+  return (
+    <div className="rounded-2xl border border-sand/8 bg-black/18 p-3">
+      <div className="flex items-center gap-2">
+        {isGenerating ? (
+          <Loader2 className="size-4 animate-spin text-saffron" aria-hidden="true" />
+        ) : (
+          <Sparkles className="size-4 text-saffron" aria-hidden="true" />
+        )}
+        <span className="text-sm font-black text-sand">{STATUS_LABELS[status]}</span>
+        <span className="ml-auto text-xs font-black tabular-nums text-sand/45">
+          {progress}%
+        </span>
       </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-sand/10">
+        <div
+          className="h-full rounded-full bg-saffron transition-all duration-300"
+          role="progressbar"
+          aria-valuenow={progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Generation progress"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      {isGenerating && (
+        <div className="mt-2 flex gap-1.5">
+          {GENERATION_STAGES.map((stage, index) => (
+            <span
+              key={stage}
+              className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] ${
+                stage === status
+                  ? "border-saffron/35 bg-saffron/10 text-saffron"
+                  : index < stageIndex
+                    ? "border-sand/12 bg-sand/8 text-sand/38"
+                    : "border-sand/8 text-sand/25"
+              }`}
+            >
+              {stage}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
-  )
-}
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-function OptionGroup({
-  title,
-  children,
-}: {
-  title: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="mt-2.5 first:mt-0">
-      <p className="mb-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-sand/45">
-        {title}
-      </p>
-      <div className="flex flex-wrap gap-1.5">{children}</div>
-    </div>
-  )
-}
-
-function ChoicePill({
-  label,
-  active,
-  onClick,
-}: {
-  label: string
-  active: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`inline-flex min-h-7 items-center rounded-full border px-2 py-0.5 text-[11.5px] font-bold leading-none transition sm:px-2.5 ${active
-          ? "border-saffron bg-saffron text-sand shadow-[0_8px_20px_rgba(227,122,44,0.22)]"
-          : "border-sand/12 bg-sand/8 text-sand/72 hover:bg-sand/12 hover:text-sand"
-        }`}
-    >
-      {label}
-    </button>
   )
 }
