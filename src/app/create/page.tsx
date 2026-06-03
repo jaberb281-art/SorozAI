@@ -6,7 +6,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Clock3,
   Filter,
   Folder,
   FolderSearch,
@@ -393,13 +392,13 @@ function CreatePageInner() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#111111] text-sand">
+    <div className="relative overflow-x-hidden bg-[#111111] text-sand">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_6%,rgba(227,122,44,0.14),transparent_24%),radial-gradient(circle_at_82%_10%,rgba(26,58,92,0.48),transparent_28%),linear-gradient(135deg,#141414_0%,#191716_48%,#101010_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.045] [background-image:linear-gradient(90deg,rgba(237,227,211,0.35)_1px,transparent_1px),linear-gradient(rgba(237,227,211,0.25)_1px,transparent_1px)] [background-size:36px_36px]" />
 
-      <main className="relative z-10 flex min-h-screen flex-col gap-4 px-3 pb-[168px] pt-3 md:grid md:grid-cols-[minmax(470px,520px)_minmax(0,1fr)] md:gap-0 md:px-0 md:pb-[96px] md:pt-0">
+      <main className="relative z-10 flex flex-col gap-4 px-3 pb-32 pt-3 md:grid md:h-[calc(100dvh-96px)] md:min-h-0 md:grid-cols-[minmax(470px,520px)_minmax(0,1fr)] md:gap-0 md:overflow-hidden md:px-0 md:pb-0 md:pt-0">
         {/* ── LEFT PANEL ── */}
-        <section className="rounded-2xl border border-sand/10 bg-[#181818]/95 shadow-[0_20px_60px_rgba(0,0,0,0.34)] md:h-[calc(100vh-96px)] md:min-h-0 md:rounded-none md:border-y-0 md:border-l-0 md:border-r md:bg-[#171717]/92">
+        <section className="rounded-2xl border border-sand/10 bg-[#181818]/95 shadow-[0_20px_60px_rgba(0,0,0,0.34)] md:h-[calc(100dvh-96px)] md:min-h-0 md:rounded-none md:border-y-0 md:border-l-0 md:border-r md:bg-[#171717]/92">
           <div className="flex h-full min-h-0 flex-col overflow-y-auto overflow-x-visible p-4 pb-5 md:p-5 md:pb-6">
             {/* Top controls */}
             <div className="flex flex-wrap items-center gap-3">
@@ -943,8 +942,8 @@ function CreatePageInner() {
         </section>
 
         {/* ── RIGHT PANEL (Workspace) ── */}
-        <section className="flex min-h-[640px] flex-col rounded-2xl border border-sand/10 bg-[#111111]/82 shadow-[0_20px_60px_rgba(0,0,0,0.26)] md:min-h-screen md:rounded-none md:border-0 md:bg-transparent">
-          <div className="flex flex-1 flex-col px-4 py-5 md:px-5 md:py-7 xl:px-6">
+        <section className="flex flex-col rounded-2xl border border-sand/10 bg-[#111111]/82 shadow-[0_20px_60px_rgba(0,0,0,0.26)] md:h-full md:min-h-0 md:rounded-none md:border-0 md:bg-transparent">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5 md:px-5 md:py-7 xl:px-6">
             <div className="flex flex-wrap items-center gap-2 text-lg font-black">
               <span>Workspaces</span>
               <ChevronRight className="size-4 text-sand/35" aria-hidden="true" />
@@ -1140,30 +1139,7 @@ function CreatePageInner() {
               )}
             </div>
 
-            {/* Challenges card */}
-            <div className="mt-6 rounded-[1.45rem] border border-sand/12 bg-sand/[0.055] p-3">
-              <div className="flex items-center gap-3">
-                <div className="inline-flex size-12 shrink-0 items-center justify-center rounded-full border border-sand/14 bg-black/18 text-sm font-black">
-                  0/1
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-black">Challenges</p>
-                    <Clock3 className="size-4 text-sand/55" aria-hidden="true" />
-                  </div>
-                  <p className="mt-0.5 text-sm font-semibold text-sand/72">
-                    Earn credits per completed creation
-                  </p>
-                </div>
-                <div className="ml-auto flex items-center gap-3 text-sm font-semibold text-sand/45">
-                  <span className="hidden sm:inline">Time left</span>
-                  <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 font-black tabular-nums text-emerald-400">
-                    09:04
-                  </span>
-                  <ChevronDown className="size-5 rotate-180 text-sand/65" aria-hidden="true" />
-                </div>
-              </div>
-            </div>
+            {/* Challenges temporarily hidden for MVP frontend polish. */}
           </div>
         </section>
       </main>

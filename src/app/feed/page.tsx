@@ -128,7 +128,7 @@ export default function FeedPage() {
             {/* Background */}
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_2%,rgba(227,122,44,0.16),transparent_28%),radial-gradient(circle_at_80%_8%,rgba(26,58,92,0.5),transparent_30%),linear-gradient(135deg,var(--charcoal)_0%,var(--deep-indigo)_50%,var(--charcoal)_100%)]" />
 
-            <div className="relative z-10 mx-auto w-full max-w-[1280px] px-4 pb-8 pt-6 md:px-6 md:pt-8 lg:px-8">
+            <div className="relative z-10 mx-auto w-full max-w-[1280px] px-4 pb-[160px] pt-6 md:px-6 md:pb-[96px] md:pt-8 lg:px-8">
 
                 {/* ── Page header ── */}
                 <header className="max-w-2xl">

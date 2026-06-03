@@ -352,17 +352,6 @@ export default function HooksPage() {
                         )}
                     </button>
 
-                    {/* Hook indicator dots */}
-                    <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
-                        {HOOKS.map((_, i) => (
-                            <span
-                                key={i}
-                                className={`size-1.5 rounded-full transition-all ${
-                                    i === activeIndex ? "w-4 bg-saffron" : "bg-white/40"
-                                }`}
-                            />
-                        ))}
-                    </div>
                 </div>
             </div>
 

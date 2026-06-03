@@ -35,14 +35,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const showPlayer = shouldShowBottomPlayer(pathname)
 
     return (
-        <div className="flex min-h-screen overflow-x-hidden bg-charcoal">
+        <div className="flex min-h-dvh overflow-x-hidden bg-charcoal">
             {/* Desktop sidebar */}
             <AppSidebar />
 
-            {/* Main scrollable area — offset by sidebar width */}
-            <main className="flex min-h-screen w-full min-w-0 flex-col transition-[margin-left] duration-200 md:ml-[var(--app-sidebar-width,228px)] md:w-auto md:flex-1">
-                {/* pb: with player = mobile 140px (player+tab) / desktop 80px; without = mobile 68px (tab only) / desktop 16px */}
-                <div className={`flex-1 ${showPlayer ? "pb-[140px] md:pb-[80px]" : "pb-[68px] md:pb-4"}`}>
+            {/* Main scrollable area; pages own their player-safe bottom spacing. */}
+            <main className="flex min-h-dvh w-full min-w-0 flex-col transition-[margin-left] duration-200 md:ml-[var(--app-sidebar-width,228px)] md:w-auto md:flex-1">
+                <div className="flex-1">
                     {children}
                 </div>
             </main>

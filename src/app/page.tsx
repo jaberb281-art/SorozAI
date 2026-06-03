@@ -1,570 +1,701 @@
+"use client"
+
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import type { ChangeEvent } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
-  BookOpen,
-  CheckCircle2,
-  Compass,
-  Mic2,
+  AudioLines,
+  Dice5,
+  Minus,
   Music2,
-  PenLine,
   Play,
-  Radio,
+  Plus,
   SlidersHorizontal,
   Sparkles,
-  SquarePlay,
-  Waves,
+  Upload,
+  WandSparkles,
 } from "lucide-react"
 
-import { LandingPrompt } from "@/components/home/landing-prompt"
+import { formatCount, getFeedSongs } from "@/lib/mock-songs"
 
-// ── Data ────────────────────────────────────────────────────────────────────
+const showcaseSongs = getFeedSongs().slice(0, 6)
 
-const exampleSongs = [
+const floatingCards = [
   {
-    title: "Makran Evening",
-    genre: "Zahirok",
-    instruments: "Suroz + Damboora",
-    duration: "3:18",
-    stats: "35K plays · 606 likes",
+    title: "Makran Nightfall",
+    creator: "Zareena Sajid",
     coverImage: "/covers/makran-evening.png",
+    className: "-left-4 top-[46%] -rotate-[7deg] xl:left-[2%]",
   },
   {
-    title: "Desert Pulse",
-    genre: "Hip-Hop Fusion",
-    instruments: "Drums + Bass",
-    duration: "2:58",
-    stats: "16K plays · 461 likes",
-    coverImage: "/covers/desert-pulse.png",
-  },
-  {
-    title: "Wedding Doholl Nights",
-    genre: "Wedding",
-    instruments: "Doholl + Rubab",
-    duration: "3:05",
-    stats: "22K plays · 549 likes",
+    title: "Doholl Wedding",
+    creator: "Meerali Gwadar",
     coverImage: "/covers/wedding-doholl.png",
+    className: "-right-4 top-[46%] rotate-[6deg] xl:right-[2%]",
   },
   {
-    title: "Sufi Breath",
-    genre: "Sufi",
-    instruments: "Damboora + Suroz",
-    duration: "4:01",
-    stats: "27K plays · 642 likes",
+    title: "Suroz Breath",
+    creator: "Noor Dehwar",
     coverImage: "/covers/sufi-dambora.png",
+    className: "hidden",
   },
 ]
 
-const productRoutes = [
-  {
-    title: "Create from a prompt",
-    body: "Write a memory, mood, or lyric and turn it into a Balochi-inspired song.",
-    href: "/create",
-    icon: PenLine,
-  },
-  {
-    title: "Explore public songs",
-    body: "Discover what the Zahirok community is creating across genres and styles.",
-    href: "/feed",
-    icon: Compass,
-  },
-  {
-    title: "Try Hooks",
-    body: "Browse short music previews in a TikTok-style viewer with swipe navigation.",
-    href: "/hooks",
-    icon: SquarePlay,
-  },
-  {
-    title: "Open Studio",
-    body: "Advanced multi-track creation tools for serious Balochi producers.",
-    href: "/studio",
-    icon: SlidersHorizontal,
-  },
+const proofLabels = [
+  "Balochi Vocals",
+  "Dambora",
+  "Doholl",
+  "Suroz",
+  "Makran Dialect",
+  "Coastal Folk",
 ]
 
 const features = [
   {
-    title: "Prompt-first creation",
-    body: "Write a memory, poem, or lyric idea and Zahirok shapes it into a song direction.",
-    icon: PenLine,
+    title: "Start with a simple prompt",
+    body: "Describe a mood, story, or place. Zahirok helps turn it into a song idea.",
+    visual: "prompt",
   },
   {
-    title: "Balochi genre presets",
-    body: "Start with Zahirok, wedding, Sufi, lullaby, or modern fusion styles rooted in Makkuran tradition.",
-    icon: Music2,
+    title: "Built around Balochi sound",
+    body: "Use styles inspired by dambora, dohol, suroz, folk vocals, and coastal rhythms.",
+    visual: "sound",
   },
   {
-    title: "Traditional instruments",
-    body: "Shape your sound with Suroz, Damboora, Rubab, Tamburag, and Doholl-inspired textures.",
-    icon: Radio,
+    title: "Create and share",
+    body: "Draft songs, explore community creations, and save ideas to your workspace.",
+    visual: "share",
   },
   {
-    title: "Explore and remix",
-    body: "Browse public songs, remix ideas, and discover what other creators are making on the feed.",
-    icon: Compass,
+    title: "Advanced creation controls",
+    body: "Adjust lyrics, styles, vocal gender, weirdness, and style influence.",
+    visual: "controls",
   },
   {
-    title: "Voice of Balochistan",
-    body: "Future contributors can help improve Balochi pronunciation and vocal quality with consent.",
-    icon: Mic2,
+    title: "Hooks for short videos",
+    body: "Create short musical moments for reels, stories, and cinematic previews.",
+    visual: "hooks",
   },
   {
-    title: "Affordable pricing",
-    body: "Start free with 5 songs per month. Upgrade only when you need longer tracks and cleaner exports.",
-    icon: Sparkles,
-  },
-]
-
-const culturalCards = [
-  {
-    title: "Makkuran-first dialect",
-    body: "The MVP is built around Makkuran phrasing, pronunciation, and folk melody patterns.",
-    icon: BookOpen,
-  },
-  {
-    title: "Traditional instruments",
-    body: "Prompt with Suroz, Damboora, Doholl, Rubab, and regional textures that feel rooted.",
-    icon: Radio,
-  },
-  {
-    title: "Balochi genres",
-    body: "Shape ideas around Zahirok folk, wedding energy, Sufi moods, Naat devotion, and modern fusion.",
-    icon: Music2,
-  },
-  {
-    title: "Community voice",
-    body: "A consent-first path for the community to improve vocal quality over time.",
-    icon: Mic2,
+    title: "A future studio for creators",
+    body: "Studio tools, remixing, stems, and collaboration can grow into the full Zahirok workflow.",
+    visual: "studio",
   },
 ]
 
-const steps = [
+const faqs = [
   {
-    title: "Write your prompt or lyrics",
-    body: "Start with a memory, poem, place, or full lyric idea in Makkuran style.",
-    icon: PenLine,
+    question: "What is Zahirok AI?",
+    answer:
+      "Zahirok AI is a Balochi-focused music creation interface for turning prompts, lyrics, and styles into song ideas.",
   },
   {
-    title: "Choose genre and instruments",
-    body: "Guide the feeling with Zahirok folk, wedding, Sufi, or fusion presets.",
-    icon: SlidersHorizontal,
+    question: "Is Zahirok only for Balochi music?",
+    answer:
+      "The first release focuses on Balochi music and Makkuran-style creation, but the system can expand over time.",
   },
   {
-    title: "Generate, save, and share",
-    body: "Create a preview, keep it in your library, or share it with listeners on the feed.",
-    icon: Sparkles,
-  },
-]
-
-const pricingPreview = [
-  {
-    name: "Free",
-    price: "$0",
-    allowance: "5 songs/month",
-    detail: "Explore the studio and try short song ideas.",
+    question: "Can I upload or record audio?",
+    answer:
+      "Upload and record flows are currently frontend mock features. Real audio workflows can be connected later.",
   },
   {
-    name: "Basic",
-    price: "$3/month",
-    allowance: "30 songs/month",
-    detail: "Create more often with room for drafts and experiments.",
+    question: "Do I need music experience?",
+    answer:
+      "No. You can start with a simple idea, then refine lyrics, style, and options.",
   },
   {
-    name: "Pro",
-    price: "$7/month",
-    allowance: "100 songs/month",
-    detail: "Higher limits for committed artists and cultural projects.",
+    question: "Is it free to use?",
+    answer:
+      "Current frontend flows are demo/mock. Pricing and real credits can be connected later.",
   },
 ]
 
 const footerLinks = [
   { label: "Create", href: "/create" },
   { label: "Explore", href: "/feed" },
+  { label: "Library", href: "/library" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Sign in", href: "/auth/sign-in" },
   { label: "Terms", href: "/terms" },
-  { label: "Privacy", href: "/privacy" },
 ]
-
-// ── Page ────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-charcoal text-sand">
-      {/* ── HERO ── */}
-      <section className="relative isolate overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/hero/zahirok-hero-bg.png" alt="" aria-hidden="true" className="absolute inset-0 -z-20 h-full w-full object-cover opacity-[0.18]" />
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_18%_6%,rgba(227,122,44,0.22),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(26,58,92,0.72),transparent_36%),linear-gradient(145deg,rgba(17,17,17,0.92)_0%,rgba(26,23,20,0.88)_48%,rgba(17,24,39,0.92)_100%)]" />
-        <div className="absolute inset-0 -z-10 opacity-[0.08] [background-image:linear-gradient(rgba(237,227,211,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(237,227,211,0.18)_1px,transparent_1px)] [background-size:42px_42px]" />
-
-        {/* Header */}
-        <header className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex min-w-0 items-center gap-2.5" aria-label="Zahirok home">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-saffron/30 bg-saffron/12 text-saffron shadow-[0_0_20px_rgba(227,122,44,0.18)]">
-              <Music2 className="size-4" aria-hidden="true" />
-            </span>
-            <span className="text-[1rem] font-extrabold uppercase leading-none tracking-[0.08em] text-white">
-              Zahirok
-            </span>
-          </Link>
-
-          <nav className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <Link
-              href="/feed"
-              className="hidden rounded-full px-3 py-2 text-sm font-semibold text-sand/60 transition hover:bg-white/[0.04] hover:text-sand md:inline-flex"
-            >
-              Explore
-            </Link>
-            <Link
-              href="/auth/sign-in"
-              className="hidden rounded-full px-3 py-2 text-sm font-semibold text-sand/60 transition hover:bg-white/[0.04] hover:text-saffron sm:inline-flex"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/create"
-              className="inline-flex h-10 items-center justify-center rounded-full bg-saffron px-4 text-sm font-black text-charcoal shadow-[0_14px_32px_rgba(227,122,44,0.24)] transition hover:bg-terracotta"
-            >
-              Create Song
-            </Link>
-          </nav>
-        </header>
-
-        {/* Hero content */}
-        <div className="mx-auto flex min-h-[calc(80vh-4rem)] max-w-5xl flex-col items-center justify-center px-4 pb-12 pt-6 text-center sm:px-6 sm:pb-16 lg:px-8">
-          <div className="w-full max-w-4xl">
-            <p className="inline-flex items-center gap-2 rounded-full border border-saffron/25 bg-saffron/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-saffron sm:text-xs">
-              <Waves className="size-3.5" aria-hidden="true" />
-              Balochi AI Music Studio
-            </p>
-            <h1 className="mx-auto mt-5 max-w-4xl text-[2.25rem] font-black leading-[1.08] tracking-[-0.02em] text-sand sm:text-5xl md:text-6xl lg:text-[4.5rem] lg:leading-[0.96]">
-              Bring your Balochi sound to life
-            </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-base font-medium leading-7 text-sand/70 sm:text-lg sm:leading-8">
-              Create songs from lyrics, poetry, memories, and prompts — shaped by Makkuran melodies, Damboora, Suroz, and Doholl-inspired sounds.
-            </p>
-
-            <LandingPrompt />
-
-            {/* Product route cards */}
-            <div className="mx-auto mt-6 grid max-w-4xl gap-3 text-left sm:grid-cols-2 lg:grid-cols-4">
-              {productRoutes.map((route) => (
-                <Link
-                  key={route.title}
-                  href={route.href}
-                  className="group rounded-2xl border border-sand/10 bg-sand/[0.05] p-4 transition hover:-translate-y-0.5 hover:border-saffron/30 hover:bg-sand/[0.08]"
-                >
-                  <route.icon className="size-5 text-saffron" aria-hidden="true" />
-                  <h3 className="mt-3 text-sm font-black text-sand">{route.title}</h3>
-                  <p className="mt-1.5 text-xs font-medium leading-[1.5] text-sand/50">{route.body}</p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SONG EXAMPLES ── */}
-      <section className="border-y border-sand/8 bg-[#161616] px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <SectionHeading
-            eyebrow="SONG EXAMPLES"
-            title="Hear Balochi ideas become songs"
-            body="From Zahirok melodies to wedding Doholl, Sufi Damboora, and modern fusion — Zahirok turns memory into music."
-          />
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {exampleSongs.map((song) => (
-              <ExampleSongCard key={song.title} {...song} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── PRODUCT FEATURES ── */}
-      <section className="px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <SectionHeading
-            eyebrow="CREATOR TOOLS"
-            title="Everything you need to create Balochi music"
-            body="Prompt-first creation, traditional instruments, community discovery, and an upgrade path when you're ready."
-          />
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature) => (
-              <FeatureCard key={feature.title} {...feature} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CULTURAL PROMISE ── */}
-      <section className="px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <SectionHeading
-            eyebrow="CULTURAL PROMISE"
-            title="Built for the sound of Balochistan"
-            body="Zahirok is shaped around cultural memory, regional instruments, and tools designed for Makkuran creators."
-          />
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {culturalCards.map((card) => (
-              <FeatureCard key={card.title} {...card} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ── */}
-      <section className="border-y border-sand/8 bg-[#161616] px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <SectionHeading
-            eyebrow="HOW IT WORKS"
-            title="From idea to song"
-            body="A simple prompt-first flow for turning memories, lyrics, and cultural references into a song preview."
-          />
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {steps.map((step, index) => (
-              <StepCard key={step.title} step={index + 1} {...step} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── VOICE OF BALOCHISTAN ── */}
-      <section className="px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-6 rounded-[2rem] border border-saffron/18 bg-saffron/[0.08] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-saffron">
-              Voice of Balochistan
-            </p>
-            <h2 className="mt-3 text-3xl font-black text-sand sm:text-4xl">
-              Your voice is the future of our sound
-            </h2>
-            <p className="mt-4 max-w-3xl text-base font-medium leading-7 text-sand/74">
-              Future contributors can help improve Balochi pronunciation, rhythm, and vocal quality with clear consent.
-            </p>
-          </div>
-          <Link
-            href="/voice-of-balochistan"
-            className="inline-flex h-12 items-center justify-center rounded-full border border-saffron/35 bg-charcoal/50 px-5 text-sm font-black text-saffron transition hover:bg-saffron/10"
-          >
-            Learn about voice contribution
-          </Link>
-        </div>
-      </section>
-
-      {/* ── PRICING ── */}
-      <section className="border-y border-sand/8 bg-[#161616] px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <SectionHeading
-              eyebrow="PRICING"
-              title="Start free, grow when you need more"
-              body="Simple tiers for exploring, creating, and publishing Balochi music."
-            />
-            <Link
-              href="/pricing"
-              className="inline-flex h-11 shrink-0 items-center justify-center rounded-full border border-sand/15 bg-sand/[0.07] px-5 text-sm font-bold text-sand transition hover:bg-sand/[0.12]"
-            >
-              View pricing
-            </Link>
-          </div>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {pricingPreview.map((tier) => (
-              <article
-                key={tier.name}
-                className="rounded-[1.5rem] border border-sand/12 bg-sand/[0.07] p-5"
-              >
-                <h3 className="text-xl font-black text-sand">{tier.name}</h3>
-                <p className="mt-2 text-3xl font-black text-saffron">{tier.price}</p>
-                <p className="mt-2 text-sm font-black uppercase tracking-[0.16em] text-sand/58">
-                  {tier.allowance}
-                </p>
-                <p className="mt-4 text-sm font-semibold leading-6 text-sand/68">
-                  {tier.detail}
-                </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FINAL CTA ── */}
-      <section className="px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="mx-auto flex size-12 items-center justify-center rounded-full border border-saffron/25 bg-saffron/12 text-saffron">
-            <Sparkles className="size-5" aria-hidden="true" />
-          </p>
-          <h2 className="mt-5 text-3xl font-black text-sand sm:text-5xl">
-            Create the next Balochi sound
-          </h2>
-          <Link
-            href="/create"
-            className="mt-7 inline-flex h-12 items-center justify-center rounded-full bg-saffron px-6 text-sm font-black text-charcoal shadow-[0_18px_42px_rgba(227,122,44,0.24)] transition hover:bg-terracotta"
-          >
-            Create Song
-          </Link>
-        </div>
-      </section>
-
-      {/* ── FOOTER ── */}
-      <footer className="border-t border-sand/8 bg-[#131313] px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.28em] text-sand">
-              Zahirok
-            </p>
-            <p className="mt-3 max-w-md text-sm font-semibold leading-6 text-sand/50">
-              Balochi AI music studio — built for memory, melody, and future creators.
-            </p>
-          </div>
-          <nav
-            aria-label="Footer navigation"
-            className="flex flex-wrap gap-4 text-sm font-bold text-sand/55"
-          >
-            {footerLinks.map((link) => (
-              <Link key={link.label} href={link.href} className="transition hover:text-sand">
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      </footer>
+    <main className="min-h-dvh overflow-x-hidden bg-[#0d0d0f] text-sand">
+      <LandingNavbar />
+      <LandingHero />
+      <ProofStrip />
+      <SongShowcaseSection />
+      <FeatureGridSection />
+      <FaqSection />
+      <FinalCtaSection />
+      <LandingFooter />
     </main>
   )
 }
 
-// ── Sub-components ──────────────────────────────────────────────────────────
+function LandingNavbar() {
+  return (
+    <header className="fixed left-0 right-0 top-0 z-50 px-4 py-4 sm:px-6 lg:px-8">
+      <nav className="mx-auto flex max-w-[1440px] items-center justify-between gap-3">
+        <Link
+          href="/"
+          aria-label="Zahirok home"
+          className="flex min-w-0 items-center gap-2.5"
+        >
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-saffron/30 bg-saffron/10 text-saffron shadow-[0_0_28px_rgba(227,122,44,0.18)]">
+            <Music2 className="size-5" aria-hidden="true" />
+          </span>
+          <span className="text-xl font-black uppercase tracking-[0.18em] text-white sm:text-2xl">
+            Zahirok
+          </span>
+        </Link>
 
-function SectionHeading({
-  body,
-  eyebrow,
+        <div className="flex shrink-0 items-center gap-2">
+          <Link
+            href="/auth/sign-in"
+            className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-black/10 px-4 text-sm font-bold text-white/88 backdrop-blur-xl transition hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-12 sm:px-5"
+          >
+            Log in
+          </Link>
+          <Link
+            href="/auth/sign-up"
+            className="inline-flex h-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ff3ca0,#e37a2c)] px-4 text-sm font-black text-white shadow-[0_14px_36px_rgba(227,122,44,0.28)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-12 sm:px-6"
+          >
+            <span className="hidden sm:inline">Join Zahirok for free</span>
+            <span className="sm:hidden">Join free</span>
+          </Link>
+        </div>
+      </nav>
+    </header>
+  )
+}
+
+function LandingHero() {
+  return (
+    <section className="relative isolate flex min-h-[88dvh] items-center overflow-hidden px-4 pb-10 pt-28 text-center sm:px-6 lg:px-8">
+      <div className="absolute inset-0 -z-30 bg-[#0c0b0b]" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/hero/zahirok-hero-bg.png"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 -z-20 h-full w-full object-cover opacity-30"
+      />
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_26%,rgba(227,122,44,0.3),transparent_23%),radial-gradient(circle_at_18%_18%,rgba(255,60,160,0.18),transparent_24%),radial-gradient(circle_at_84%_22%,rgba(26,58,92,0.48),transparent_30%),linear-gradient(180deg,rgba(12,12,14,0.34)_0%,rgba(12,12,14,0.72)_62%,#0d0d0f_100%)]" />
+      <div className="absolute inset-0 -z-10 opacity-[0.08] [background-image:radial-gradient(rgba(237,227,211,0.65)_1px,transparent_1px)] [background-size:3px_3px]" />
+
+      <div className="pointer-events-none absolute inset-0 hidden lg:block">
+        {floatingCards.map((card) => (
+          <FloatingSongCard key={card.title} {...card} />
+        ))}
+      </div>
+
+      <div className="relative z-10 mx-auto w-full max-w-5xl">
+        <h1 className="mx-auto max-w-3xl text-4xl font-black leading-[1.04] tracking-[-0.03em] text-white sm:text-5xl md:text-6xl xl:text-7xl">
+          Make any Balochi song you can imagine
+        </h1>
+        <p className="mx-auto mt-4 max-w-xl text-sm font-semibold leading-6 text-white/72 sm:text-base sm:leading-7">
+          Start with a simple idea. Zahirok turns your words, mood, and dialect into a song draft.
+        </p>
+
+        <HeroComposer />
+      </div>
+    </section>
+  )
+}
+
+function HeroComposer() {
+  const router = useRouter()
+  const menuRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [prompt, setPrompt] = useState("")
+  const [notice, setNotice] = useState("")
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  useEffect(() => {
+    if (!isMenuOpen) return
+
+    function handlePointerDown(event: PointerEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsMenuOpen(false)
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown)
+    document.addEventListener("keydown", handleEscape)
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown)
+      document.removeEventListener("keydown", handleEscape)
+    }
+  }, [isMenuOpen])
+
+  function openCreate() {
+    const trimmed = prompt.trim()
+    setNotice("")
+    router.push(trimmed ? `/create?prompt=${encodeURIComponent(trimmed)}` : "/create")
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (file) {
+      setNotice(`${file.name} - Mock upload`)
+    }
+  }
+
+  return (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault()
+        openCreate()
+      }}
+      className="mx-auto mt-6 w-full max-w-[900px] rounded-[1.25rem] border border-white/12 bg-[#171311]/72 p-3 text-left shadow-[0_20px_58px_rgba(0,0,0,0.38)] backdrop-blur-2xl"
+    >
+      <label className="sr-only" htmlFor="landing-prompt">
+        Chat to make Balochi music
+      </label>
+      <textarea
+        id="landing-prompt"
+        value={prompt}
+        onChange={(event) => {
+          setPrompt(event.target.value)
+          setNotice("")
+        }}
+        rows={1}
+        placeholder="Chat to make Balochi music"
+        className="min-h-10 max-h-14 w-full resize-none bg-transparent text-base font-bold leading-6 text-white outline-none placeholder:text-white/36"
+      />
+
+      <div className="mt-2 flex flex-col gap-2 border-t border-white/8 pt-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <div ref={menuRef} className="relative">
+            <button
+              type="button"
+              aria-label="Add audio options"
+              aria-expanded={isMenuOpen}
+              aria-controls="landing-audio-options"
+              onClick={() => setIsMenuOpen((open) => !open)}
+              className="inline-flex size-10 items-center justify-center rounded-full bg-white/8 text-white/78 transition hover:bg-white/12 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            >
+              <Plus className="size-5" aria-hidden="true" />
+            </button>
+            {isMenuOpen && (
+              <div
+                id="landing-audio-options"
+                role="menu"
+                aria-label="Audio options"
+                className="absolute bottom-full left-0 z-30 mb-2 w-40 rounded-xl border border-white/12 bg-[#141416] p-1.5 text-sm font-bold text-white shadow-[0_20px_54px_rgba(0,0,0,0.5)]"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsMenuOpen(false)
+                    fileInputRef.current?.click()
+                  }}
+                  className="group flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-white/82 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                >
+                  <Upload className="size-4 text-white/55 transition group-hover:text-saffron" aria-hidden="true" />
+                  Upload
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsMenuOpen(false)
+                    setNotice("Recording feature coming soon.")
+                  }}
+                  className="group flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-white/82 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                >
+                  <AudioLines className="size-4 text-white/55 transition group-hover:text-saffron" aria-hidden="true" />
+                  Record
+                </button>
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={openCreate}
+            className="inline-flex h-10 items-center gap-2 rounded-full bg-white/9 px-4 text-sm font-black text-white/82 transition hover:bg-white/13 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+          >
+            <SlidersHorizontal className="size-4" aria-hidden="true" />
+            Advanced
+          </button>
+
+          {notice && (
+            <p role="status" className="min-w-0 truncate rounded-full border border-saffron/25 bg-saffron/10 px-3 py-1.5 text-xs font-bold text-saffron">
+              {notice}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            aria-label="Randomize prompt"
+            onClick={() => {
+              setPrompt("A Zahirok song about Makran evenings, dohol rhythm, and a coastal wedding")
+              setNotice("")
+            }}
+            className="inline-flex size-10 items-center justify-center rounded-full bg-white/8 text-white/76 transition hover:bg-white/12 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+          >
+            <Dice5 className="size-5" aria-hidden="true" />
+          </button>
+          <button
+            type="submit"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#ff3ca0,#e37a2c)] px-4 text-sm font-black text-white shadow-[0_14px_28px_rgba(227,122,44,0.3)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+          >
+            <WandSparkles className="size-4" aria-hidden="true" />
+            Create
+          </button>
+        </div>
+      </div>
+    </form>
+  )
+}
+
+function FloatingSongCard({
+  className,
+  coverImage,
+  creator,
   title,
 }: {
-  body: string
-  eyebrow: string
+  className: string
+  coverImage: string
+  creator: string
   title: string
 }) {
   return (
-    <div className="max-w-2xl">
-      <p className="text-xs font-black uppercase tracking-[0.24em] text-saffron">
-        {eyebrow}
-      </p>
-      <h2 className="mt-3 text-3xl font-black text-sand sm:text-4xl">{title}</h2>
-      <p className="mt-4 text-base font-medium leading-7 text-sand/68">{body}</p>
+    <div className={`absolute w-48 rounded-[1.25rem] border border-white/10 bg-white/[0.08] p-2.5 shadow-[0_24px_70px_rgba(0,0,0,0.42)] backdrop-blur-xl xl:w-52 ${className}`}>
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[1.05rem]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={coverImage} alt="" aria-hidden="true" className="h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+        <span className="absolute left-3 top-3 inline-flex size-10 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur">
+          <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
+        </span>
+        <div className="absolute inset-x-3 bottom-3">
+          <p className="text-sm font-black text-white">{title}</p>
+          <p className="mt-0.5 text-xs font-bold text-white/62">{creator}</p>
+        </div>
+      </div>
     </div>
   )
 }
 
-function ExampleSongCard({
-  coverImage,
-  duration,
-  genre,
-  instruments,
-  stats,
-  title,
-}: {
-  coverImage?: string
-  duration: string
-  genre: string
-  instruments: string
-  stats: string
-  title: string
-}) {
+function ProofStrip() {
   return (
-    <Link
-      href="/feed"
-      aria-label={`Explore songs like ${title}`}
-      className="group relative block overflow-hidden rounded-[1.65rem] border border-sand/12 bg-[linear-gradient(145deg,rgba(237,227,211,0.08),rgba(237,227,211,0.035))] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:border-saffron/35 hover:bg-sand/[0.08] sm:p-5"
-    >
-      {/* Cover image background */}
-      {coverImage && (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img
-          src={coverImage}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover opacity-[0.15] transition group-hover:opacity-[0.22]"
-        />
-      )}
-      <div className="pointer-events-none absolute inset-x-4 top-0 h-20 rounded-full bg-saffron/8 blur-2xl transition group-hover:bg-saffron/14" />
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-saffron">
-            {genre}
-          </p>
-          <h3 className="mt-2 line-clamp-2 text-xl font-black leading-tight text-sand sm:text-2xl">
-            {title}
-          </h3>
-          <p className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-saffron/80">
-            {instruments}
-          </p>
-        </div>
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-saffron text-charcoal shadow-[0_10px_24px_rgba(227,122,44,0.24)] transition group-hover:bg-terracotta sm:size-11">
-          <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
-        </span>
-      </div>
-      <div className="mt-5 flex h-20 items-end gap-1 rounded-xl border border-sand/8 bg-charcoal/30 px-3 py-2.5" aria-hidden="true">
-        {Array.from({ length: 32 }, (_, i) => (
-          <span
-            key={i}
-            className={`w-full rounded-full transition ${i < 10 ? "bg-saffron" : "bg-sand/50"}`}
-            style={{ height: `${14 + ((i * 19) % 48)}px` }}
-          />
+    <section className="border-y border-white/[0.06] bg-[#0f0f11] px-4 py-7 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-3 text-center">
+        <p className="w-full text-xs font-black uppercase tracking-[0.28em] text-white/28 sm:w-auto">
+          Built for Balochi creators
+        </p>
+        {proofLabels.map((label) => (
+          <span key={label} className="text-sm font-black text-white/32 sm:text-base">
+            {label}
+          </span>
         ))}
       </div>
-      <div className="mt-4 flex items-center justify-between gap-3 text-xs font-bold text-sand/55">
-        <span>{stats}</span>
-        <span className="rounded-full border border-sand/10 bg-sand/7 px-2 py-1 text-sand/65">
-          {duration}
-        </span>
+    </section>
+  )
+}
+
+function SongShowcaseSection() {
+  return (
+    <section className="bg-[#111113] px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
+      <SectionHeading
+        title="Balochi music ideas, instantly shaped into sound"
+        body="From wedding rhythms to coastal folk, explore song drafts inspired by Balochistan's sound."
+        align="center"
+      />
+
+      <div className="mx-auto mt-14 flex max-w-[1500px] gap-5 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {showcaseSongs.map((song) => (
+          <ShowcaseCard key={song.id} song={song} />
+        ))}
       </div>
-    </Link>
+    </section>
+  )
+}
+
+function ShowcaseCard({ song }: { song: (typeof showcaseSongs)[number] }) {
+  const [isPlaying, setIsPlaying] = useState(false)
+
+  return (
+    <button
+      type="button"
+      onClick={() => setIsPlaying((playing) => !playing)}
+      className="group w-[260px] shrink-0 text-left outline-none sm:w-[300px]"
+      aria-label={`${isPlaying ? "Pause" : "Play"} ${song.title}`}
+    >
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.04] shadow-[0_24px_80px_rgba(0,0,0,0.28)] transition group-hover:-translate-y-1 group-focus-visible:ring-2 group-focus-visible:ring-saffron">
+        {song.coverImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={song.coverImage} alt={`${song.title} cover`} className="h-full w-full object-cover" />
+        ) : (
+          <div className={`h-full w-full ${song.coverClass}`} />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/10 to-transparent" />
+        <span className="absolute left-4 top-4 inline-flex size-10 items-center justify-center rounded-full bg-white/16 text-white backdrop-blur-md">
+          {isPlaying ? (
+            <AudioLines className="size-5" aria-hidden="true" />
+          ) : (
+            <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
+          )}
+        </span>
+        <div className="absolute bottom-4 left-4 flex gap-2">
+          <span className="rounded-lg bg-black/40 px-2.5 py-1.5 text-xs font-black text-white backdrop-blur">
+            <Play className="mr-1 inline size-3 fill-current align-[-1px]" aria-hidden="true" />
+            {formatCount(song.plays)}
+          </span>
+          <span className="rounded-lg bg-black/40 px-2.5 py-1.5 text-xs font-black text-white backdrop-blur">
+            {formatCount(song.likes)} likes
+          </span>
+        </div>
+      </div>
+      <h3 className="mt-4 truncate text-lg font-black text-white">{song.title}</h3>
+      <p className="mt-1 text-sm font-bold text-white/48">{song.creator}</p>
+    </button>
+  )
+}
+
+function FeatureGridSection() {
+  return (
+    <section className="bg-[#111113] px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
+      <div className="mx-auto max-w-6xl">
+        <SectionHeading
+          title="Everything you need to make Balochi music your way"
+          body="A cinematic creation surface for prompt writing, style shaping, hooks, and future studio workflows."
+        />
+
+        <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {features.map((feature) => (
+            <FeatureCard key={feature.title} {...feature} />
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }
 
 function FeatureCard({
   body,
-  icon: Icon,
   title,
+  visual,
 }: {
   body: string
-  icon: React.ComponentType<{ className?: string; "aria-hidden"?: "true" }>
   title: string
+  visual: string
 }) {
   return (
-    <article className="rounded-[1.5rem] border border-sand/10 bg-sand/[0.06] p-5">
-      <span className="flex size-10 items-center justify-center rounded-full bg-saffron/12 text-saffron">
-        <Icon className="size-4" aria-hidden="true" />
-      </span>
-      <h3 className="mt-4 text-base font-black text-sand">{title}</h3>
-      <p className="mt-2 text-sm font-semibold leading-6 text-sand/60">{body}</p>
+    <article className="flex min-h-[360px] flex-col overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.045] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+      <h3 className="text-xl font-black text-white">{title}</h3>
+      <p className="mt-4 text-sm font-semibold leading-6 text-white/58">{body}</p>
+      <FeatureVisual type={visual} />
     </article>
   )
 }
 
-function StepCard({
+function FeatureVisual({ type }: { type: string }) {
+  if (type === "prompt") {
+    return (
+      <div className="mt-auto flex items-center justify-center pb-2 pt-10">
+        <div className="grid size-36 place-items-center rounded-full bg-[radial-gradient(circle,#ff3ca0_0%,#e37a2c_45%,rgba(227,122,44,0.04)_70%)] shadow-[0_0_0_16px_rgba(227,122,44,0.08),0_0_60px_rgba(255,60,160,0.28)]">
+          <Sparkles className="size-11 text-white" aria-hidden="true" />
+        </div>
+      </div>
+    )
+  }
+
+  if (type === "studio") {
+    return (
+      <div className="mt-auto pt-10">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/cards/explore-public-songs.png" alt="" aria-hidden="true" className="h-40 w-full rounded-xl object-cover opacity-82" />
+      </div>
+    )
+  }
+
+  if (type === "controls") {
+    return (
+      <div className="mt-auto space-y-4 pt-10">
+        {["Vocal color", "Weirdness", "Style influence"].map((label, index) => (
+          <div key={label}>
+            <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-[0.14em] text-white/40">
+              <span>{label}</span>
+              <span>{index === 0 ? "Warm" : "50%"}</span>
+            </div>
+            <div className="mt-2 h-2 rounded-full bg-white/8">
+              <div className="h-full rounded-full bg-[linear-gradient(90deg,#ff3ca0,#e37a2c)]" style={{ width: `${52 + index * 12}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (type === "hooks") {
+    return (
+      <div className="mt-auto flex justify-center pt-10">
+        <div className="relative h-44 w-32 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(227,122,44,0.54),rgba(12,12,14,0.95))]">
+          <div className="absolute inset-x-4 bottom-5 h-16 rounded-full bg-saffron/40 blur-xl" />
+          <Play className="absolute left-1/2 top-1/2 size-9 -translate-x-1/2 -translate-y-1/2 fill-current text-white" aria-hidden="true" />
+        </div>
+      </div>
+    )
+  }
+
+  if (type === "share") {
+    return (
+      <div className="relative mt-auto h-44 pt-10">
+        <div className="absolute bottom-6 left-3 rounded-xl bg-indigo-deep px-6 py-4 text-2xl font-black text-white shadow-xl">1k</div>
+        <div className="absolute bottom-12 left-24 rounded-xl bg-[linear-gradient(135deg,#e37a2c,#ff3ca0)] px-8 py-6 text-3xl font-black text-white shadow-xl">5k</div>
+        <div className="absolute bottom-20 right-4 rounded-xl bg-terracotta px-6 py-4 text-2xl font-black text-white shadow-xl">13k</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-auto pt-10">
+      <div className="grid gap-3">
+        <div className="h-12 rounded-lg bg-[linear-gradient(90deg,#0c7df2,#1188ff)] px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-white">Vocals</div>
+        <div className="ml-10 h-12 rounded-lg bg-saffron px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-[#171717]">Doholl</div>
+        <div className="ml-20 h-12 rounded-lg bg-[#08b45b] px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-white">Dambora</div>
+      </div>
+    </div>
+  )
+}
+
+function FaqSection() {
+  const [openIndex, setOpenIndex] = useState(0)
+
+  return (
+    <section className="bg-[#101012] px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
+      <div className="mx-auto max-w-3xl">
+        <SectionHeading
+          title="Frequently asked questions"
+          body="Everything you need to know about creating with Zahirok."
+          align="center"
+        />
+
+        <div className="mt-12 divide-y divide-white/10">
+          {faqs.map((faq, index) => {
+            const isOpen = openIndex === index
+            return (
+              <div key={faq.question} className="py-1">
+                <button
+                  type="button"
+                  onClick={() => setOpenIndex(isOpen ? -1 : index)}
+                  aria-expanded={isOpen}
+                  className="flex w-full items-center justify-between gap-4 py-6 text-left text-lg font-black text-white transition hover:text-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                >
+                  {faq.question}
+                  {isOpen ? (
+                    <Minus className="size-5 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <Plus className="size-5 shrink-0" aria-hidden="true" />
+                  )}
+                </button>
+                {isOpen && (
+                  <p className="pb-6 text-base font-semibold leading-7 text-white/56">
+                    {faq.answer}
+                  </p>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function FinalCtaSection() {
+  return (
+    <section className="bg-[#101012] px-4 pb-24 pt-4 text-center sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_50%_0%,rgba(227,122,44,0.2),transparent_32%),rgba(255,255,255,0.045)] px-6 py-16 shadow-[0_28px_90px_rgba(0,0,0,0.28)]">
+        <h2 className="text-4xl font-black leading-tight tracking-[-0.03em] text-white sm:text-6xl">
+          Ready to make your first Zahirok track?
+        </h2>
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link
+            href="/auth/sign-up"
+            className="inline-flex h-12 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ff3ca0,#e37a2c)] px-7 text-sm font-black text-white shadow-[0_18px_42px_rgba(227,122,44,0.28)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+          >
+            Join Zahirok for free
+          </Link>
+          <Link
+            href="/create"
+            className="inline-flex h-12 items-center justify-center rounded-full border border-white/12 bg-white/[0.055] px-7 text-sm font-black text-white transition hover:bg-white/[0.09] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+          >
+            Explore the demo
+          </Link>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function LandingFooter() {
+  return (
+    <footer className="border-t border-white/[0.06] bg-[#0d0d0f] px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="flex size-9 items-center justify-center rounded-full border border-saffron/30 bg-saffron/10 text-saffron">
+              <Music2 className="size-4" aria-hidden="true" />
+            </span>
+            <span className="text-lg font-black uppercase tracking-[0.18em] text-white">Zahirok</span>
+          </div>
+          <p className="mt-3 text-sm font-semibold text-white/42">
+            (c) 2026 Zahirok AI. Built for Balochi creators.
+          </p>
+        </div>
+        <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold text-white/48">
+          {footerLinks.map((link) => (
+            <Link key={link.label} href={link.href} className="transition hover:text-white">
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+    </footer>
+  )
+}
+
+function SectionHeading({
+  align = "left",
   body,
-  icon: Icon,
-  step,
   title,
 }: {
+  align?: "left" | "center"
   body: string
-  icon: React.ComponentType<{ className?: string; "aria-hidden"?: "true" }>
-  step: number
   title: string
 }) {
   return (
-    <article className="rounded-[1.5rem] border border-sand/12 bg-sand/[0.07] p-5">
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs font-black uppercase tracking-[0.2em] text-saffron">
-          Step {step}
-        </span>
-        <Icon className="size-5 text-saffron" aria-hidden="true" />
-      </div>
-      <h3 className="mt-5 text-lg font-black text-sand">{title}</h3>
-      <p className="mt-3 text-sm font-semibold leading-6 text-sand/68">{body}</p>
-      <p className="mt-4 flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-sand/50">
-        <CheckCircle2 className="size-4 text-saffron" aria-hidden="true" />
-        Studio ready
+    <div className={align === "center" ? "mx-auto max-w-4xl text-center" : "max-w-4xl"}>
+      <h2 className="text-4xl font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-6xl lg:text-7xl">
+        {title}
+      </h2>
+      <p className="mt-6 max-w-3xl text-base font-semibold leading-7 text-white/58 sm:text-xl sm:leading-8">
+        {body}
       </p>
-    </article>
+    </div>
   )
 }
