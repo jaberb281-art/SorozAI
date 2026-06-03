@@ -7,16 +7,21 @@ import {
     ArrowLeft,
     ChevronDown,
     ChevronUp,
+    Flag,
     Heart,
     MessageCircle,
+    Minus,
     MoreHorizontal,
     Pause,
     Play,
     Plus,
     Repeat2,
+    Send,
     Share2,
+    ThumbsDown,
     Volume2,
     VolumeX,
+    X,
 } from "lucide-react"
 
 import type { GenrePreset, Instrument } from "@/lib/types"
@@ -140,12 +145,18 @@ const STRIP_ZONE = 84 // px from bottom where strip lives (strip h ~66 + bottom-
 export default function HooksPage() {
     const router = useRouter()
     const viewerRef = useRef<HTMLDivElement | null>(null)
+    const moreMenuRef = useRef<HTMLDivElement | null>(null)
     const lastWheelAt = useRef(0)
     const [activeIndex, setActiveIndex] = useState(0)
     const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
     const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
     const [isMuted, setIsMuted] = useState(false)
     const [isPreviewPlaying, setIsPreviewPlaying] = useState(false)
+    const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false)
+    const [hooksNotice, setHooksNotice] = useState<string | null>(null)
+    const [isCommentsOpen, setIsCommentsOpen] = useState(false)
+    const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false)
+    const [playlistName, setPlaylistName] = useState("")
 
     const activeHook = HOOKS[activeIndex]
     const isLiked = likedIds.has(activeHook.id)
@@ -153,16 +164,35 @@ export default function HooksPage() {
     const likes = activeHook.likes + (isLiked ? 1 : 0)
 
     const showPreviousHook = useCallback(() => {
+        setIsPreviewPlaying(false)
+        setIsMoreMenuOpen(false)
+        setHooksNotice(null)
         setActiveIndex((i) => (i === 0 ? HOOKS.length - 1 : i - 1))
     }, [])
 
     const showNextHook = useCallback(() => {
+        setIsPreviewPlaying(false)
+        setIsMoreMenuOpen(false)
+        setHooksNotice(null)
         setActiveIndex((i) => (i + 1) % HOOKS.length)
     }, [])
 
     useEffect(() => {
-        setIsPreviewPlaying(false)
-    }, [activeIndex])
+        if (!isMoreMenuOpen) return
+
+        function handlePointerDown(event: PointerEvent) {
+            if (
+                moreMenuRef.current &&
+                !moreMenuRef.current.contains(event.target as Node)
+            ) {
+                setIsMoreMenuOpen(false)
+            }
+        }
+
+        document.addEventListener("pointerdown", handlePointerDown)
+
+        return () => document.removeEventListener("pointerdown", handlePointerDown)
+    }, [isMoreMenuOpen])
 
     useEffect(() => {
         const prev = document.body.style.overflow
@@ -193,6 +223,12 @@ export default function HooksPage() {
         function handleKeyDown(e: KeyboardEvent) {
             const t = e.target as HTMLElement | null
             if (t?.isContentEditable) return
+            if (e.key === "Escape") {
+                setIsMoreMenuOpen(false)
+                setIsCommentsOpen(false)
+                setIsPlaylistModalOpen(false)
+                return
+            }
             if (["A", "BUTTON", "INPUT", "SELECT", "TEXTAREA"].includes(t?.tagName ?? "")) return
             if (e.key === "ArrowDown") {
                 e.preventDefault()
@@ -220,13 +256,16 @@ export default function HooksPage() {
         })
     }
 
-    function toggleSaved() {
-        setSavedIds((cur) => {
-            const next = new Set(cur)
-            if (next.has(activeHook.id)) next.delete(activeHook.id)
-            else next.add(activeHook.id)
-            return next
-        })
+    function handleMoreAction(notice: string) {
+        setHooksNotice(notice)
+        setIsMoreMenuOpen(false)
+    }
+
+    function handleSaveToPlaylist() {
+        setSavedIds((cur) => new Set(cur).add(activeHook.id))
+        setHooksNotice("Added to playlist.")
+        setIsPlaylistModalOpen(false)
+        setPlaylistName("")
     }
 
     return (
@@ -257,6 +296,15 @@ export default function HooksPage() {
             >
                 Create hook
             </Link>
+
+            {hooksNotice && (
+                <p
+                    role="status"
+                    className="absolute left-1/2 top-5 z-[70] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-full border border-saffron/25 bg-[#18181b]/95 px-4 py-2 text-xs font-bold text-saffron shadow-[0_16px_44px_rgba(0,0,0,0.4)]"
+                >
+                    {hooksNotice}
+                </p>
+            )}
 
             {/* ── CENTER MEDIA CARD ── */}
             {/* Centered in the zone between top bar (56px) and bottom strip zone */}
@@ -347,7 +395,9 @@ export default function HooksPage() {
             {/* ── RIGHT ACTION RAIL ── */}
             {/* Centered in same vertical zone as media card, offset right */}
             <div
-                className="absolute right-3 z-30 flex flex-col items-center justify-center gap-2 sm:right-4 lg:right-5"
+                className={`absolute right-3 z-30 flex flex-col items-center justify-center gap-2 transition-[right] sm:right-4 ${
+                    isCommentsOpen ? "lg:right-[410px]" : "lg:right-5"
+                }`}
                 style={{ top: 56, bottom: STRIP_ZONE }}
             >
                 <RailAction ariaLabel="Previous hook" onClick={showPreviousHook} icon={<ChevronUp className="size-5" />} />
@@ -366,8 +416,30 @@ export default function HooksPage() {
                 <RailButton
                     ariaLabel="Comments"
                     label={formatCount(activeHook.comments)}
+                    onClick={() => setIsCommentsOpen(true)}
                     icon={<MessageCircle className="size-[18px]" />}
                 />
+                <RailButton
+                    ariaLabel="Share"
+                    label="SHARE"
+                    onClick={() => setHooksNotice("Share link copied.")}
+                    icon={<Share2 className="size-[18px]" />}
+                />
+                <div ref={moreMenuRef} className="relative">
+                    <RailButton
+                        ariaLabel="More options"
+                        onClick={() => setIsMoreMenuOpen((value) => !value)}
+                        active={isMoreMenuOpen}
+                        icon={<MoreHorizontal className="size-[18px]" />}
+                    />
+                    {isMoreMenuOpen && (
+                        <HookMoreMenu
+                            onHideCreator={() => handleMoreAction("Creator hidden for this session.")}
+                            onReport={() => handleMoreAction("Report submitted for review.")}
+                            onNotInterested={() => handleMoreAction("We'll show fewer like this.")}
+                        />
+                    )}
+                </div>
             </div>
 
             {/* ── BOTTOM SONG STRIP ── */}
@@ -400,16 +472,10 @@ export default function HooksPage() {
 
                     {/* Actions */}
                     <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-                        <StripButton ariaLabel="Share hook">
-                            <Share2 className="size-[15px]" />
-                        </StripButton>
-                        <StripButton ariaLabel="More options">
-                            <MoreHorizontal className="size-[15px]" />
-                        </StripButton>
                         <button
                             type="button"
                             aria-pressed={isSaved}
-                            onClick={toggleSaved}
+                            onClick={() => setIsPlaylistModalOpen(true)}
                             className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-bold transition sm:h-9 sm:px-4 sm:text-[13px] ${
                                 isSaved
                                     ? "bg-saffron text-charcoal"
@@ -427,11 +493,218 @@ export default function HooksPage() {
             <div className="absolute bottom-0 left-0 right-0 z-30 h-[3px] bg-white/8">
                 <div className="h-full w-1/3 bg-saffron/70 transition-all" />
             </div>
+
+            {isCommentsOpen && (
+                <CommentsPanel
+                    hook={activeHook}
+                    onClose={() => setIsCommentsOpen(false)}
+                />
+            )}
+
+            {isPlaylistModalOpen && (
+                <AddToPlaylistModal
+                    playlistName={playlistName}
+                    setPlaylistName={setPlaylistName}
+                    onClose={() => setIsPlaylistModalOpen(false)}
+                    onSave={handleSaveToPlaylist}
+                />
+            )}
         </div>
     )
 }
 
 /* ── Sub-components ──────────────────────────────────────────────────────── */
+
+function HookMoreMenu({
+    onHideCreator,
+    onReport,
+    onNotInterested,
+}: {
+    onHideCreator: () => void
+    onReport: () => void
+    onNotInterested: () => void
+}) {
+    return (
+        <div className="absolute right-full top-0 z-[80] mr-3 w-64 rounded-xl border border-white/12 bg-[#1f1f22] p-2 text-sm font-bold text-sand shadow-[0_18px_52px_rgba(0,0,0,0.5)]">
+            <button
+                type="button"
+                onClick={onHideCreator}
+                className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition hover:bg-white/[0.07] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            >
+                <Minus className="size-4 text-sand/70 transition group-hover:text-saffron" aria-hidden="true" />
+                Hide Creator
+            </button>
+            <button
+                type="button"
+                onClick={onReport}
+                className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition hover:bg-white/[0.07] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            >
+                <Flag className="size-4 text-sand/70 transition group-hover:text-saffron" aria-hidden="true" />
+                Report Inappropriate
+            </button>
+            <button
+                type="button"
+                onClick={onNotInterested}
+                className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition hover:bg-white/[0.07] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            >
+                <ThumbsDown className="size-4 text-sand/70 transition group-hover:text-saffron" aria-hidden="true" />
+                Not Interested
+            </button>
+        </div>
+    )
+}
+
+function CommentsPanel({
+    hook,
+    onClose,
+}: {
+    hook: HookItem
+    onClose: () => void
+}) {
+    const comments = [
+        {
+            id: "comment-1",
+            name: "Mahrang360",
+            time: "18w ago",
+            body: "This hook is warm and cinematic. The Damboora tone sits beautifully with the vocal.",
+            likes: 23,
+        },
+        {
+            id: "comment-2",
+            name: hook.creator,
+            time: "12w ago",
+            body: "I appreciate you listening.",
+            likes: 5,
+        },
+        {
+            id: "comment-3",
+            name: "Harley Maxwell",
+            time: "22w ago",
+            body: "That melody feels like a sunset drive along the coast.",
+            likes: 20,
+        },
+    ]
+
+    return (
+        <aside className="absolute bottom-3 right-3 top-3 z-[65] flex w-[min(390px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#19191c] shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+                <h2 className="text-xl font-black text-white">Comments</h2>
+                <button
+                    type="button"
+                    aria-label="Close comments"
+                    onClick={onClose}
+                    className="inline-flex size-11 items-center justify-center rounded-full bg-white/[0.06] text-sand/70 transition hover:bg-white/[0.1] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                >
+                    <X className="size-5" aria-hidden="true" />
+                </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+                <label className="flex min-h-14 items-center gap-3 rounded-full bg-white/[0.07] px-4">
+                    <span className="size-9 shrink-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,#f2d1aa_0%,#e37a2c_36%,#2f8f9a_100%)]" />
+                    <span className="sr-only">Write a comment</span>
+                    <input
+                        type="text"
+                        placeholder="Write a comment"
+                        className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-sand outline-none placeholder:text-sand/55"
+                    />
+                    <Send className="size-4 text-sand/45" aria-hidden="true" />
+                </label>
+
+                <div className="mt-7 flex items-center justify-between">
+                    <p className="text-lg font-black text-white">{formatCount(hook.comments)} Comments</p>
+                    <button type="button" className="text-sm font-bold text-sand/70 transition hover:text-white">
+                        Sort by
+                    </button>
+                </div>
+
+                <div className="mt-5 grid gap-5">
+                    {comments.map((comment, index) => (
+                        <article key={comment.id} className="flex gap-3">
+                            <div className={`size-9 shrink-0 rounded-full ${index === 1 ? "bg-[radial-gradient(circle_at_30%_30%,#f2d1aa_0%,#e37a2c_36%,#2f8f9a_100%)]" : "bg-white/12"}`} />
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5">
+                                    <p className="text-sm font-black text-white">{comment.name}</p>
+                                    <span className="text-xs font-semibold text-sand/45">{comment.time}</span>
+                                    <span className="text-xs font-black text-[#ff3ca0]">on Song</span>
+                                </div>
+                                <p className="mt-1 text-sm font-semibold leading-6 text-sand/75">{comment.body}</p>
+                                <button type="button" className="mt-1 text-xs font-bold text-sand/45 transition hover:text-white">
+                                    Reply
+                                </button>
+                            </div>
+                            <div className="flex shrink-0 flex-col items-center gap-1 text-xs font-black text-sand/55">
+                                <Heart className="size-4" aria-hidden="true" />
+                                {comment.likes}
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            </div>
+        </aside>
+    )
+}
+
+function AddToPlaylistModal({
+    playlistName,
+    setPlaylistName,
+    onClose,
+    onSave,
+}: {
+    playlistName: string
+    setPlaylistName: (value: string) => void
+    onClose: () => void
+    onSave: () => void
+}) {
+    return (
+        <div className="absolute inset-0 z-[90] flex items-center justify-center bg-black/72 px-4 backdrop-blur-sm">
+            <div className="w-full max-w-xl rounded-[1.75rem] border border-white/10 bg-[#202024] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.65)] sm:p-7">
+                <div className="flex items-center justify-between gap-4">
+                    <h2 className="text-3xl font-black text-white">Add to Playlist</h2>
+                    <button
+                        type="button"
+                        aria-label="Close add to playlist"
+                        onClick={onClose}
+                        className="inline-flex size-12 items-center justify-center rounded-full bg-white/[0.06] text-sand/70 transition hover:bg-white/[0.1] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                    >
+                        <X className="size-5" aria-hidden="true" />
+                    </button>
+                </div>
+
+                <button
+                    type="button"
+                    onClick={onSave}
+                    className="mt-7 flex w-full items-center gap-4 rounded-lg bg-white/[0.055] p-3 text-left transition hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                >
+                    <span className="flex size-12 items-center justify-center rounded-md bg-[radial-gradient(circle_at_30%_30%,#29d44f_0%,#1580ff_70%)] text-white">
+                        <Heart className="size-5 fill-current" aria-hidden="true" />
+                    </span>
+                    <span className="text-lg font-black text-white">Liked Songs</span>
+                </button>
+
+                <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
+                    <label>
+                        <span className="sr-only">Playlist name</span>
+                        <input
+                            type="text"
+                            value={playlistName}
+                            onChange={(event) => setPlaylistName(event.target.value)}
+                            placeholder="Playlist Name"
+                            className="h-14 w-full rounded-lg border border-white/12 bg-transparent px-4 text-base font-semibold text-white outline-none placeholder:text-sand/45 focus:border-saffron/45"
+                        />
+                    </label>
+                    <button
+                        type="button"
+                        onClick={onSave}
+                        className="h-14 rounded-lg border border-white/12 px-5 text-base font-black text-white transition hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                    >
+                        Create Playlist
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
 
 function TopButton({
     ariaLabel,
@@ -448,24 +721,6 @@ function TopButton({
             aria-label={ariaLabel}
             onClick={onClick}
             className="inline-flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white transition hover:bg-white/12"
-        >
-            {children}
-        </button>
-    )
-}
-
-function StripButton({
-    ariaLabel,
-    children,
-}: {
-    ariaLabel: string
-    children: React.ReactNode
-}) {
-    return (
-        <button
-            type="button"
-            aria-label={ariaLabel}
-            className="inline-flex size-8 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/18 sm:size-9"
         >
             {children}
         </button>

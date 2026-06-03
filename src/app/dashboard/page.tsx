@@ -1,17 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
     AudioWaveform,
     ChevronRight,
     Compass,
+    Mic,
     Music2,
     Pause,
     Play,
     Plus,
     Search,
+    Upload,
+    X,
 } from "lucide-react"
 
 import { usePlaySong } from "@/hooks/use-play-song"
@@ -147,9 +150,42 @@ function formatPlays(n: number): string {
 export default function DashboardPage() {
     const router = useRouter()
     const [prompt, setPrompt] = useState("")
-    const [optionsNote, setOptionsNote] = useState(false)
+    const [isAudioMenuOpen, setIsAudioMenuOpen] = useState(false)
+    const [selectedAudioFile, setSelectedAudioFile] = useState<File | null>(null)
+    const [composerNotice, setComposerNotice] = useState("")
     const [promptNote, setPromptNote] = useState("")
+    const audioMenuRef = useRef<HTMLDivElement>(null)
+    const audioInputRef = useRef<HTMLInputElement>(null)
     const { playSong, isCurrentSong, isPlaying } = usePlaySong()
+
+    useEffect(() => {
+        if (!isAudioMenuOpen) {
+            return
+        }
+
+        function handlePointerDown(event: PointerEvent) {
+            if (
+                audioMenuRef.current &&
+                !audioMenuRef.current.contains(event.target as Node)
+            ) {
+                setIsAudioMenuOpen(false)
+            }
+        }
+
+        function handleEscape(event: KeyboardEvent) {
+            if (event.key === "Escape") {
+                setIsAudioMenuOpen(false)
+            }
+        }
+
+        document.addEventListener("pointerdown", handlePointerDown)
+        document.addEventListener("keydown", handleEscape)
+
+        return () => {
+            document.removeEventListener("pointerdown", handlePointerDown)
+            document.removeEventListener("keydown", handleEscape)
+        }
+    }, [isAudioMenuOpen])
 
     // MOCK: replace with api-client.generateSong({ prompt }) when backend is ready
     function handleCreate() {
@@ -171,6 +207,36 @@ export default function DashboardPage() {
 
     function handlePlaySong(s: CollectionSong) {
         playSong(toSong(s))
+    }
+
+    function handleRecordClick() {
+        setIsAudioMenuOpen(false)
+        setSelectedAudioFile(null)
+        setComposerNotice("Recording feature coming soon.")
+    }
+
+    function handleUploadClick() {
+        setIsAudioMenuOpen(false)
+        setComposerNotice("")
+        audioInputRef.current?.click()
+    }
+
+    function handleAudioFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+        const file = event.target.files?.[0]
+
+        if (file) {
+            setSelectedAudioFile(file)
+            setComposerNotice("")
+        }
+    }
+
+    function handleRemoveAudioFile() {
+        setSelectedAudioFile(null)
+        setComposerNotice("")
+
+        if (audioInputRef.current) {
+            audioInputRef.current.value = ""
+        }
     }
 
     return (
@@ -215,20 +281,30 @@ export default function DashboardPage() {
                             />
                         </div>
                         <div className="flex items-center justify-between px-3 pb-3 pt-1">
-                            <div className="relative">
+                            <div ref={audioMenuRef} className="relative">
                                 <button
                                     type="button"
-                                    aria-label="Add options"
-                                    onClick={() => setOptionsNote((v) => !v)}
-                                    className="flex size-9 items-center justify-center rounded-full text-sand/40 transition hover:bg-sand/8 hover:text-sand/70"
+                                    aria-label="Add audio options"
+                                    aria-expanded={isAudioMenuOpen}
+                                    aria-controls="dashboard-audio-options-menu"
+                                    onClick={() => setIsAudioMenuOpen((v) => !v)}
+                                    className="flex size-9 items-center justify-center rounded-full text-sand/40 transition hover:bg-sand/8 hover:text-sand/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
                                 >
                                     <Plus className="size-5" aria-hidden="true" />
                                 </button>
-                                {optionsNote && (
-                                    <span role="status" className="absolute bottom-full left-0 mb-2 whitespace-nowrap rounded-lg border border-saffron/25 bg-[#1a1a1c] px-3 py-1.5 text-xs font-semibold text-saffron shadow-lg">
-                                        Upload / options coming soon.
-                                    </span>
+                                {isAudioMenuOpen && (
+                                    <AudioOptionsPopover
+                                        onRecord={handleRecordClick}
+                                        onUpload={handleUploadClick}
+                                    />
                                 )}
+                                <input
+                                    ref={audioInputRef}
+                                    type="file"
+                                    accept="audio/*"
+                                    className="hidden"
+                                    onChange={handleAudioFileChange}
+                                />
                             </div>
                             <button
                                 type="button"
@@ -239,6 +315,36 @@ export default function DashboardPage() {
                                 Create
                             </button>
                         </div>
+                        {(selectedAudioFile || composerNotice) && (
+                            <div className="px-3 pb-3 text-left">
+                                {selectedAudioFile ? (
+                                    <div
+                                        role="status"
+                                        className="inline-flex max-w-full items-center gap-2 rounded-full border border-saffron/25 bg-saffron/10 px-3 py-1.5 text-xs font-bold text-sand shadow-[0_10px_28px_rgba(0,0,0,0.18)]"
+                                    >
+                                        <AudioWaveform className="size-3.5 shrink-0 text-saffron" aria-hidden="true" />
+                                        <span className="min-w-0 truncate">{selectedAudioFile.name}</span>
+                                        <span className="shrink-0 text-saffron">Mock upload</span>
+                                        <button
+                                            type="button"
+                                            aria-label={`Remove ${selectedAudioFile.name}`}
+                                            onClick={handleRemoveAudioFile}
+                                            className="-mr-1 flex size-5 shrink-0 items-center justify-center rounded-full text-sand/55 transition hover:bg-sand/10 hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                                        >
+                                            <X className="size-3.5" aria-hidden="true" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <p
+                                        role="status"
+                                        className="inline-flex max-w-full items-center gap-2 rounded-full border border-sand/10 bg-sand/[0.06] px-3 py-1.5 text-xs font-bold text-sand/70"
+                                    >
+                                        <Mic className="size-3.5 shrink-0 text-saffron" aria-hidden="true" />
+                                        {composerNotice}
+                                    </p>
+                                )}
+                            </div>
+                        )}
                     </div>
                     {promptNote && (
                         <p role="status" className="mx-auto mt-3 max-w-xl text-center text-xs font-semibold text-saffron">
@@ -314,6 +420,38 @@ export default function DashboardPage() {
 }
 
 // ── CollectionCard (horizontal layout) ───────────────────────────────────────
+
+function AudioOptionsPopover({
+    onRecord,
+    onUpload,
+}: {
+    onRecord: () => void
+    onUpload: () => void
+}) {
+    return (
+        <div
+            id="dashboard-audio-options-menu"
+            className="absolute bottom-full left-0 z-30 mb-2 w-40 rounded-xl border border-sand/12 bg-[#111113] p-1.5 text-left text-sm font-bold text-sand shadow-[0_18px_44px_rgba(0,0,0,0.45)]"
+        >
+            <button
+                type="button"
+                onClick={onRecord}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sand/88 transition hover:bg-sand/10 hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            >
+                <Mic className="size-4 text-saffron" aria-hidden="true" />
+                Record
+            </button>
+            <button
+                type="button"
+                onClick={onUpload}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sand/88 transition hover:bg-sand/10 hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            >
+                <Upload className="size-4 text-saffron" aria-hidden="true" />
+                Upload
+            </button>
+        </div>
+    )
+}
 
 function CollectionCard({
     collection,
