@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { BottomPlayer } from "@/components/layout/bottom-player"
+import { MobileAppNavbar } from "@/components/layout/mobile-app-navbar"
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar"
 
 /** Routes where global music playback BottomPlayer should appear */
@@ -33,7 +34,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
 
     const showPlayer = shouldShowBottomPlayer(pathname)
-    const showMobileTabBar = pathname !== "/hooks"
+    const showMobileAppNavbar = pathname !== "/hooks"
+    const showMobileTabBar = true
 
     return (
         <div
@@ -44,8 +46,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {/* Desktop sidebar */}
             <AppSidebar />
 
+            {/* Shared mobile top navbar */}
+            {showMobileAppNavbar && <MobileAppNavbar />}
+
             {/* Main scrollable area; the shell owns fixed-nav safe-area spacing. */}
-            <main className="flex min-h-dvh w-full min-w-0 flex-col pb-[var(--app-bottom-safe-area)] transition-[margin-left,padding-bottom] duration-200 lg:ml-[var(--app-sidebar-width,228px)] lg:w-auto lg:flex-1 lg:pb-[var(--app-desktop-bottom-safe-area)]">
+            <main className={`flex min-h-dvh w-full min-w-0 flex-col pb-[var(--app-bottom-safe-area)] transition-[margin-left,padding-bottom] duration-200 lg:ml-[var(--app-sidebar-width,228px)] lg:w-auto lg:flex-1 lg:pb-0 lg:pt-0 ${showMobileAppNavbar ? "pt-14" : "pt-0"}`}>
                 <div className="flex-1">
                     {children}
                 </div>

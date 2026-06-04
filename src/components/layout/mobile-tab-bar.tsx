@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation"
 import { BookOpen, Compass, Home, User } from "lucide-react"
 
 const MOBILE_NAV = [
-    { href: "/dashboard", label: "Home", icon: Home },
+    { href: "/hooks", label: "Home", icon: Home },
     { href: "/library", label: "Library", icon: BookOpen },
     { href: "/feed", label: "Explore", icon: Compass },
-    { href: "/account", label: "Account", icon: User },
+    { href: "/profile", label: "Profile", icon: User },
 ] as const
 
 export function MobileTabBar() {
@@ -20,21 +20,23 @@ export function MobileTabBar() {
                 const Icon = item.icon
                 const isActive =
                     pathname === item.href ||
-                    (item.href === "/library" && pathname.startsWith("/song/"))
+                    (item.href === "/library" && pathname.startsWith("/song/")) ||
+                    (item.href === "/profile" && pathname.startsWith("/profile/"))
 
                 return (
                     <Link
                         key={item.href}
                         href={item.href}
+                        aria-label={item.label}
                         aria-current={isActive ? "page" : undefined}
-                        className={`flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-black uppercase tracking-[0.14em] transition ${isActive ? "text-saffron" : "text-sand/45 hover:text-sand/70"
+                        className={`flex flex-1 items-center justify-center transition ${isActive ? "text-saffron" : "text-sand/45 hover:text-sand/70"
                             }`}
                     >
                         <Icon
                             className={`size-5 ${isActive ? "text-saffron" : "text-sand/40"}`}
                             aria-hidden="true"
                         />
-                        {item.label}
+                        <span className="sr-only">{item.label}</span>
                     </Link>
                 )
             })}

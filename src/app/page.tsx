@@ -192,7 +192,7 @@ function LandingHero() {
         ))}
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-5xl">
+      <div className="relative z-10 mx-auto min-w-0 w-full max-w-5xl">
         <h1 className="mx-auto max-w-3xl text-4xl font-black leading-[1.04] tracking-[-0.03em] text-white sm:text-5xl md:text-6xl xl:text-7xl">
           Make any Balochi song you can imagine
         </h1>
@@ -257,7 +257,7 @@ function HeroComposer() {
         event.preventDefault()
         openCreate()
       }}
-      className="mx-auto mt-6 w-full max-w-[900px] rounded-[1.25rem] border border-white/12 bg-[#171311]/72 p-2.5 text-left shadow-[0_20px_58px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-3"
+      className="mx-auto mt-6 w-full max-w-[900px] rounded-2xl border border-white/10 bg-black/40 p-3 text-left shadow-[0_20px_58px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-4 lg:p-5"
     >
       <label className="sr-only" htmlFor="landing-prompt">
         Chat to make Balochi music
@@ -271,11 +271,11 @@ function HeroComposer() {
         }}
         rows={1}
         placeholder="Chat to make Balochi music"
-        className="min-h-10 max-h-14 w-full resize-none bg-transparent text-base font-bold leading-6 text-white outline-none placeholder:text-white/36"
+        className="h-10 max-h-10 min-h-10 w-full resize-none bg-transparent text-base font-bold leading-6 text-white outline-none placeholder:text-white/36 sm:h-14 sm:max-h-14 sm:min-h-14"
       />
 
-      <div className="mt-2 flex flex-col gap-2 border-t border-white/8 pt-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <div className="mt-2 flex h-11 items-center justify-between gap-2 border-t border-white/8 pt-2 sm:h-12">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           <div ref={menuRef} className="relative">
             <button
               type="button"
@@ -283,9 +283,9 @@ function HeroComposer() {
               aria-expanded={isMenuOpen}
               aria-controls="landing-audio-options"
               onClick={() => setIsMenuOpen((open) => !open)}
-              className="inline-flex size-10 items-center justify-center rounded-full bg-white/8 text-white/78 transition hover:bg-white/12 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+              className="inline-flex size-9 items-center justify-center rounded-full bg-white/8 text-white/78 transition hover:bg-white/12 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:size-10"
             >
-              <Plus className="size-5" aria-hidden="true" />
+              <Plus className="size-4 sm:size-5" aria-hidden="true" />
             </button>
             {isMenuOpen && (
               <div
@@ -332,20 +332,20 @@ function HeroComposer() {
           <button
             type="button"
             onClick={openCreate}
-            className="inline-flex h-10 items-center gap-2 rounded-full bg-white/9 px-4 text-sm font-black text-white/82 transition hover:bg-white/13 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white/9 px-3 text-xs font-black text-white/82 transition hover:bg-white/13 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-10 sm:gap-2 sm:px-4 sm:text-sm"
           >
             <SlidersHorizontal className="size-4" aria-hidden="true" />
             Advanced
           </button>
 
           {notice && (
-            <p role="status" className="min-w-0 truncate rounded-full border border-saffron/25 bg-saffron/10 px-3 py-1.5 text-xs font-bold text-saffron">
+            <p role="status" className="sr-only min-w-0 truncate rounded-full border border-saffron/25 bg-saffron/10 px-3 py-1.5 text-xs font-bold text-saffron sm:not-sr-only sm:block">
               {notice}
             </p>
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex shrink-0 items-center justify-end gap-2">
           <button
             type="button"
             aria-label="Randomize prompt"
@@ -353,13 +353,13 @@ function HeroComposer() {
               setPrompt("A Zahirok song about Makran evenings, dohol rhythm, and a coastal wedding")
               setNotice("")
             }}
-            className="inline-flex size-10 items-center justify-center rounded-full bg-white/8 text-white/76 transition hover:bg-white/12 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            className="inline-flex size-9 items-center justify-center rounded-full bg-white/8 text-white/76 transition hover:bg-white/12 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:size-10"
           >
-            <Dice5 className="size-5" aria-hidden="true" />
+            <Dice5 className="size-4 sm:size-5" aria-hidden="true" />
           </button>
           <button
             type="submit"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#ff3ca0,#e37a2c)] px-4 text-sm font-black text-white shadow-[0_14px_28px_rgba(227,122,44,0.3)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-[linear-gradient(135deg,#ff3ca0,#e37a2c)] px-3 text-xs font-black text-white shadow-[0_14px_28px_rgba(227,122,44,0.3)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-10 sm:gap-2 sm:px-4 sm:text-sm"
           >
             <WandSparkles className="size-4" aria-hidden="true" />
             Create

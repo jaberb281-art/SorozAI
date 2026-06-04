@@ -63,7 +63,7 @@ export default async function SongDetailPage({ params }: SongDetailPageProps) {
             <div className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-charcoal/85 to-transparent" />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-charcoal to-transparent" />
 
-            <section className="relative z-10 mx-auto w-full max-w-6xl px-5 pb-[160px] pt-8 md:px-6 md:pb-[96px] md:pt-10 xl:px-8">
+            <section className="relative z-10 mx-auto w-full max-w-6xl px-5 pb-8 pt-8 md:px-6 md:pt-10 xl:px-8">
                 <Link
                     href="/library"
                     className="inline-flex items-center gap-2 rounded-full border border-sand/15 bg-sand/8 px-4 py-2 text-sm font-bold text-sand/82 transition hover:bg-sand/12 hover:text-sand"

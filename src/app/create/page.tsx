@@ -3,14 +3,19 @@
 import { useEffect, useMemo, useRef, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import {
+  AudioLines,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Dices,
+  Drum,
   Filter,
   Folder,
   FolderSearch,
+  Guitar,
   Heart,
   Info,
+  KeyboardMusic,
   Maximize2,
   Loader2,
   Mic2,
@@ -25,6 +30,7 @@ import {
   Trash2,
   Upload,
   Wand2,
+  WavesHorizontal,
   X,
 } from "lucide-react"
 
@@ -78,12 +84,26 @@ const MOCK_TITLES = [
   "Kech Valley Song",
 ] as const
 
-const STYLE_SUGGESTIONS = ["experimental hip-hop", "jazz bass", "cumbia colombiana", "chicago drill", "chill beat"]
+const STYLE_SUGGESTIONS = ["sombrio", "sweet vocal", "trap/rap", "sound design", "atmospheric guitars"]
 
-const MODEL_OPTIONS = [
-  { id: "v1", label: "v1", tag: "Current", available: true },
-  { id: "v1-folk", label: "v1 Folk Preview", tag: "Coming soon", available: false },
-  { id: "v1-studio", label: "v1 Studio Draft", tag: "Coming soon", available: false },
+type StyleChipIconKind = "suroz" | "benju" | "rabab" | "duholl" | "dambora" | "vocal" | "coastal"
+
+const ADVANCED_STYLE_CHIPS: { label: string; icon: StyleChipIconKind }[] = [
+  { label: "Suroz", icon: "suroz" },
+  { label: "Benju", icon: "benju" },
+  { label: "Rabab", icon: "rabab" },
+  { label: "Duholl", icon: "duholl" },
+  { label: "Dambora", icon: "dambora" },
+  { label: "Makkuran vocal", icon: "vocal" },
+  { label: "Coastal folk", icon: "coastal" },
+]
+
+const SIMPLE_PROMPT_IDEAS = [
+  "Jazzy pop song about being invisible",
+  "Sombrio Zahirok melody with sweet vocals and atmospheric guitars",
+  "Trap/rap rhythm with Damboora textures and a cinematic hook",
+  "Dreamy coastal song about missing someone at sunrise",
+  "Soft folk-pop track with layered harmonies and warm percussion",
 ] as const
 
 // MOCK: Makkuran/Balochi-inspired lyric fragments for the Wand button
@@ -176,13 +196,12 @@ function CreatePageInner() {
   const [generatedSongs, setGeneratedSongs] = useState<GeneratedSong[]>([])
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
   const [importedPrompt, setImportedPrompt] = useState(false)
-  const [isModelOpen, setIsModelOpen] = useState(false)
-  const [modelNote, setModelNote] = useState("")
   const [panelNote, setPanelNote] = useState("")
   const [isAudioMenuOpen, setIsAudioMenuOpen] = useState(false)
   const [selectedAudioFile, setSelectedAudioFile] = useState<File | null>(null)
   const [composerNotice, setComposerNotice] = useState("")
   const [isLyricsOpen, setIsLyricsOpen] = useState(true)
+  const [isLyricsExpanded, setIsLyricsExpanded] = useState(false)
   const [isStylesOpen, setIsStylesOpen] = useState(true)
   const [isMoreOptionsOpen, setIsMoreOptionsOpen] = useState(true)
   const [sortLabel, setSortLabel] = useState<"Newest" | "Oldest">("Newest")
@@ -327,6 +346,12 @@ function CreatePageInner() {
     setLyrics((prev) => prev + getRandomLyricIdea())
   }
 
+  function handleRandomDescription() {
+    const idea = SIMPLE_PROMPT_IDEAS[Math.floor(Math.random() * SIMPLE_PROMPT_IDEAS.length)]
+    setStylePrompt(idea)
+    setImportedPrompt(false)
+  }
+
   function handleTopTabClick(tab: InputTab) {
     setInputTab(tab)
     setIsAudioMenuOpen(false)
@@ -396,17 +421,12 @@ function CreatePageInner() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_6%,rgba(227,122,44,0.14),transparent_24%),radial-gradient(circle_at_82%_10%,rgba(26,58,92,0.48),transparent_28%),linear-gradient(135deg,#141414_0%,#191716_48%,#101010_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.045] [background-image:linear-gradient(90deg,rgba(237,227,211,0.35)_1px,transparent_1px),linear-gradient(rgba(237,227,211,0.25)_1px,transparent_1px)] [background-size:36px_36px]" />
 
-      <main className="relative z-10 grid grid-cols-1 gap-3 px-3 py-3 xl:h-[calc(100dvh-96px)] xl:min-h-0 xl:grid-cols-[minmax(420px,500px)_minmax(0,1fr)] xl:gap-0 xl:overflow-hidden xl:px-0 xl:py-0">
+      <main className="relative z-10 grid grid-cols-1 gap-3 px-3 py-3 xl:h-dvh xl:min-h-0 xl:grid-cols-[minmax(420px,500px)_minmax(0,1fr)] xl:gap-0 xl:overflow-hidden xl:px-0 xl:py-0">
         {/* ── LEFT PANEL ── */}
-        <section className="rounded-2xl border border-sand/10 bg-[#181818]/95 shadow-[0_20px_60px_rgba(0,0,0,0.34)] xl:h-[calc(100dvh-96px)] xl:min-h-0 xl:rounded-none xl:border-y-0 xl:border-l-0 xl:border-r xl:bg-[#171717]/92">
+        <section className="rounded-2xl border border-sand/10 bg-[#181818]/95 shadow-[0_20px_60px_rgba(0,0,0,0.34)] xl:h-full xl:min-h-0 xl:rounded-none xl:border-y-0 xl:border-l-0 xl:border-r xl:bg-[#171717]/92">
           <div className="flex h-full min-h-0 flex-col overflow-x-visible p-3 pb-28 sm:p-4 sm:pb-32 lg:pb-4 xl:overflow-y-auto xl:p-5 xl:pb-6">
             {/* Top controls */}
             <div className="flex flex-wrap items-center gap-3">
-              <div className="inline-flex h-10 items-center gap-2 rounded-full border border-sand/12 bg-black/20 px-4 text-sm font-black">
-                <Music2 className="size-4 text-saffron" aria-hidden="true" />
-                75
-              </div>
-
               <div className="inline-flex h-10 rounded-full border border-sand/10 bg-black/20 p-1">
                 {(["Simple", "Advanced"] as const).map((mode) => (
                   <button
@@ -423,55 +443,6 @@ function CreatePageInner() {
                     {mode}
                   </button>
                 ))}
-              </div>
-
-              {/* Model dropdown */}
-              <div className="relative ml-auto">
-                <button
-                  type="button"
-                  onClick={() => { setIsModelOpen((v) => !v); setModelNote("") }}
-                  aria-expanded={isModelOpen}
-                  aria-haspopup="listbox"
-                  className="inline-flex h-10 items-center gap-2 rounded-full border border-sand/10 bg-black/20 px-4 text-sm font-black text-sand transition hover:border-sand/20"
-                >
-                  v1
-                  <ChevronDown className={`size-4 text-sand/45 transition-transform ${isModelOpen ? "rotate-180" : ""}`} aria-hidden="true" />
-                </button>
-                {isModelOpen && (
-                  <div role="listbox" aria-label="Select model" className="absolute right-0 top-full z-20 mt-2 w-52 rounded-xl border border-sand/12 bg-[#1e1e20] p-1 shadow-[0_16px_48px_rgba(0,0,0,0.4)]">
-                    {MODEL_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        role="option"
-                        aria-selected={opt.id === "v1"}
-                        onClick={() => {
-                          if (opt.available) {
-                            setIsModelOpen(false)
-                            setModelNote("")
-                          } else {
-                            setModelNote("This model is not available yet.")
-                          }
-                        }}
-                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-bold transition ${
-                          opt.id === "v1"
-                            ? "bg-sand/10 text-white"
-                            : "text-sand/60 hover:bg-sand/[0.06] hover:text-sand"
-                        }`}
-                      >
-                        {opt.label}
-                        <span className={`text-[10px] font-black uppercase tracking-wider ${opt.available ? "text-saffron" : "text-sand/40"}`}>
-                          {opt.tag}
-                        </span>
-                      </button>
-                    ))}
-                    {modelNote && (
-                      <p role="status" className="mt-1 rounded-lg border border-saffron/25 bg-saffron/10 px-3 py-1.5 text-xs font-semibold text-saffron">
-                        {modelNote}
-                      </p>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -592,7 +563,101 @@ function CreatePageInner() {
             )}
 
             {/* Tab content */}
-            {inputTab === "Audio" ? (
+            {createMode === "Simple" && inputTab === "Audio" ? (
+              <div className="mt-4 rounded-[1.35rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-5 sm:p-4">
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <label
+                      htmlFor="simple-song-description"
+                      className="text-sm font-black text-sand/82"
+                    >
+                      Song Description
+                    </label>
+                    <textarea
+                      id="simple-song-description"
+                      value={stylePrompt}
+                      onChange={(event) => {
+                        setStylePrompt(event.target.value)
+                        setImportedPrompt(false)
+                      }}
+                      disabled={isGenerating}
+                      rows={3}
+                      placeholder="Jazzy pop song about being invisible"
+                      className="mt-4 min-h-24 w-full resize-none bg-transparent text-base font-semibold leading-6 text-sand outline-none placeholder:text-sand/38 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-28"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRandomDescription}
+                    disabled={isGenerating}
+                    className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-sand/[0.08] text-sand/70 transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                    aria-label="Random song description"
+                  >
+                    <Dices className="size-5" aria-hidden="true" />
+                  </button>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between gap-3 border-b border-sand/8 pb-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCreateMode("Advanced")
+                      setIsLyricsOpen(true)
+                      setLyricsMode("write")
+                    }}
+                    className="inline-flex h-10 items-center gap-2 rounded-full bg-sand/[0.08] px-4 text-sm font-black text-sand transition hover:bg-sand/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                  >
+                    <Plus className="size-4" aria-hidden="true" />
+                    Lyrics
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLyricsMode((mode) => mode === "instrumental" ? "write" : "instrumental")
+                    }
+                    aria-pressed={lyricsMode === "instrumental"}
+                    className={`inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron ${
+                      lyricsMode === "instrumental"
+                        ? "border-saffron/35 bg-saffron/12 text-saffron"
+                        : "border-sand/10 bg-black/10 text-sand/60 hover:text-sand"
+                    }`}
+                  >
+                    <span
+                      className={`size-4 rounded-full border ${
+                        lyricsMode === "instrumental"
+                          ? "border-saffron bg-saffron shadow-[inset_0_0_0_3px_#171717]"
+                          : "border-sand/18 bg-sand/[0.05]"
+                      }`}
+                      aria-hidden="true"
+                    />
+                    Instrumental
+                  </button>
+                </div>
+
+                <div className="mt-3">
+                  <p className="text-sm font-black text-sand/34">Suggestions</p>
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {STYLE_SUGGESTIONS.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => {
+                          setStylePrompt((value) =>
+                            value ? `${value}, ${suggestion}` : suggestion,
+                          )
+                          setImportedPrompt(false)
+                        }}
+                        disabled={isGenerating}
+                        className="shrink-0 rounded-full bg-sand/[0.08] px-4 py-2 text-sm font-black text-sand/82 transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : inputTab === "Audio" ? (
               <>
                 {/* Lyrics section */}
                 <div className="mt-4 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-5 sm:rounded-[1.35rem] sm:p-4">
@@ -633,7 +698,13 @@ function CreatePageInner() {
 
                   {isLyricsOpen && (
                     <div id="create-lyrics-section">
-                      <div className="mt-4 flex min-h-44 flex-col rounded-2xl bg-black/18 p-3 sm:mt-5 sm:min-h-52 sm:p-4">
+                      <div
+                        className={`mt-4 flex flex-col rounded-2xl bg-black/18 p-3 transition-[min-height] duration-300 sm:mt-5 sm:p-4 ${
+                          isLyricsExpanded
+                            ? "min-h-[540px] sm:min-h-[620px] xl:min-h-[calc(100dvh-190px)]"
+                            : "min-h-44 sm:min-h-52"
+                        }`}
+                      >
                     {lyricsMode === "write" && (
                       <textarea
                         value={lyrics}
@@ -685,9 +756,14 @@ function CreatePageInner() {
                       <div className="flex justify-end">
                         <button
                           type="button"
-                          onClick={() => setPanelNote("Expand lyrics editor coming soon.")}
-                          className="inline-flex size-10 items-center justify-center rounded-full bg-sand/[0.07] text-sand/58 transition hover:bg-sand/[0.12] hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
-                          aria-label="Expand lyrics editor"
+                          onClick={() => setIsLyricsExpanded((isExpanded) => !isExpanded)}
+                          aria-pressed={isLyricsExpanded}
+                          className={`inline-flex size-10 items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron ${
+                            isLyricsExpanded
+                              ? "bg-sand text-[#171717] hover:bg-white"
+                              : "bg-sand/[0.07] text-sand/58 hover:bg-sand/[0.12] hover:text-sand"
+                          }`}
+                          aria-label={isLyricsExpanded ? "Collapse lyrics editor" : "Expand lyrics editor"}
                         >
                           <Maximize2 className="size-4" aria-hidden="true" />
                         </button>
@@ -733,7 +809,7 @@ function CreatePageInner() {
                       onChange={(e) => { setStylePrompt(e.target.value); setImportedPrompt(false) }}
                       disabled={isGenerating}
                       rows={4}
-                      placeholder="experimental hip-hop, jazz bass, cumbia colombiana, chicago drill, chill beat"
+                      placeholder="Suroz, Benju, Rabab, Duholl, Dambora, Makkuran vocal, coastal folk"
                       className="min-h-24 flex-1 resize-none bg-transparent text-sm leading-6 text-sand outline-none placeholder:text-sand/32 disabled:cursor-not-allowed disabled:opacity-50"
                     />
 
@@ -750,7 +826,7 @@ function CreatePageInner() {
                         type="button"
                         onClick={() =>
                           setStylePrompt((value) =>
-                            value ? `${value}, experimental hip-hop` : "experimental hip-hop",
+                            value ? `${value}, Suroz` : "Suroz",
                           )
                         }
                         disabled={isGenerating}
@@ -769,19 +845,22 @@ function CreatePageInner() {
                         <RefreshCw className="size-4" aria-hidden="true" />
                       </button>
 
-                      {STYLE_SUGGESTIONS.slice(0, 2).map((suggestion) => (
+                      {ADVANCED_STYLE_CHIPS.map((chip) => (
                         <button
-                          key={suggestion}
+                          key={chip.label}
                           type="button"
                           onClick={() =>
                             setStylePrompt((value) =>
-                              value ? `${value}, ${suggestion}` : suggestion,
+                              value ? `${value}, ${chip.label}` : chip.label,
                             )
                           }
                           disabled={isGenerating}
-                          className="rounded-full bg-sand/[0.08] px-3 py-2 text-xs font-black text-sand transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40"
+                          className="group inline-flex items-center gap-2 rounded-full bg-sand/[0.08] py-1.5 pl-2 pr-3 text-xs font-black text-sand transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40"
                         >
-                          {suggestion}
+                          <span className="inline-flex size-6 items-center justify-center rounded-full bg-black/22 text-saffron transition group-hover:text-[#171717]">
+                            <StyleChipGlyph icon={chip.icon} />
+                          </span>
+                          {chip.label}
                         </button>
                       ))}
                     </div>
@@ -901,28 +980,30 @@ function CreatePageInner() {
               />
 
               <div className="mt-2 flex items-center gap-2 sm:mt-3 sm:gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLyrics("")
-                    setLyricsPrompt("")
-                    setStylePrompt("")
-                    setSongTitle("")
-                    setVocalGender("male")
-                    setWeirdness(50)
-                    setStyleInfluence(50)
-                    setImportedPrompt(false)
-                    setComposerNotice("")
-                    setSelectedAudioFile(null)
-                    if (audioInputRef.current) {
-                      audioInputRef.current.value = ""
-                    }
-                  }}
-                  className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-sand/[0.08] text-sand/60 transition hover:bg-sand/[0.12] hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:size-14"
-                  aria-label="Clear composer"
-                >
-                  <Trash2 className="size-4" aria-hidden="true" />
-                </button>
+                {createMode === "Advanced" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLyrics("")
+                      setLyricsPrompt("")
+                      setStylePrompt("")
+                      setSongTitle("")
+                      setVocalGender("male")
+                      setWeirdness(50)
+                      setStyleInfluence(50)
+                      setImportedPrompt(false)
+                      setComposerNotice("")
+                      setSelectedAudioFile(null)
+                      if (audioInputRef.current) {
+                        audioInputRef.current.value = ""
+                      }
+                    }}
+                    className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-sand/[0.08] text-sand/60 transition hover:bg-sand/[0.12] hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:size-14"
+                    aria-label="Clear composer"
+                  >
+                    <Trash2 className="size-4" aria-hidden="true" />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handleCreate}
@@ -1145,6 +1226,27 @@ function CreatePageInner() {
       </main>
     </div>
   )
+}
+
+function StyleChipGlyph({ icon }: { icon: StyleChipIconKind }) {
+  const className = "size-3.5"
+
+  switch (icon) {
+    case "suroz":
+      return <AudioLines className={className} aria-hidden="true" />
+    case "benju":
+      return <KeyboardMusic className={className} aria-hidden="true" />
+    case "rabab":
+      return <Guitar className={className} aria-hidden="true" />
+    case "duholl":
+      return <Drum className={className} aria-hidden="true" />
+    case "dambora":
+      return <Music2 className={className} aria-hidden="true" />
+    case "vocal":
+      return <Mic2 className={className} aria-hidden="true" />
+    case "coastal":
+      return <WavesHorizontal className={className} aria-hidden="true" />
+  }
 }
 
 function ComposerSlider({

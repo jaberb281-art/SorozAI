@@ -15,9 +15,7 @@
 }
 
 [data-has-bottom-player="true"] {
-  --app-bottom-safe-area: calc(
-    var(--app-mobile-tab-bar-height) + var(--app-bottom-player-height)
-  );
+  --app-bottom-safe-area: var(--app-mobile-tab-bar-height);
   --app-desktop-bottom-safe-area: var(--app-bottom-player-height);
 }
 

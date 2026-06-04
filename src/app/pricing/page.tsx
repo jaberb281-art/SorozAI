@@ -169,7 +169,7 @@ export default function PricingPage() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(circle_at_50%_0%,rgba(227,122,44,0.36),transparent_32%),radial-gradient(circle_at_84%_8%,rgba(186,130,32,0.34),transparent_28%),linear-gradient(180deg,rgba(116,45,31,0.72)_0%,rgba(38,18,18,0.55)_42%,transparent_100%)]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] opacity-[0.1] [background-image:radial-gradient(rgba(237,227,211,0.5)_1px,transparent_1px)] [background-size:7px_7px]" />
 
-      <main className="relative z-10 px-5 pb-[170px] pt-8 md:px-8 md:pb-[112px] xl:px-12">
+      <main className="relative z-10 px-5 pb-8 pt-8 md:px-8 xl:px-12">
         <CurrencySelector
           currency={currency}
           currencyQuery={currencyQuery}

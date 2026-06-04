@@ -50,7 +50,7 @@ export default function LabsPage() {
       <div className="pointer-events-none absolute inset-0 opacity-35 [background-image:radial-gradient(rgba(237,227,211,0.42)_1px,transparent_1px)] [background-size:32px_32px]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_50%_0%,rgba(237,227,211,0.08),transparent_42%)]" />
 
-      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 pb-[170px] pt-14 md:px-8 md:pb-[112px] lg:pt-16">
+      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 pb-8 pt-14 md:px-8 lg:pt-16">
         <section className="mx-auto max-w-3xl text-center">
           <h1 className="text-5xl font-black tracking-tight text-white md:text-6xl">
             Labs

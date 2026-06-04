@@ -11,6 +11,7 @@ import {
   MoreHorizontal,
   Music,
   Play,
+  Repeat2,
   Share2,
   User,
   Users,
@@ -85,24 +86,33 @@ export default function PublicProfilePage() {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,#090909_0%,#15110f_42%,#090909_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.045] [background-image:linear-gradient(90deg,rgba(237,227,211,0.34)_1px,transparent_1px),linear-gradient(rgba(237,227,211,0.24)_1px,transparent_1px)] [background-size:32px_32px]" />
 
-      <main className="relative z-10 mx-auto w-full max-w-[1180px] px-4 pb-6 pt-5 md:px-6 md:pt-7 lg:px-8 lg:pb-8">
-        <section className="relative min-h-[220px] overflow-hidden rounded-[28px] border border-sand/10 bg-[#171314] shadow-[0_28px_80px_rgba(0,0,0,0.38)] md:min-h-[300px]">
+      <main className="relative z-10 mx-auto w-full max-w-[460px] px-3 pb-8 pt-3 sm:px-4 md:max-w-[680px] lg:max-w-[1180px] lg:px-8 lg:pb-10 lg:pt-7">
+        <section className="relative h-[240px] overflow-hidden rounded-[28px] border border-sand/10 bg-[#171314] shadow-[0_28px_80px_rgba(0,0,0,0.38)] sm:h-[280px] lg:h-[320px]">
           <div
             className="absolute inset-0"
             style={{ background: profile.bannerGradient }}
             aria-hidden="true"
           />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_30%,rgba(255,73,170,0.5),transparent_24%),radial-gradient(circle_at_80%_22%,rgba(255,224,104,0.34),transparent_30%),linear-gradient(to_top,rgba(9,9,9,0.72),transparent_58%)]" aria-hidden="true" />
+          {profile.songs[0]?.coverImage ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={profile.songs[0].coverImage}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover opacity-28 mix-blend-screen"
+              aria-hidden="true"
+            />
+          ) : null}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_32%,rgba(255,255,255,0.22),transparent_25%),linear-gradient(to_top,rgba(9,9,9,0.86),rgba(9,9,9,0.18)_58%,rgba(9,9,9,0.1))]" aria-hidden="true" />
 
-          <div className="relative flex min-h-[220px] flex-col justify-end gap-6 p-5 sm:p-7 md:min-h-[300px] lg:flex-row lg:items-end lg:justify-between">
-            <div className="flex min-w-0 items-end gap-4">
-              <PublicAvatar profile={profile} className="size-20 md:size-24" />
-              <div className="min-w-0 pb-1">
-                <h1 className="truncate text-3xl font-black tracking-tight text-white md:text-5xl">
+          <div className="relative flex h-full flex-col justify-end p-4 sm:p-5 lg:p-7">
+            <div className="flex min-w-0 items-end gap-3 sm:gap-4">
+              <PublicAvatar profile={profile} className="size-16 sm:size-20 lg:size-24" />
+              <div className="min-w-0 pb-0.5">
+                <h1 className="truncate text-2xl font-black tracking-tight text-white sm:text-3xl lg:text-5xl">
                   {profile.displayName}
                 </h1>
-                <p className="mt-1 text-sm font-bold text-white/82">{profile.handle}</p>
-                <p className="mt-1 flex items-center gap-1.5 text-sm font-black text-white/78">
+                <p className="mt-0.5 text-sm font-bold text-white/84">{profile.handle}</p>
+                <p className="mt-1 flex items-center gap-1.5 text-xs font-black text-white/82 sm:text-sm">
                   <Play className="size-3 fill-current" aria-hidden="true" />
                   {profile.plays}
                   <Heart className="ml-1 size-3 fill-current" aria-hidden="true" />
@@ -111,12 +121,12 @@ export default function PublicProfilePage() {
               </div>
             </div>
 
-            <div className="flex w-full flex-wrap items-center gap-3 lg:w-auto lg:pb-1">
+            <div className="mt-5 flex items-center gap-3">
               <button
                 type="button"
                 aria-pressed={isFollowing}
                 onClick={() => setIsFollowing((value) => !value)}
-                className={`inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full border border-white/10 px-5 text-sm font-black shadow-[0_12px_32px_rgba(0,0,0,0.18)] backdrop-blur-xl transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron sm:flex-none ${
+                className={`inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border border-white/10 px-5 text-sm font-black shadow-[0_12px_32px_rgba(0,0,0,0.18)] backdrop-blur-xl transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron sm:h-12 ${
                   isFollowing
                     ? "bg-white text-charcoal hover:bg-saffron hover:text-white"
                     : "bg-black/24 text-white hover:bg-black/34"
@@ -129,7 +139,7 @@ export default function PublicProfilePage() {
                 type="button"
                 aria-label={`Play ${profile.displayName} songs`}
                 onClick={() => setNotice("Profile playback coming soon.")}
-                className="inline-flex size-14 items-center justify-center rounded-full bg-white text-charcoal shadow-[0_14px_36px_rgba(0,0,0,0.24)] transition hover:bg-saffron hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+                className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-white text-charcoal shadow-[0_14px_36px_rgba(0,0,0,0.24)] transition hover:bg-saffron hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
               >
                 <Play className="ml-0.5 size-5 fill-current" aria-hidden="true" />
               </button>
@@ -137,7 +147,7 @@ export default function PublicProfilePage() {
           </div>
         </section>
 
-        <section className="mt-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <section className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-2">
             <StatPill icon={<Music className="size-3.5" aria-hidden="true" />} label={`${profile.songs.length} songs`} />
             <StatPill icon={<User className="size-3.5" aria-hidden="true" />} label={`${profile.followers} followers`} />
@@ -168,7 +178,7 @@ export default function PublicProfilePage() {
               <div
                 role="menu"
                 aria-label="Public profile actions"
-                className="absolute right-0 top-12 z-30 w-[min(210px,calc(100vw-2rem))] rounded-lg border border-white/8 bg-[#242428] py-1.5 shadow-[0_20px_56px_rgba(0,0,0,0.48)]"
+                className="absolute left-0 top-12 z-30 w-[min(220px,calc(100vw-2rem))] rounded-xl border border-white/8 bg-[#242428] py-1.5 shadow-[0_20px_56px_rgba(0,0,0,0.48)] md:left-auto md:right-0"
               >
                 <ActionMenuButton
                   icon={<Clipboard className="size-4" aria-hidden="true" />}
@@ -216,20 +226,20 @@ export default function PublicProfilePage() {
 
 function PublicSongsSection({ profile }: { profile: PublicProfile }) {
   return (
-    <section className="mt-12">
+    <section className="mt-8 lg:mt-12">
       <h2 className="inline-flex items-center gap-1 text-lg font-black text-white">
         Songs
         <ChevronRight className="size-5 text-sand/60" aria-hidden="true" />
       </h2>
 
-      <div className="mt-6 grid gap-x-10 gap-y-5 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-4 grid gap-1.5 md:grid-cols-2 md:gap-x-6 xl:grid-cols-3">
         {profile.songs.map((song) => (
           <button
             key={song.title}
             type="button"
-            className="flex min-w-0 items-center gap-3 rounded-lg p-1 text-left transition hover:bg-sand/7 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+            className="group flex min-w-0 items-center gap-3 rounded-xl px-1 py-2 text-left transition hover:bg-sand/7 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
           >
-            <span className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-[#201816]">
+            <span className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-[#201816] shadow-[0_10px_24px_rgba(0,0,0,0.18)] sm:size-14">
               {song.coverImage ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
@@ -239,8 +249,8 @@ function PublicSongsSection({ profile }: { profile: PublicProfile }) {
                 />
               ) : null}
             </span>
-            <span className="min-w-0">
-              <span className="flex items-center gap-2">
+            <span className="min-w-0 flex-1">
+              <span className="flex min-w-0 items-center gap-2">
                 <span className="truncate text-sm font-black text-white">{song.title}</span>
                 <span className="shrink-0 rounded border border-sand/14 bg-sand/8 px-1.5 py-0.5 text-[10px] font-black text-saffron">
                   {song.version}
@@ -251,6 +261,10 @@ function PublicSongsSection({ profile }: { profile: PublicProfile }) {
                 {song.plays} · {song.style}
               </span>
             </span>
+            <span className="ml-auto flex shrink-0 flex-col items-center gap-2 text-sand/45">
+              <MoreHorizontal className="size-4 transition group-hover:text-white" aria-hidden="true" />
+              <Repeat2 className="size-3.5 transition group-hover:text-saffron" aria-hidden="true" />
+            </span>
           </button>
         ))}
       </div>
@@ -260,19 +274,19 @@ function PublicSongsSection({ profile }: { profile: PublicProfile }) {
 
 function PublicPlaylistsSection({ profile }: { profile: PublicProfile }) {
   return (
-    <section className="mt-14">
+    <section className="mt-10 lg:mt-14">
       <h2 className="inline-flex items-center gap-1 text-lg font-black text-white">
         Playlists
         <ChevronRight className="size-5 text-sand/60" aria-hidden="true" />
       </h2>
-      <div className="mt-6 flex flex-wrap gap-5">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:flex lg:flex-wrap lg:gap-5">
         {profile.playlists.map((playlist) => (
           <button
             key={playlist.title}
             type="button"
-            className="w-[160px] rounded-lg p-1 text-left transition hover:bg-sand/7 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+            className="rounded-xl p-1 text-left transition hover:bg-sand/7 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron lg:w-[160px]"
           >
-            <span className="block size-16 overflow-hidden rounded-lg bg-[#201816]">
+            <span className="block aspect-square w-full overflow-hidden rounded-xl bg-[#201816] lg:size-16">
               {playlist.coverImage ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
@@ -301,46 +315,45 @@ function PublicAboutSection({
   profile: PublicProfile
 }) {
   return (
-    <section className="mt-14">
+    <section className="mt-10 lg:mt-14">
       <h2 className="text-lg font-black text-white">About</h2>
-      <div className="mt-4 rounded-[28px] border border-sand/8 bg-sand/8 p-5 shadow-[0_18px_52px_rgba(0,0,0,0.22)] md:p-8">
-        <div className="grid gap-8 md:grid-cols-[minmax(220px,0.7fr)_minmax(0,1.3fr)] md:items-center">
-          <div className="flex min-w-0 items-center gap-4 sm:gap-5">
-            <PublicAvatar profile={profile} className="size-24 md:size-28" />
-            <div className="min-w-0">
-              <h3 className="truncate text-2xl font-black text-white md:text-3xl">
-                {profile.displayName}
-              </h3>
-              <button
-                type="button"
-                aria-pressed={isFollowing}
-                onClick={onFollow}
-                className={`mt-3 inline-flex h-9 items-center gap-2 rounded-full px-4 text-sm font-black transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron ${
-                  isFollowing
-                    ? "bg-saffron text-white hover:bg-terracotta"
-                    : "bg-white text-charcoal hover:bg-saffron hover:text-white"
-                }`}
-              >
-                <User className="size-3.5" aria-hidden="true" />
-                {isFollowing ? "Following" : "Follow"}
-              </button>
-            </div>
-          </div>
+      <div className="mt-4 rounded-[28px] border border-sand/8 bg-sand/[0.075] p-6 text-center shadow-[0_18px_52px_rgba(0,0,0,0.22)] md:mx-auto md:max-w-xl md:p-8">
+        <PublicAvatar profile={profile} className="mx-auto size-24 md:size-28" />
+        <h3 className="mt-4 truncate text-2xl font-black text-white md:text-3xl">
+          {profile.displayName}
+        </h3>
+        <p className="mt-1 text-sm font-bold text-sand/52">{profile.handle}</p>
+        <button
+          type="button"
+          aria-pressed={isFollowing}
+          onClick={onFollow}
+          className={`mt-4 inline-flex h-9 items-center gap-2 rounded-full px-4 text-sm font-black transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron ${
+            isFollowing
+              ? "bg-saffron text-white hover:bg-terracotta"
+              : "bg-white text-charcoal hover:bg-saffron hover:text-white"
+          }`}
+        >
+          <User className="size-3.5" aria-hidden="true" />
+          {isFollowing ? "Following" : "Follow"}
+        </button>
 
-          <div>
-            {profile.bio ? (
-              <p className="text-sm font-bold leading-6 text-sand/62">{profile.bio}</p>
-            ) : null}
-            <div className="mt-5 flex flex-wrap gap-2">
-              {profile.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-sand/14 bg-sand/8 px-3 py-1 text-xs font-black text-sand/72"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+        <div className="mx-auto mt-5 max-w-md">
+          {profile.bio ? (
+            <p className="text-sm font-bold leading-6 text-sand/72">{profile.bio}</p>
+          ) : (
+            <p className="text-sm font-bold leading-6 text-sand/56">
+              Zahirok creator exploring Balochi melodies, hooks, and modern production.
+            </p>
+          )}
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            {profile.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-sand/14 bg-sand/8 px-3 py-1 text-xs font-black text-sand/78"
+              >
+                {tag}
+              </span>
+            ))}
           </div>
         </div>
       </div>

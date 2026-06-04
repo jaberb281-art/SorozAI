@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import {
     ArrowLeft,
     Bell,
@@ -27,6 +26,7 @@ import {
     X,
 } from "lucide-react"
 
+import { MobileMoreMenu } from "@/components/layout/mobile-more-menu"
 import type { GenrePreset, Instrument } from "@/lib/types"
 import { profilePathForCreator, profilePathForHandle } from "@/lib/public-profiles"
 
@@ -143,11 +143,8 @@ function formatCount(value: number) {
     return value.toString()
 }
 
-/* ── Bottom strip height + gap constants ──────────────────────────────────── */
-const STRIP_ZONE = 84 // px from bottom where strip lives (strip h ~66 + bottom-[14px] + breathing room)
 
 export default function HooksPage() {
-    const router = useRouter()
     const viewerRef = useRef<HTMLDivElement | null>(null)
     const moreMenuRef = useRef<HTMLDivElement | null>(null)
     const lastWheelAt = useRef(0)
@@ -156,7 +153,8 @@ export default function HooksPage() {
     const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
     const [isMuted, setIsMuted] = useState(false)
     const [isPreviewPlaying, setIsPreviewPlaying] = useState(false)
-    const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false)
+    const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false)
+    const [isHookMoreMenuOpen, setIsHookMoreMenuOpen] = useState(false)
     const [hooksNotice, setHooksNotice] = useState<string | null>(null)
     const [isCommentsOpen, setIsCommentsOpen] = useState(false)
     const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false)
@@ -169,34 +167,34 @@ export default function HooksPage() {
 
     const showPreviousHook = useCallback(() => {
         setIsPreviewPlaying(false)
-        setIsMoreMenuOpen(false)
+        setIsHookMoreMenuOpen(false)
         setHooksNotice(null)
         setActiveIndex((i) => (i === 0 ? HOOKS.length - 1 : i - 1))
     }, [])
 
     const showNextHook = useCallback(() => {
         setIsPreviewPlaying(false)
-        setIsMoreMenuOpen(false)
+        setIsHookMoreMenuOpen(false)
         setHooksNotice(null)
         setActiveIndex((i) => (i + 1) % HOOKS.length)
     }, [])
 
     useEffect(() => {
-        if (!isMoreMenuOpen) return
+        if (!isHookMoreMenuOpen) return
 
         function handlePointerDown(event: PointerEvent) {
             if (
                 moreMenuRef.current &&
                 !moreMenuRef.current.contains(event.target as Node)
             ) {
-                setIsMoreMenuOpen(false)
+                setIsHookMoreMenuOpen(false)
             }
         }
 
         document.addEventListener("pointerdown", handlePointerDown)
 
         return () => document.removeEventListener("pointerdown", handlePointerDown)
-    }, [isMoreMenuOpen])
+    }, [isHookMoreMenuOpen])
 
     useEffect(() => {
         const prev = document.body.style.overflow
@@ -228,7 +226,8 @@ export default function HooksPage() {
             const t = e.target as HTMLElement | null
             if (t?.isContentEditable) return
             if (e.key === "Escape") {
-                setIsMoreMenuOpen(false)
+                setIsMobileMoreOpen(false)
+                setIsHookMoreMenuOpen(false)
                 setIsCommentsOpen(false)
                 setIsPlaylistModalOpen(false)
                 return
@@ -262,7 +261,7 @@ export default function HooksPage() {
 
     function handleMoreAction(notice: string) {
         setHooksNotice(notice)
-        setIsMoreMenuOpen(false)
+        setIsHookMoreMenuOpen(false)
     }
 
     function handleSaveToPlaylist() {
@@ -313,8 +312,9 @@ export default function HooksPage() {
                     </Link>
                     <button
                         type="button"
-                        aria-label="More hooks options"
-                        onClick={() => setHooksNotice("More options are in the action rail.")}
+                        aria-label="More navigation options"
+                        aria-expanded={isMobileMoreOpen}
+                        onClick={() => setIsMobileMoreOpen(true)}
                         className="inline-flex size-9 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/12 [&_svg]:pointer-events-none"
                     >
                         <MoreHorizontal className="size-4" aria-hidden="true" />
@@ -322,14 +322,22 @@ export default function HooksPage() {
                 </div>
             </header>
 
+            {isMobileMoreOpen && (
+                <MobileMoreMenu onClose={() => setIsMobileMoreOpen(false)} />
+            )}
+
             {/* Gradient overlays */}
             <div className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(0,0,0,0.35)_0%,transparent_18%,transparent_50%,rgba(0,0,0,0.75)_100%)]" />
 
             {/* ── TOP LEFT — back + volume ── */}
             <div className="absolute left-3 top-[4.5rem] z-50 flex items-center gap-2 sm:left-5 lg:top-4">
-                <TopButton ariaLabel="Go back" onClick={() => router.back()}>
+                <Link
+                    href="/dashboard"
+                    aria-label="Go back to dashboard"
+                    className="inline-flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white transition hover:bg-white/12 [&_svg]:pointer-events-none sm:size-10"
+                >
                     <ArrowLeft className="size-[18px]" />
-                </TopButton>
+                </Link>
                 <TopButton
                     ariaLabel={isMuted ? "Unmute" : "Mute"}
                     onClick={() => setIsMuted((v) => !v)}
@@ -357,14 +365,10 @@ export default function HooksPage() {
                 </p>
             )}
 
-            {/* ── CENTER MEDIA CARD ── */}
-            {/* Centered in the zone between top bar (56px) and bottom strip zone */}
-            <div
-                className="absolute inset-x-0 z-10 flex items-center justify-center"
-                style={{ top: 72, bottom: STRIP_ZONE }}
-            >
+            {/* Full-screen on mobile; restored to a centered card on desktop. */}
+            <div className="absolute inset-0 z-10 lg:inset-x-0 lg:bottom-[84px] lg:top-[72px] lg:flex lg:items-center lg:justify-center">
                 <div
-                    className={`relative aspect-[9/16] w-[min(330px,calc(100vw_-_5.75rem),calc((100dvh_-_190px)*9/16))] max-h-full overflow-hidden rounded-2xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_20px_60px_rgba(0,0,0,0.55)] sm:w-[min(380px,calc((100dvh_-_200px)*9/16))] ${activeHook.mediaClass}`}
+                    className={`relative h-full w-full overflow-hidden lg:aspect-[9/16] lg:h-auto lg:max-h-full lg:w-[min(380px,calc((100dvh_-_200px)*9/16))] lg:rounded-2xl lg:border lg:border-white/[0.08] lg:shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_20px_60px_rgba(0,0,0,0.55)] ${activeHook.mediaClass}`}
                 >
                     {/* Thumbnail image (if available) or decorative layers */}
                     {activeHook.thumbImage ? (
@@ -408,8 +412,7 @@ export default function HooksPage() {
 
             {/* ── LEFT METADATA ── */}
             <div
-                className="absolute left-3 z-20 max-w-[calc(100vw-6.5rem)] sm:left-5 sm:max-w-[min(420px,calc(100vw-8rem))] lg:left-6 lg:max-w-[min(460px,calc(50%-160px))]"
-                style={{ bottom: STRIP_ZONE + 8 }}
+                className="absolute bottom-[calc(var(--app-mobile-tab-bar-height)+5.25rem)] left-3 z-20 max-w-[calc(100vw-6.5rem)] sm:left-5 sm:max-w-[min(420px,calc(100vw-8rem))] lg:bottom-[92px] lg:left-6 lg:max-w-[min(460px,calc(50%-160px))]"
             >
                 <div className="flex items-center gap-2.5">
                     <Link
@@ -442,10 +445,9 @@ export default function HooksPage() {
             {/* ── RIGHT ACTION RAIL ── */}
             {/* Centered in same vertical zone as media card, offset right */}
             <div
-                className={`absolute right-2 z-30 flex flex-col items-center justify-center gap-1.5 transition-[right] sm:right-4 sm:gap-2 ${
+                className={`absolute bottom-[calc(var(--app-mobile-tab-bar-height)+5rem)] right-2 top-14 z-30 flex flex-col items-center justify-center gap-1.5 transition-[right] sm:right-4 sm:gap-2 lg:bottom-[88px] lg:top-[54px] ${
                     isCommentsOpen ? "lg:right-[410px]" : "lg:right-5"
                 }`}
-                style={{ top: 54, bottom: STRIP_ZONE + 4 }}
             >
                 <RailAction ariaLabel="Previous hook" onClick={showPreviousHook} icon={<ChevronUp className="size-5" />} />
                 <RailAction ariaLabel="Next hook" onClick={showNextHook} icon={<ChevronDown className="size-5" />} />
@@ -475,11 +477,11 @@ export default function HooksPage() {
                 <div ref={moreMenuRef} className="relative">
                     <RailButton
                         ariaLabel="More options"
-                        onClick={() => setIsMoreMenuOpen((value) => !value)}
-                        active={isMoreMenuOpen}
+                        onClick={() => setIsHookMoreMenuOpen((value) => !value)}
+                        active={isHookMoreMenuOpen}
                         icon={<MoreHorizontal className="size-[18px]" />}
                     />
-                    {isMoreMenuOpen && (
+                    {isHookMoreMenuOpen && (
                         <HookMoreMenu
                             onHideCreator={() => handleMoreAction("Creator hidden for this session.")}
                             onReport={() => handleMoreAction("Report submitted for review.")}
@@ -490,7 +492,7 @@ export default function HooksPage() {
             </div>
 
             {/* ── BOTTOM SONG STRIP ── */}
-            <div className="absolute bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-2 right-2 z-20 sm:left-5 sm:right-5">
+            <div className="absolute bottom-[calc(var(--app-mobile-tab-bar-height)+0.75rem)] left-2 right-2 z-20 sm:left-5 sm:right-5 lg:bottom-[calc(env(safe-area-inset-bottom)+0.75rem)]">
                 <div className="mx-auto flex h-[58px] max-w-[1080px] items-center gap-2 rounded-[18px] border border-white/12 bg-[#20252b]/88 px-2 pr-2.5 shadow-[0_16px_42px_rgba(0,0,0,0.42)] backdrop-blur-md sm:h-[64px] sm:gap-3 sm:px-3 sm:pr-3">
                     {/* Thumbnail / play */}
                     <button
@@ -537,7 +539,7 @@ export default function HooksPage() {
             </div>
 
             {/* Progress bar */}
-            <div className="absolute bottom-0 left-0 right-0 z-30 h-[3px] bg-white/8">
+            <div className="absolute bottom-[var(--app-mobile-tab-bar-height)] left-0 right-0 z-30 h-[3px] bg-white/8 lg:bottom-0">
                 <div className="h-full w-1/3 bg-saffron/70 transition-all" />
             </div>
 

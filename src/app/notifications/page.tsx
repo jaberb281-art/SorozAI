@@ -106,7 +106,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#090909] text-sand">
-      <section className="min-h-screen w-full border-white/10 bg-[#121214] pb-[160px] md:max-w-[600px] md:border-r md:pb-[96px] lg:max-w-[640px]">
+      <section className="min-h-screen w-full border-white/10 bg-[#121214] pb-6 md:max-w-[600px] md:border-r md:pb-8 lg:max-w-[640px]">
         <div className="grid h-[70px] grid-cols-[1fr_1fr_62px] border-b border-white/12">
           {(["Notifications", "Activity"] as const).map((tab) => (
             <button
