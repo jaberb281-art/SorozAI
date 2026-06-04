@@ -11,6 +11,7 @@ import { SongSocialPanel } from "@/components/songs/song-social-panel"
 import { SongStatusBadge } from "@/components/songs/song-status-badge"
 import { getSongById } from "@/lib/api-client"
 import { getMockSongById } from "@/lib/mock-songs"
+import { profilePathForCreator } from "@/lib/public-profiles"
 import type { Song } from "@/lib/types"
 
 // ── Local type ────────────────────────────────────────────────────────────────
@@ -83,7 +84,13 @@ export default async function SongDetailPage({ params }: SongDetailPageProps) {
                                 </h1>
                                 {song.creator && (
                                     <p className="mt-2 text-sm font-bold text-sand/55">
-                                        by {song.creator}
+                                        by{" "}
+                                        <Link
+                                            href={profilePathForCreator(song.creator)}
+                                            className="transition hover:text-saffron"
+                                        >
+                                            {song.creator}
+                                        </Link>
                                     </p>
                                 )}
                             </div>

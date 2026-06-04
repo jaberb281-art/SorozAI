@@ -5,14 +5,21 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
     AudioWaveform,
+    Bell,
+    Check,
+    ChevronDown,
     ChevronRight,
     Compass,
+    Monitor,
+    MoreHorizontal,
     Mic,
+    Moon,
     Music2,
     Pause,
     Play,
     Plus,
     Search,
+    Sun,
     Upload,
     X,
 } from "lucide-react"
@@ -151,6 +158,8 @@ export default function DashboardPage() {
     const router = useRouter()
     const [prompt, setPrompt] = useState("")
     const [isAudioMenuOpen, setIsAudioMenuOpen] = useState(false)
+    const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false)
+    const [isMobileThemeOpen, setIsMobileThemeOpen] = useState(false)
     const [selectedAudioFile, setSelectedAudioFile] = useState<File | null>(null)
     const [composerNotice, setComposerNotice] = useState("")
     const [promptNote, setPromptNote] = useState("")
@@ -186,6 +195,22 @@ export default function DashboardPage() {
             document.removeEventListener("keydown", handleEscape)
         }
     }, [isAudioMenuOpen])
+
+    useEffect(() => {
+        if (!isMobileMoreOpen) return
+
+        function handleEscape(event: KeyboardEvent) {
+            if (event.key === "Escape") {
+                setIsMobileMoreOpen(false)
+            }
+        }
+
+        document.addEventListener("keydown", handleEscape)
+
+        return () => {
+            document.removeEventListener("keydown", handleEscape)
+        }
+    }, [isMobileMoreOpen])
 
     // MOCK: replace with api-client.generateSong({ prompt }) when backend is ready
     function handleCreate() {
@@ -240,16 +265,62 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="relative min-h-screen overflow-x-hidden bg-charcoal text-sand">
+        <div className="relative min-h-dvh w-full max-w-full min-w-0 overflow-x-hidden bg-charcoal text-sand">
             {/* Background */}
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_8%,rgba(227,122,44,0.18),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(26,58,92,0.6),transparent_34%),linear-gradient(135deg,var(--charcoal)_0%,var(--deep-indigo)_46%,var(--charcoal)_100%)]" />
             <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:linear-gradient(90deg,rgba(237,227,211,0.3)_1px,transparent_1px),linear-gradient(rgba(237,227,211,0.25)_1px,transparent_1px)] [background-size:40px_40px]" />
 
             {/* Content */}
-            <div className="relative z-10 mx-auto w-full max-w-5xl px-4 pb-[160px] pt-5 md:px-6 md:pb-[100px] md:pt-6">
+            <div className="relative z-10 mx-auto w-full max-w-5xl min-w-0 px-4 pb-6 pt-4 md:px-6 md:pt-6 lg:pb-8">
 
                 {/* ── Top bar: compact search pill ── */}
-                <div className="flex items-center justify-end">
+                <header className="flex h-14 items-center justify-between gap-3 lg:hidden">
+                    <Link href="/dashboard" aria-label="Zahirok dashboard" className="flex min-w-0 items-center gap-2">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-saffron/25 bg-saffron/10 text-saffron">
+                            <Music2 className="size-4" aria-hidden="true" />
+                        </span>
+                        <span className="truncate text-lg font-black uppercase tracking-[0.14em] text-white">
+                            Zahirok
+                        </span>
+                    </Link>
+
+                    <div className="flex shrink-0 items-center gap-1.5">
+                        <Link
+                            href="/pricing"
+                            className="inline-flex h-9 items-center justify-center rounded-full bg-white/[0.08] px-4 text-xs font-black text-white transition hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                        >
+                            Upgrade
+                        </Link>
+                        <button
+                            type="button"
+                            aria-label="Search"
+                            onClick={() => router.push("/feed")}
+                            className="inline-flex size-9 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                        >
+                            <Search className="size-4" aria-hidden="true" />
+                        </button>
+                        <button
+                            type="button"
+                            aria-label="Notifications"
+                            onClick={() => router.push("/notifications")}
+                            className="inline-flex size-9 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                        >
+                            <Bell className="size-4" aria-hidden="true" />
+                        </button>
+                        <button
+                            type="button"
+                            aria-label="Open more menu"
+                            aria-expanded={isMobileMoreOpen}
+                            aria-haspopup="dialog"
+                            onClick={() => setIsMobileMoreOpen(true)}
+                            className="inline-flex size-9 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                        >
+                            <MoreHorizontal className="size-4" aria-hidden="true" />
+                        </button>
+                    </div>
+                </header>
+
+                <div className="hidden items-center justify-end lg:flex">
                     <button
                         type="button"
                         aria-label="Search"
@@ -262,13 +333,14 @@ export default function DashboardPage() {
                 </div>
 
                 {/* ── Hero ── */}
-                <section className="mx-auto mt-10 max-w-2xl text-center md:mt-14">
-                    <h1 className="text-[2rem] font-black leading-[1.1] tracking-tight text-sand sm:text-[2.6rem] md:text-[3rem]">
-                        Bring your sound to life
+                <section className="mx-auto mt-9 max-w-2xl text-center lg:mt-14">
+                    <h1 className="text-[2rem] font-black leading-[1.08] tracking-tight text-sand sm:text-[2.6rem] md:text-[3rem]">
+                        <span className="lg:hidden">Let&apos;s make a song</span>
+                        <span className="hidden lg:inline">Bring your sound to life</span>
                     </h1>
 
                     {/* Compact prompt composer — single flat card */}
-                    <div className="mx-auto mt-6 max-w-xl rounded-xl border border-sand/10 bg-charcoal/60 shadow-[0_16px_48px_rgba(0,0,0,0.3)]">
+                    <div className="mx-auto mt-5 max-w-xl rounded-xl border border-sand/10 bg-[#211514]/72 shadow-[0_16px_48px_rgba(0,0,0,0.3)] lg:mt-6 lg:bg-charcoal/60">
                         <div className="px-4 pt-3">
                             <textarea
                                 value={prompt}
@@ -280,7 +352,7 @@ export default function DashboardPage() {
                                 className="w-full resize-none bg-transparent text-sm leading-6 text-sand outline-none placeholder:text-sand/35"
                             />
                         </div>
-                        <div className="flex items-center justify-between px-3 pb-3 pt-1">
+                        <div className="flex items-center justify-between gap-3 px-3 pb-3 pt-1">
                             <div ref={audioMenuRef} className="relative">
                                 <button
                                     type="button"
@@ -309,7 +381,7 @@ export default function DashboardPage() {
                             <button
                                 type="button"
                                 onClick={handleCreate}
-                                className="inline-flex h-10 items-center gap-2 rounded-full bg-saffron px-5 text-sm font-black text-sand shadow-[0_12px_32px_rgba(227,122,44,0.25)] transition hover:bg-terracotta"
+                                className="inline-flex h-10 items-center gap-2 rounded-full bg-[linear-gradient(135deg,#ff3ca0,#e37a2c)] px-5 text-sm font-black text-white shadow-[0_12px_32px_rgba(227,122,44,0.25)] transition hover:brightness-110 lg:bg-saffron lg:text-sand lg:hover:bg-terracotta lg:hover:brightness-100"
                             >
                                 <AudioWaveform className="size-4" aria-hidden="true" />
                                 Create
@@ -354,7 +426,14 @@ export default function DashboardPage() {
                 </section>
 
                 {/* ── Featured collections (horizontal cards) ── */}
-                <section className="mt-12 md:mt-16">
+                <MobileForYouSection
+                    collection={COLLECTIONS[0]}
+                    onPlaySong={handlePlaySong}
+                    isCurrentSong={isCurrentSong}
+                    isPlaying={isPlaying}
+                />
+
+                <section className="mt-12 hidden lg:block">
                     <div className="grid gap-4 lg:grid-cols-3">
                         {COLLECTIONS.map((col) => (
                             <CollectionCard
@@ -372,7 +451,8 @@ export default function DashboardPage() {
                 <section className="mt-12 md:mt-16">
                     <div className="flex items-center justify-between">
                         <h2 className="text-xl font-black text-sand sm:text-2xl">
-                            For Every Mood
+                            <span className="lg:hidden">Curated Collections</span>
+                            <span className="hidden lg:inline">For Every Mood</span>
                         </h2>
                         <Link
                             href="/feed"
@@ -415,6 +495,14 @@ export default function DashboardPage() {
                     </Link>
                 </section>
             </div>
+
+            {isMobileMoreOpen && (
+                <DashboardMobileMoreMenu
+                    isThemeOpen={isMobileThemeOpen}
+                    onClose={() => setIsMobileMoreOpen(false)}
+                    onThemeToggle={() => setIsMobileThemeOpen((open) => !open)}
+                />
+            )}
         </div>
     )
 }
@@ -450,6 +538,279 @@ function AudioOptionsPopover({
                 Upload
             </button>
         </div>
+    )
+}
+
+function DashboardMobileMoreMenu({
+    isThemeOpen,
+    onClose,
+    onThemeToggle,
+}: {
+    isThemeOpen: boolean
+    onClose: () => void
+    onThemeToggle: () => void
+}) {
+    const primaryItems = [
+        { label: "My Taste", href: "/account" },
+        { label: "Invite friends", href: "/profile" },
+        { label: "Account", href: "/account" },
+    ]
+
+    const navItems = [
+        { label: "Hooks", href: "/hooks" },
+        { label: "Labs", href: "/labs" },
+        { label: "Help", href: "/terms" },
+        { label: "About", href: "/" },
+        { label: "Blog", href: "/feed" },
+        { label: "Feedback", href: "/notifications" },
+        { label: "Careers", href: "/studio" },
+        { label: "Terms of Service", href: "/terms" },
+        { label: "Privacy Policy", href: "/privacy" },
+        { label: "Your Privacy Choices", href: "/privacy" },
+    ]
+
+    return (
+        <div
+            className="fixed inset-0 z-[95] bg-black/62 px-3 py-4 backdrop-blur-sm lg:hidden"
+            role="presentation"
+            onMouseDown={(event) => {
+                if (event.target === event.currentTarget) onClose()
+            }}
+        >
+            <section
+                role="dialog"
+                aria-modal="true"
+                aria-label="More menu"
+                className="ml-auto flex h-full w-full max-w-sm flex-col overflow-hidden border border-white/[0.06] bg-[#101012] text-white shadow-[0_28px_90px_rgba(0,0,0,0.65)]"
+            >
+                <div className="flex shrink-0 items-center justify-end px-4 py-3">
+                    <button
+                        type="button"
+                        aria-label="Close more menu"
+                        onClick={onClose}
+                        className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                    >
+                        <X className="size-5" aria-hidden="true" />
+                    </button>
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-4 [scrollbar-color:rgba(237,227,211,0.25)_transparent] [scrollbar-width:thin]">
+                    <nav aria-label="Account menu" className="grid gap-1">
+                        {primaryItems.map((item) => (
+                            <MobileMoreLink key={item.label} href={item.href} onClick={onClose}>
+                                {item.label}
+                            </MobileMoreLink>
+                        ))}
+
+                        <Link
+                            href="/pricing"
+                            onClick={onClose}
+                            className="flex min-h-9 items-center gap-2 rounded-lg px-0 text-sm font-semibold text-white transition hover:text-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                        >
+                            Subscription
+                            <span className="rounded-full bg-white/12 px-2 py-0.5 text-[9px] font-black text-white">
+                                75 Credits
+                            </span>
+                        </Link>
+
+                        <button
+                            type="button"
+                            aria-expanded={isThemeOpen}
+                            onClick={onThemeToggle}
+                            className="mt-1 flex min-h-10 w-full items-center justify-between rounded-lg px-0 text-left text-sm font-semibold text-white transition hover:text-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                        >
+                            Theme
+                            <ChevronDown className={`size-4 text-white/72 transition ${isThemeOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+                        </button>
+
+                        {isThemeOpen && (
+                            <div className="mb-2 grid border-y border-white/[0.08] py-2">
+                                <ThemeChoice icon={<Moon className="size-4" aria-hidden="true" />} label="Dark" active />
+                                <ThemeChoice icon={<Sun className="size-4" aria-hidden="true" />} label="Light" />
+                                <ThemeChoice icon={<Monitor className="size-4" aria-hidden="true" />} label="System" />
+                            </div>
+                        )}
+                    </nav>
+
+                    {!isThemeOpen && <div className="my-2 border-t border-white/[0.08]" />}
+
+                    <nav aria-label="Zahirok links" className="grid gap-1">
+                        {navItems.map((item) => (
+                            <MobileMoreLink key={item.label} href={item.href} onClick={onClose}>
+                                {item.label}
+                            </MobileMoreLink>
+                        ))}
+                    </nav>
+
+                    <div className="mt-3 border-t border-white/[0.08] pt-2">
+                        <button
+                            type="button"
+                            className="flex min-h-9 w-full items-center rounded-lg px-0 text-left text-sm font-semibold text-white transition hover:text-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                        >
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid shrink-0 grid-cols-5 border-t border-white/[0.08] px-5 py-3 text-white/46">
+                    <span className="text-center text-xl font-semibold">X</span>
+                    <span className="text-center text-xl font-semibold">◎</span>
+                    <span className="text-center text-xl font-semibold">▶</span>
+                    <Music2 className="mx-auto size-5" aria-hidden="true" />
+                    <span className="text-center text-xl font-semibold">●</span>
+                </div>
+            </section>
+        </div>
+    )
+}
+
+function MobileMoreLink({
+    children,
+    href,
+    onClick,
+}: {
+    children: React.ReactNode
+    href: string
+    onClick: () => void
+}) {
+    return (
+        <Link
+            href={href}
+            onClick={onClick}
+            className="flex min-h-9 items-center rounded-lg px-0 text-sm font-semibold text-white transition hover:text-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+        >
+            {children}
+        </Link>
+    )
+}
+
+function ThemeChoice({
+    active,
+    icon,
+    label,
+}: {
+    active?: boolean
+    icon: React.ReactNode
+    label: string
+}) {
+    return (
+        <button
+            type="button"
+            className="flex min-h-9 items-center gap-3 rounded-lg px-0 text-sm font-semibold text-white transition hover:text-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+        >
+            <span className="text-white/86">{icon}</span>
+            <span className="flex-1 text-left">{label}</span>
+            {active && <Check className="size-4 text-white/86" aria-hidden="true" />}
+        </button>
+    )
+}
+
+function MobileForYouSection({
+    collection,
+    onPlaySong,
+    isCurrentSong,
+    isPlaying,
+}: {
+    collection: (typeof COLLECTIONS)[number]
+    onPlaySong: (s: CollectionSong) => void
+    isCurrentSong: (s: Song) => boolean
+    isPlaying: boolean
+}) {
+    const firstSong = collection.songs[0]
+
+    return (
+        <section className="mt-7 lg:hidden">
+            <article className="overflow-hidden rounded-2xl border border-sand/10 bg-sand/[0.055] p-4 shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
+                <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (firstSong) onPlaySong(firstSong)
+                        }}
+                        aria-label={`Play ${collection.title}`}
+                        className="relative grid size-[84px] shrink-0 grid-cols-2 grid-rows-2 gap-0.5 overflow-hidden rounded-xl"
+                    >
+                        {collection.collage.map((bg, i) => {
+                            const songImg = collection.songs[i % collection.songs.length]?.coverImage
+                            return (
+                                <span key={i} className={`${bg} relative flex items-center justify-center`}>
+                                    {songImg ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={songImg} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
+                                    ) : (
+                                        <Music2 className="size-4 text-sand/35" aria-hidden="true" />
+                                    )}
+                                </span>
+                            )
+                        })}
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/18">
+                            <span className="flex size-10 items-center justify-center rounded-full bg-white/82 text-charcoal shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
+                                <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
+                            </span>
+                        </span>
+                    </button>
+                    <div className="min-w-0">
+                        <h2 className="text-base font-black text-white">{collection.title}</h2>
+                        <p className="mt-1 text-xs font-semibold text-sand/45">{collection.subtitle}</p>
+                    </div>
+                </div>
+
+                <div className="mt-4 grid gap-2">
+                    {collection.songs.map((song) => {
+                        const songObj = toSong(song)
+                        const isCurrent = isCurrentSong(songObj)
+                        const isThisPlaying = isCurrent && isPlaying
+
+                        return (
+                            <div key={song.id} className={`flex items-center gap-2.5 rounded-xl p-1.5 ${isCurrent ? "bg-saffron/10" : ""}`}>
+                                <div className={`relative size-11 shrink-0 overflow-hidden rounded-lg ${song.color}`}>
+                                    {song.coverImage ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={song.coverImage} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
+                                    ) : (
+                                        <Music2 className="absolute left-1/2 top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 text-sand/40" aria-hidden="true" />
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => onPlaySong(song)}
+                                    aria-label={`${isThisPlaying ? "Pause" : "Play"} ${song.title}`}
+                                    className={`flex size-8 shrink-0 items-center justify-center rounded-full transition ${isThisPlaying ? "bg-saffron text-charcoal" : "bg-white/[0.08] text-white hover:bg-saffron hover:text-charcoal"}`}
+                                >
+                                    {isThisPlaying ? (
+                                        <Pause className="size-3.5 fill-current" aria-hidden="true" />
+                                    ) : (
+                                        <Play className="ml-px size-3.5 fill-current" aria-hidden="true" />
+                                    )}
+                                </button>
+                                <div className="min-w-0 flex-1">
+                                    <p className={`truncate text-sm font-black leading-tight ${isCurrent ? "text-saffron" : "text-white"}`}>
+                                        {song.title}
+                                    </p>
+                                    <p className="mt-0.5 truncate text-[11px] font-semibold text-sand/45">
+                                        {formatPlays(song.plays)} · {song.genre}
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    aria-label={`More options for ${song.title}`}
+                                    className="flex size-8 shrink-0 items-center justify-center rounded-full text-sand/45 transition hover:bg-white/[0.08] hover:text-white"
+                                >
+                                    <MoreHorizontal className="size-4" aria-hidden="true" />
+                                </button>
+                            </div>
+                        )
+                    })}
+                </div>
+
+                <Link
+                    href="/feed"
+                    className="mt-4 flex h-10 w-full items-center justify-center rounded-full border border-sand/10 text-sm font-black text-white transition hover:border-saffron/35 hover:bg-saffron/10"
+                >
+                    See more
+                </Link>
+            </article>
+        </section>
     )
 }
 

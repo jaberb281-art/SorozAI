@@ -150,9 +150,9 @@ export default function LibraryPage() {
     }
 
     return (
-        <div className="min-h-screen overflow-x-hidden bg-[#101010] text-sand">
-            <main className="min-h-screen px-4 pb-[160px] pt-6 md:px-6 md:pb-[96px] xl:px-8">
-                <header className="flex items-start justify-between gap-4">
+        <div className="min-h-dvh w-full max-w-full min-w-0 overflow-x-hidden bg-[#101010] text-sand">
+            <main className="min-h-dvh w-full max-w-full min-w-0 px-4 pb-6 pt-6 md:px-6 lg:pb-8 xl:px-8">
+                <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <h1 className="text-4xl font-black leading-none tracking-tight text-white">
                         Library
                     </h1>
@@ -164,7 +164,7 @@ export default function LibraryPage() {
                                 aria-expanded={isAudioMenuOpen}
                                 aria-controls="library-audio-options-menu"
                                 onClick={() => setIsAudioMenuOpen((open) => !open)}
-                                className={`inline-flex h-12 items-center gap-2 rounded-full border px-5 text-sm font-black text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron ${
+                                className={`inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-black text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-12 sm:px-5 ${
                                     isAudioMenuOpen
                                         ? "border-saffron/35 bg-white/[0.08]"
                                         : "border-white/12 hover:bg-white/[0.04]"
@@ -190,7 +190,7 @@ export default function LibraryPage() {
                         <button
                             type="button"
                             aria-label="Delete selected items"
-                            className="inline-flex size-12 items-center justify-center rounded-full border border-white/10 text-sand/68 transition hover:bg-white/[0.05] hover:text-white"
+                            className="inline-flex size-11 items-center justify-center rounded-full border border-white/10 text-sand/68 transition hover:bg-white/[0.05] hover:text-white sm:size-12"
                         >
                             <Trash2 className="size-4" aria-hidden={true} />
                         </button>
@@ -232,7 +232,7 @@ export default function LibraryPage() {
                 <div
                     role="tablist"
                     aria-label="Library sections"
-                    className="mt-8 flex gap-7 overflow-x-auto border-b border-white/12 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    className="mt-8 flex snap-x gap-5 overflow-x-auto border-b border-white/12 pb-0.5 [scrollbar-color:rgba(237,227,211,0.28)_transparent] [scrollbar-width:thin] sm:gap-7 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sand/20"
                 >
                     {LIBRARY_TABS.map((tab) => (
                         <button
@@ -246,7 +246,7 @@ export default function LibraryPage() {
                                 setActiveTab(tab)
                                 setQuery("")
                             }}
-                            className={`shrink-0 pb-3 text-base font-bold ${
+                            className={`shrink-0 snap-start pb-3 text-sm font-bold sm:text-base ${
                                 activeTab === tab
                                     ? "border-b-2 border-white text-white"
                                     : "text-sand/70 transition hover:text-white"

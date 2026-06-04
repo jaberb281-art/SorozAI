@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
     ArrowLeft,
+    Bell,
     ChevronDown,
     ChevronUp,
     Flag,
@@ -16,15 +17,18 @@ import {
     Play,
     Plus,
     Repeat2,
+    Search,
     Send,
     Share2,
     ThumbsDown,
+    Music2,
     Volume2,
     VolumeX,
     X,
 } from "lucide-react"
 
 import type { GenrePreset, Instrument } from "@/lib/types"
+import { profilePathForCreator, profilePathForHandle } from "@/lib/public-profiles"
 
 type HookItem = {
     id: string
@@ -271,13 +275,58 @@ export default function HooksPage() {
     return (
         <div
             ref={viewerRef}
-            className="fixed inset-0 z-40 overflow-hidden bg-[#08080a] text-sand md:left-[var(--app-sidebar-width,228px)]"
+            className="fixed inset-0 z-40 min-h-dvh w-full max-w-full overflow-hidden overflow-x-hidden bg-[#08080a] text-sand lg:left-[var(--app-sidebar-width,228px)] lg:w-auto"
         >
+            <header className="absolute left-0 right-0 top-0 z-[60] flex h-14 items-center justify-between gap-3 bg-[#08080a]/78 px-4 backdrop-blur-md lg:hidden">
+                <Link
+                    href="/dashboard"
+                    aria-label="Zahirok dashboard"
+                    className="flex min-w-0 items-center gap-2"
+                >
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-saffron/25 bg-saffron/10 text-saffron">
+                        <Music2 className="size-4" aria-hidden="true" />
+                    </span>
+                    <span className="truncate text-lg font-black uppercase tracking-[0.14em] text-white">
+                        Zahirok
+                    </span>
+                </Link>
+                <div className="flex shrink-0 items-center gap-1.5">
+                    <Link
+                        href="/pricing"
+                        className="inline-flex h-9 items-center justify-center rounded-full bg-white/[0.08] px-4 text-xs font-black text-white transition hover:bg-white/12"
+                    >
+                        Upgrade
+                    </Link>
+                    <Link
+                        href="/feed"
+                        aria-label="Search"
+                        className="inline-flex size-9 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/12 [&_svg]:pointer-events-none"
+                    >
+                        <Search className="size-4" aria-hidden="true" />
+                    </Link>
+                    <Link
+                        href="/notifications"
+                        aria-label="Notifications"
+                        className="inline-flex size-9 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/12 [&_svg]:pointer-events-none"
+                    >
+                        <Bell className="size-4" aria-hidden="true" />
+                    </Link>
+                    <button
+                        type="button"
+                        aria-label="More hooks options"
+                        onClick={() => setHooksNotice("More options are in the action rail.")}
+                        className="inline-flex size-9 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/12 [&_svg]:pointer-events-none"
+                    >
+                        <MoreHorizontal className="size-4" aria-hidden="true" />
+                    </button>
+                </div>
+            </header>
+
             {/* Gradient overlays */}
             <div className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(0,0,0,0.35)_0%,transparent_18%,transparent_50%,rgba(0,0,0,0.75)_100%)]" />
 
             {/* ── TOP LEFT — back + volume ── */}
-            <div className="absolute left-5 top-4 z-50 flex items-center gap-2">
+            <div className="absolute left-3 top-[4.5rem] z-50 flex items-center gap-2 sm:left-5 lg:top-4">
                 <TopButton ariaLabel="Go back" onClick={() => router.back()}>
                     <ArrowLeft className="size-[18px]" />
                 </TopButton>
@@ -292,9 +341,11 @@ export default function HooksPage() {
             {/* ── TOP RIGHT — create hook ── */}
             <Link
                 href="/create"
-                className="absolute right-5 top-4 z-50 inline-flex h-10 items-center rounded-full border border-white/12 bg-white/[0.06] px-4 text-[13px] font-bold text-white transition hover:bg-white/10"
+                aria-label="Create hook"
+                className="absolute right-3 top-[4.5rem] z-50 inline-flex size-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.08] text-white transition hover:bg-white/12 sm:right-5 lg:top-4 lg:h-10 lg:w-auto lg:max-w-[calc(100vw-8rem)] lg:px-4 lg:text-[13px] lg:font-bold"
             >
-                Create hook
+                <Plus className="size-4 lg:hidden" aria-hidden="true" />
+                <span className="hidden lg:inline">Create hook</span>
             </Link>
 
             {hooksNotice && (
@@ -310,10 +361,10 @@ export default function HooksPage() {
             {/* Centered in the zone between top bar (56px) and bottom strip zone */}
             <div
                 className="absolute inset-x-0 z-10 flex items-center justify-center"
-                style={{ top: 56, bottom: STRIP_ZONE }}
+                style={{ top: 72, bottom: STRIP_ZONE }}
             >
                 <div
-                    className={`relative aspect-[9/16] w-[min(380px,calc((100dvh_-_200px)*9/16))] max-h-full overflow-hidden rounded-2xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_20px_60px_rgba(0,0,0,0.55)] ${activeHook.mediaClass}`}
+                    className={`relative aspect-[9/16] w-[min(330px,calc(100vw_-_5.75rem),calc((100dvh_-_190px)*9/16))] max-h-full overflow-hidden rounded-2xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_20px_60px_rgba(0,0,0,0.55)] sm:w-[min(380px,calc((100dvh_-_200px)*9/16))] ${activeHook.mediaClass}`}
                 >
                     {/* Thumbnail image (if available) or decorative layers */}
                     {activeHook.thumbImage ? (
@@ -357,15 +408,22 @@ export default function HooksPage() {
 
             {/* ── LEFT METADATA ── */}
             <div
-                className="absolute left-5 z-20 max-w-[min(460px,calc(50%-200px))] min-w-[200px] sm:left-6"
+                className="absolute left-3 z-20 max-w-[calc(100vw-6.5rem)] sm:left-5 sm:max-w-[min(420px,calc(100vw-8rem))] lg:left-6 lg:max-w-[min(460px,calc(50%-160px))]"
                 style={{ bottom: STRIP_ZONE + 8 }}
             >
                 <div className="flex items-center gap-2.5">
-                    <div className="size-9 shrink-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,#f2d1aa_0%,#e37a2c_36%,#2f8f9a_100%)] shadow-[0_2px_8px_rgba(0,0,0,0.3)]" />
-                    <div className="min-w-0">
+                    <Link
+                        href={profilePathForHandle(activeHook.creatorHandle)}
+                        className="size-9 shrink-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,#f2d1aa_0%,#e37a2c_36%,#2f8f9a_100%)] shadow-[0_2px_8px_rgba(0,0,0,0.3)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+                        aria-label={`View ${activeHook.creator}'s profile`}
+                    />
+                    <Link
+                        href={profilePathForHandle(activeHook.creatorHandle)}
+                        className="min-w-0 transition hover:text-saffron focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+                    >
                         <p className="truncate text-[13px] font-bold leading-tight text-white">{activeHook.creator}</p>
                         <p className="text-[11px] text-sand/45">@{activeHook.creatorHandle}</p>
-                    </div>
+                    </Link>
                     <button
                         type="button"
                         className="ml-0.5 h-[26px] shrink-0 rounded-full border border-white/16 px-3 text-[11px] font-bold text-white transition hover:bg-white/[0.06]"
@@ -373,10 +431,10 @@ export default function HooksPage() {
                         Follow
                     </button>
                 </div>
-                <p className="mt-2 text-[14px] font-semibold leading-[1.45] text-white line-clamp-2">
+                <p className="mt-2 hidden text-[14px] font-semibold leading-[1.45] text-white line-clamp-2 sm:block">
                     {activeHook.caption}
                 </p>
-                <p className="mt-1 text-[12px] leading-[1.4] text-sand/50 line-clamp-1 sm:line-clamp-2">
+                <p className="mt-1 hidden text-[12px] leading-[1.4] text-sand/50 line-clamp-1 sm:block sm:line-clamp-2">
                     {activeHook.hashtags.join(" ")}
                 </p>
             </div>
@@ -384,10 +442,10 @@ export default function HooksPage() {
             {/* ── RIGHT ACTION RAIL ── */}
             {/* Centered in same vertical zone as media card, offset right */}
             <div
-                className={`absolute right-3 z-30 flex flex-col items-center justify-center gap-2 transition-[right] sm:right-4 ${
+                className={`absolute right-2 z-30 flex flex-col items-center justify-center gap-1.5 transition-[right] sm:right-4 sm:gap-2 ${
                     isCommentsOpen ? "lg:right-[410px]" : "lg:right-5"
                 }`}
-                style={{ top: 56, bottom: STRIP_ZONE }}
+                style={{ top: 54, bottom: STRIP_ZONE + 4 }}
             >
                 <RailAction ariaLabel="Previous hook" onClick={showPreviousHook} icon={<ChevronUp className="size-5" />} />
                 <RailAction ariaLabel="Next hook" onClick={showNextHook} icon={<ChevronDown className="size-5" />} />
@@ -432,8 +490,8 @@ export default function HooksPage() {
             </div>
 
             {/* ── BOTTOM SONG STRIP ── */}
-            <div className="absolute bottom-3 left-3 right-3 z-20 sm:bottom-3.5 sm:left-5 sm:right-5">
-                <div className="mx-auto flex h-[64px] max-w-[1080px] items-center gap-2.5 rounded-[18px] border border-white/10 bg-white/[0.06] px-2 pr-2.5 backdrop-blur-md sm:gap-3 sm:px-3 sm:pr-3">
+            <div className="absolute bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-2 right-2 z-20 sm:left-5 sm:right-5">
+                <div className="mx-auto flex h-[58px] max-w-[1080px] items-center gap-2 rounded-[18px] border border-white/12 bg-[#20252b]/88 px-2 pr-2.5 shadow-[0_16px_42px_rgba(0,0,0,0.42)] backdrop-blur-md sm:h-[64px] sm:gap-3 sm:px-3 sm:pr-3">
                     {/* Thumbnail / play */}
                     <button
                         type="button"
@@ -465,10 +523,10 @@ export default function HooksPage() {
                             type="button"
                             aria-pressed={isSaved}
                             onClick={() => setIsPlaylistModalOpen(true)}
-                            className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-bold transition sm:h-9 sm:px-4 sm:text-[13px] ${
+                            className={`inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-[11px] font-bold transition [&_svg]:pointer-events-none sm:h-9 sm:gap-1.5 sm:px-4 sm:text-[13px] ${
                                 isSaved
                                     ? "bg-saffron text-charcoal"
-                                    : "bg-white/12 text-white hover:bg-white/18"
+                                    : "bg-white/14 text-white hover:bg-white/20"
                             }`}
                         >
                             <Plus className="size-3.5" />
@@ -514,7 +572,7 @@ function HookMoreMenu({
     onNotInterested: () => void
 }) {
     return (
-        <div className="absolute right-full top-0 z-[80] mr-3 w-64 rounded-xl border border-white/12 bg-[#1f1f22] p-2 text-sm font-bold text-sand shadow-[0_18px_52px_rgba(0,0,0,0.5)]">
+        <div className="absolute right-full top-0 z-[80] mr-2 w-[min(16rem,calc(100vw-5rem))] rounded-xl border border-white/12 bg-[#1f1f22] p-2 text-sm font-bold text-sand shadow-[0_18px_52px_rgba(0,0,0,0.5)] sm:mr-3">
             <button
                 type="button"
                 onClick={onHideCreator}
@@ -575,20 +633,20 @@ function CommentsPanel({
     ]
 
     return (
-        <aside className="absolute bottom-3 right-3 top-3 z-[65] flex w-[min(390px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#19191c] shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
-            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-                <h2 className="text-xl font-black text-white">Comments</h2>
+        <aside className="absolute inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] top-3 z-[65] flex max-w-none flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#19191c] shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:inset-x-auto sm:right-3 sm:w-[min(390px,calc(100vw-1.5rem))]">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-5 sm:py-4">
+                <h2 className="text-lg font-black text-white sm:text-xl">Comments</h2>
                 <button
                     type="button"
                     aria-label="Close comments"
                     onClick={onClose}
-                    className="inline-flex size-11 items-center justify-center rounded-full bg-white/[0.06] text-sand/70 transition hover:bg-white/[0.1] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                    className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.06] text-sand/70 transition hover:bg-white/[0.1] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:size-11"
                 >
                     <X className="size-5" aria-hidden="true" />
                 </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-5 py-4">
+            <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">
                 <label className="flex min-h-14 items-center gap-3 rounded-full bg-white/[0.07] px-4">
                     <span className="size-9 shrink-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,#f2d1aa_0%,#e37a2c_36%,#2f8f9a_100%)]" />
                     <span className="sr-only">Write a comment</span>
@@ -600,8 +658,8 @@ function CommentsPanel({
                     <Send className="size-4 text-sand/45" aria-hidden="true" />
                 </label>
 
-                <div className="mt-7 flex items-center justify-between">
-                    <p className="text-lg font-black text-white">{formatCount(hook.comments)} Comments</p>
+                <div className="mt-6 flex items-center justify-between gap-3 sm:mt-7">
+                    <p className="text-base font-black text-white sm:text-lg">{formatCount(hook.comments)} Comments</p>
                     <button type="button" className="text-sm font-bold text-sand/70 transition hover:text-white">
                         Sort by
                     </button>
@@ -612,8 +670,13 @@ function CommentsPanel({
                         <article key={comment.id} className="flex gap-3">
                             <div className={`size-9 shrink-0 rounded-full ${index === 1 ? "bg-[radial-gradient(circle_at_30%_30%,#f2d1aa_0%,#e37a2c_36%,#2f8f9a_100%)]" : "bg-white/12"}`} />
                             <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-1.5">
-                                    <p className="text-sm font-black text-white">{comment.name}</p>
+                                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                                    <Link
+                                        href={profilePathForCreator(comment.name)}
+                                        className="text-sm font-black text-white transition hover:text-saffron"
+                                    >
+                                        {comment.name}
+                                    </Link>
                                     <span className="text-xs font-semibold text-sand/45">{comment.time}</span>
                                     <span className="text-xs font-black text-[#ff3ca0]">on Song</span>
                                 </div>
@@ -646,15 +709,15 @@ function AddToPlaylistModal({
     onSave: () => void
 }) {
     return (
-        <div className="absolute inset-0 z-[90] flex items-center justify-center bg-black/72 px-4 backdrop-blur-sm">
-            <div className="w-full max-w-xl rounded-[1.75rem] border border-white/10 bg-[#202024] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.65)] sm:p-7">
+        <div className="absolute inset-0 z-[90] flex items-end justify-center bg-black/72 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-4 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6">
+            <div className="max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto rounded-2xl border border-white/10 bg-[#202024] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.65)] sm:rounded-[1.75rem] sm:p-7">
                 <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-3xl font-black text-white">Add to Playlist</h2>
+                    <h2 className="text-2xl font-black text-white sm:text-3xl">Add to Playlist</h2>
                     <button
                         type="button"
                         aria-label="Close add to playlist"
                         onClick={onClose}
-                        className="inline-flex size-12 items-center justify-center rounded-full bg-white/[0.06] text-sand/70 transition hover:bg-white/[0.1] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                        className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-sand/70 transition hover:bg-white/[0.1] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:size-12"
                     >
                         <X className="size-5" aria-hidden="true" />
                     </button>
@@ -663,12 +726,12 @@ function AddToPlaylistModal({
                 <button
                     type="button"
                     onClick={onSave}
-                    className="mt-7 flex w-full items-center gap-4 rounded-lg bg-white/[0.055] p-3 text-left transition hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                    className="mt-5 flex w-full items-center gap-3 rounded-lg bg-white/[0.055] p-3 text-left transition hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:mt-7 sm:gap-4"
                 >
                     <span className="flex size-12 items-center justify-center rounded-md bg-[radial-gradient(circle_at_30%_30%,#29d44f_0%,#1580ff_70%)] text-white">
                         <Heart className="size-5 fill-current" aria-hidden="true" />
                     </span>
-                    <span className="text-lg font-black text-white">Liked Songs</span>
+                    <span className="text-base font-black text-white sm:text-lg">Liked Songs</span>
                 </button>
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
@@ -679,13 +742,13 @@ function AddToPlaylistModal({
                             value={playlistName}
                             onChange={(event) => setPlaylistName(event.target.value)}
                             placeholder="Playlist Name"
-                            className="h-14 w-full rounded-lg border border-white/12 bg-transparent px-4 text-base font-semibold text-white outline-none placeholder:text-sand/45 focus:border-saffron/45"
+                            className="h-12 w-full rounded-lg border border-white/12 bg-transparent px-4 text-base font-semibold text-white outline-none placeholder:text-sand/45 focus:border-saffron/45 sm:h-14"
                         />
                     </label>
                     <button
                         type="button"
                         onClick={onSave}
-                        className="h-14 rounded-lg border border-white/12 px-5 text-base font-black text-white transition hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                        className="h-12 rounded-lg border border-white/12 px-5 text-base font-black text-white transition hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-14"
                     >
                         Create Playlist
                     </button>
@@ -709,7 +772,7 @@ function TopButton({
             type="button"
             aria-label={ariaLabel}
             onClick={onClick}
-            className="inline-flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white transition hover:bg-white/12"
+            className="inline-flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white transition hover:bg-white/12 [&_svg]:pointer-events-none sm:size-10"
         >
             {children}
         </button>
@@ -730,7 +793,7 @@ function RailAction({
             type="button"
             aria-label={ariaLabel}
             onClick={onClick}
-            className="inline-flex size-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition hover:bg-white/12"
+            className="inline-flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition hover:bg-white/12 [&_svg]:pointer-events-none sm:size-11"
         >
             {icon}
         </button>
@@ -756,11 +819,11 @@ function RailButton({
             aria-label={ariaLabel}
             aria-pressed={active}
             onClick={onClick}
-            className={`group flex flex-col items-center gap-0.5 text-[10px] font-bold uppercase tracking-wide transition ${
+            className={`group flex flex-col items-center gap-0.5 text-[9px] font-bold uppercase tracking-wide transition [&_svg]:pointer-events-none sm:text-[10px] ${
                 active ? "text-saffron" : "text-white"
             }`}
         >
-            <span className="inline-flex size-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition group-hover:bg-white/12">
+            <span className="inline-flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition group-hover:bg-white/12 sm:size-11">
                 {icon}
             </span>
             {label && <span className="mt-px">{label}</span>}
@@ -780,9 +843,9 @@ function RailLink({
     return (
         <Link
             href={href}
-            className="group flex flex-col items-center gap-0.5 text-[10px] font-bold uppercase tracking-wide text-white transition"
+            className="group flex flex-col items-center gap-0.5 text-[9px] font-bold uppercase tracking-wide text-white transition [&_svg]:pointer-events-none sm:text-[10px]"
         >
-            <span className="inline-flex size-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition group-hover:bg-white/12">
+            <span className="inline-flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition group-hover:bg-white/12 sm:size-11">
                 {icon}
             </span>
             <span className="mt-px">{label}</span>

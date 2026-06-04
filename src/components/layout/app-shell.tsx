@@ -33,14 +33,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
 
     const showPlayer = shouldShowBottomPlayer(pathname)
+    const showMobileTabBar = pathname !== "/hooks"
 
     return (
-        <div className="flex min-h-dvh overflow-x-hidden bg-charcoal">
+        <div
+            className="flex min-h-dvh overflow-x-hidden bg-charcoal"
+            data-has-bottom-player={showPlayer ? "true" : "false"}
+            data-has-mobile-tab-bar={showMobileTabBar ? "true" : "false"}
+        >
             {/* Desktop sidebar */}
             <AppSidebar />
 
-            {/* Main scrollable area; pages own their player-safe bottom spacing. */}
-            <main className="flex min-h-dvh w-full min-w-0 flex-col transition-[margin-left] duration-200 md:ml-[var(--app-sidebar-width,228px)] md:w-auto md:flex-1">
+            {/* Main scrollable area; the shell owns fixed-nav safe-area spacing. */}
+            <main className="flex min-h-dvh w-full min-w-0 flex-col pb-[var(--app-bottom-safe-area)] transition-[margin-left,padding-bottom] duration-200 lg:ml-[var(--app-sidebar-width,228px)] lg:w-auto lg:flex-1 lg:pb-[var(--app-desktop-bottom-safe-area)]">
                 <div className="flex-1">
                     {children}
                 </div>
@@ -50,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {showPlayer && <BottomPlayer />}
 
             {/* Mobile tab bar */}
-            <MobileTabBar />
+            {showMobileTabBar && <MobileTabBar />}
         </div>
     )
 }

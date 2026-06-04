@@ -396,10 +396,10 @@ function CreatePageInner() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_6%,rgba(227,122,44,0.14),transparent_24%),radial-gradient(circle_at_82%_10%,rgba(26,58,92,0.48),transparent_28%),linear-gradient(135deg,#141414_0%,#191716_48%,#101010_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.045] [background-image:linear-gradient(90deg,rgba(237,227,211,0.35)_1px,transparent_1px),linear-gradient(rgba(237,227,211,0.25)_1px,transparent_1px)] [background-size:36px_36px]" />
 
-      <main className="relative z-10 flex flex-col gap-4 px-3 pb-32 pt-3 md:grid md:h-[calc(100dvh-96px)] md:min-h-0 md:grid-cols-[minmax(470px,520px)_minmax(0,1fr)] md:gap-0 md:overflow-hidden md:px-0 md:pb-0 md:pt-0">
+      <main className="relative z-10 grid grid-cols-1 gap-3 px-3 py-3 xl:h-[calc(100dvh-96px)] xl:min-h-0 xl:grid-cols-[minmax(420px,500px)_minmax(0,1fr)] xl:gap-0 xl:overflow-hidden xl:px-0 xl:py-0">
         {/* ── LEFT PANEL ── */}
-        <section className="rounded-2xl border border-sand/10 bg-[#181818]/95 shadow-[0_20px_60px_rgba(0,0,0,0.34)] md:h-[calc(100dvh-96px)] md:min-h-0 md:rounded-none md:border-y-0 md:border-l-0 md:border-r md:bg-[#171717]/92">
-          <div className="flex h-full min-h-0 flex-col overflow-y-auto overflow-x-visible p-4 pb-5 md:p-5 md:pb-6">
+        <section className="rounded-2xl border border-sand/10 bg-[#181818]/95 shadow-[0_20px_60px_rgba(0,0,0,0.34)] xl:h-[calc(100dvh-96px)] xl:min-h-0 xl:rounded-none xl:border-y-0 xl:border-l-0 xl:border-r xl:bg-[#171717]/92">
+          <div className="flex h-full min-h-0 flex-col overflow-x-visible p-3 pb-28 sm:p-4 sm:pb-32 lg:pb-4 xl:overflow-y-auto xl:p-5 xl:pb-6">
             {/* Top controls */}
             <div className="flex flex-wrap items-center gap-3">
               <div className="inline-flex h-10 items-center gap-2 rounded-full border border-sand/12 bg-black/20 px-4 text-sm font-black">
@@ -476,7 +476,7 @@ function CreatePageInner() {
             </div>
 
             {/* Input tabs */}
-            <div className="relative z-30 mt-5 grid grid-cols-3 overflow-visible rounded-[1.45rem] border border-sand/8 bg-black/18">
+            <div className="relative z-30 mt-4 grid grid-cols-3 overflow-visible rounded-[1.25rem] border border-sand/8 bg-black/18 sm:mt-5 sm:rounded-[1.45rem]">
               {(["Audio", "Voice", "Inspo"] as const).map((tab) => {
                 const isActive = inputTab === tab
 
@@ -496,7 +496,7 @@ function CreatePageInner() {
                         aria-expanded={isAudioMenuOpen}
                         aria-controls="create-audio-options-menu"
                         aria-pressed={isAudioActive}
-                        className={`relative flex h-16 w-full items-center justify-center gap-2 border-r border-sand/8 text-sm font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron ${
+                        className={`relative flex h-12 w-full items-center justify-center gap-1.5 border-r border-sand/8 text-sm font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron sm:h-14 sm:gap-2 ${
                           isAudioActive
                             ? "bg-sand/[0.08] text-sand"
                             : "text-sand/50 hover:bg-sand/[0.04] hover:text-sand/75"
@@ -536,7 +536,7 @@ function CreatePageInner() {
                     type="button"
                     onClick={() => handleTopTabClick(tab)}
                     aria-pressed={isActive}
-                    className={`relative flex h-16 items-center justify-center gap-2 border-r border-sand/8 text-sm font-black last:border-r-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron ${
+                    className={`relative flex h-12 items-center justify-center gap-1.5 border-r border-sand/8 text-sm font-black last:border-r-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron sm:h-14 sm:gap-2 ${
                       isActive
                         ? "bg-sand/[0.08] text-sand"
                         : "text-sand/50 hover:bg-sand/[0.04] hover:text-sand/75"
@@ -595,7 +595,7 @@ function CreatePageInner() {
             {inputTab === "Audio" ? (
               <>
                 {/* Lyrics section */}
-                <div className="mt-5 rounded-[1.35rem] border border-sand/8 bg-sand/[0.045] p-4">
+                <div className="mt-4 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-5 sm:rounded-[1.35rem] sm:p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
@@ -633,15 +633,15 @@ function CreatePageInner() {
 
                   {isLyricsOpen && (
                     <div id="create-lyrics-section">
-                      <div className="mt-5 flex min-h-56 flex-col rounded-2xl bg-black/18 p-4">
+                      <div className="mt-4 flex min-h-44 flex-col rounded-2xl bg-black/18 p-3 sm:mt-5 sm:min-h-52 sm:p-4">
                     {lyricsMode === "write" && (
                       <textarea
                         value={lyrics}
                         onChange={(e) => setLyrics(e.target.value)}
                         disabled={isGenerating}
-                        rows={7}
+                        rows={5}
                         placeholder={"[Verse]\nThis is where you write your rhymes\nor give our Magic Wand a try ↙\nSection [tags] can help instruct your\nsongs to feel more tight and structured"}
-                        className="min-h-36 flex-1 resize-none bg-transparent text-sm leading-6 text-sand outline-none placeholder:text-sand/32 disabled:cursor-not-allowed disabled:opacity-35"
+                        className="min-h-28 flex-1 resize-none bg-transparent text-sm leading-6 text-sand outline-none placeholder:text-sand/32 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32"
                       />
                     )}
 
@@ -650,14 +650,14 @@ function CreatePageInner() {
                         value={lyricsPrompt}
                         onChange={(e) => setLyricsPrompt(e.target.value)}
                         disabled={isGenerating}
-                        rows={7}
+                        rows={5}
                         placeholder={"What do you want your lyrics to be about? Suno will write\nnew lyrics every generation. Leave this blank for a random\ntopic."}
-                        className="min-h-36 flex-1 resize-none bg-transparent text-sm leading-6 text-sand outline-none placeholder:text-sand/32 disabled:cursor-not-allowed disabled:opacity-35"
+                        className="min-h-28 flex-1 resize-none bg-transparent text-sm leading-6 text-sand outline-none placeholder:text-sand/32 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32"
                       />
                     )}
 
                     {lyricsMode === "instrumental" && (
-                      <div className="flex min-h-36 flex-1 items-start rounded-xl bg-sand/[0.055] px-4 py-3 text-sm font-semibold leading-6 text-sand/72">
+                      <div className="flex min-h-28 flex-1 items-start rounded-xl bg-sand/[0.055] px-4 py-3 text-sm font-semibold leading-6 text-sand/72 sm:min-h-32">
                         This song will be instrumental, with no vocals or lyrics.
                       </div>
                     )}
@@ -705,7 +705,7 @@ function CreatePageInner() {
                 </div>
 
                 {/* Styles section */}
-                <div className="mt-4 rounded-[1.35rem] border border-sand/8 bg-sand/[0.045] p-4">
+                <div className="mt-3 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-4 sm:rounded-[1.35rem] sm:p-4">
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -727,7 +727,7 @@ function CreatePageInner() {
                     )}
                   </div>
                   {isStylesOpen && (
-                    <div id="create-styles-section" className="mt-4 flex min-h-48 flex-col rounded-2xl bg-black/18 p-4">
+                    <div id="create-styles-section" className="mt-3 flex min-h-36 flex-col rounded-2xl bg-black/18 p-3 sm:mt-4 sm:min-h-44 sm:p-4">
                     <textarea
                       value={stylePrompt}
                       onChange={(e) => { setStylePrompt(e.target.value); setImportedPrompt(false) }}
@@ -790,7 +790,7 @@ function CreatePageInner() {
                 </div>
 
                 {/* More Options section */}
-                <div className="mt-4 rounded-[1.35rem] border border-sand/8 bg-sand/[0.045] p-4">
+                <div className="mt-3 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-4 sm:rounded-[1.35rem] sm:p-4">
                   <button
                     type="button"
                     onClick={() => setIsMoreOptionsOpen((isOpen) => !isOpen)}
@@ -846,7 +846,7 @@ function CreatePageInner() {
                 </div>
 
                 {/* Title and workspace section */}
-                <div className="mt-4 overflow-hidden rounded-[1.35rem] border border-sand/8 bg-sand/[0.045]">
+                <div className="mt-3 overflow-hidden rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] sm:mt-4 sm:rounded-[1.35rem]">
                   <label className="flex h-14 items-center gap-3 px-4">
                     <Music2 className="size-4 shrink-0 text-sand/72" aria-hidden="true" />
                     <span className="sr-only">Song title</span>
@@ -875,7 +875,7 @@ function CreatePageInner() {
               </>
             ) : (
               /* Voice / Inspo placeholder */
-              <div className="mt-5 flex min-h-[320px] flex-1 items-center justify-center rounded-[1.35rem] border border-sand/8 bg-sand/[0.045] p-6 text-center">
+              <div className="mt-4 flex min-h-[220px] flex-1 items-center justify-center rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-5 text-center sm:mt-5 sm:min-h-[280px] sm:rounded-[1.35rem] sm:p-6">
                 <div>
                   {inputTab === "Voice" ? (
                     <Mic2 className="mx-auto size-10 text-saffron/50" aria-hidden="true" />
@@ -892,7 +892,7 @@ function CreatePageInner() {
             )}
 
             {/* Bottom: progress + create */}
-            <div className="mt-auto pt-5">
+            <div className="fixed bottom-[calc(var(--app-mobile-tab-bar-height)+0.75rem)] left-3 right-3 z-50 rounded-2xl border border-sand/10 bg-[#181818]/96 p-2 shadow-[0_18px_48px_rgba(0,0,0,0.38)] backdrop-blur-xl lg:static lg:mx-0 lg:mt-4 lg:border-0 lg:bg-transparent lg:p-0 lg:pt-5 lg:shadow-none lg:backdrop-blur-none xl:mt-auto">
               <GenerationProgress
                 status={status}
                 progress={progress}
@@ -900,7 +900,7 @@ function CreatePageInner() {
                 stageIndex={stageIndex}
               />
 
-              <div className="mt-3 flex items-center gap-3">
+              <div className="mt-2 flex items-center gap-2 sm:mt-3 sm:gap-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -918,7 +918,7 @@ function CreatePageInner() {
                       audioInputRef.current.value = ""
                     }
                   }}
-                  className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-sand/[0.08] text-sand/60 transition hover:bg-sand/[0.12] hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                  className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-sand/[0.08] text-sand/60 transition hover:bg-sand/[0.12] hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:size-14"
                   aria-label="Clear composer"
                 >
                   <Trash2 className="size-4" aria-hidden="true" />
@@ -927,7 +927,7 @@ function CreatePageInner() {
                   type="button"
                   onClick={handleCreate}
                   disabled={!canCreate}
-                  className="inline-flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-saffron text-base font-black text-[#171717] shadow-[0_14px_34px_rgba(227,122,44,0.22)] transition hover:bg-[#f09a4f] disabled:cursor-not-allowed disabled:bg-sand/10 disabled:text-sand/28 disabled:shadow-none"
+                  className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-saffron text-base font-black text-[#171717] shadow-[0_14px_34px_rgba(227,122,44,0.22)] transition hover:bg-[#f09a4f] disabled:cursor-not-allowed disabled:bg-sand/10 disabled:text-sand/28 disabled:shadow-none sm:h-14"
                 >
                   {isGenerating ? (
                     <Loader2 className="size-4 animate-spin" aria-hidden="true" />
@@ -942,8 +942,8 @@ function CreatePageInner() {
         </section>
 
         {/* ── RIGHT PANEL (Workspace) ── */}
-        <section className="flex flex-col rounded-2xl border border-sand/10 bg-[#111111]/82 shadow-[0_20px_60px_rgba(0,0,0,0.26)] md:h-full md:min-h-0 md:rounded-none md:border-0 md:bg-transparent">
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5 md:px-5 md:py-7 xl:px-6">
+        <section className="flex flex-col rounded-2xl border border-sand/10 bg-[#111111]/82 shadow-[0_20px_60px_rgba(0,0,0,0.26)] xl:h-full xl:min-h-0 xl:rounded-none xl:border-0 xl:bg-transparent">
+          <div className="flex min-h-0 flex-1 flex-col px-4 py-5 sm:px-5 sm:py-6 xl:overflow-y-auto xl:px-6 xl:py-7">
             <div className="flex flex-wrap items-center gap-2 text-lg font-black">
               <span>Workspaces</span>
               <ChevronRight className="size-4 text-sand/35" aria-hidden="true" />
@@ -951,8 +951,8 @@ function CreatePageInner() {
             </div>
 
             {/* Workspace toolbar */}
-            <div className="mt-7 flex flex-wrap items-center gap-2">
-              <label className="relative min-w-[220px] flex-1">
+            <div className="mt-5 flex flex-wrap items-center gap-2 sm:mt-7">
+              <label className="relative min-w-0 flex-[1_1_100%] sm:flex-[1_1_220px]">
                 <span className="sr-only">Search workspace</span>
                 <Search
                   className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-sand/45"
@@ -968,7 +968,7 @@ function CreatePageInner() {
               <button
                 type="button"
                 onClick={() => setToolbarNote("Filters coming soon.")}
-                className="inline-flex h-12 items-center gap-2 rounded-full bg-sand/[0.08] px-4 text-sm font-black text-sand transition hover:bg-sand/[0.12]"
+                className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-sand/[0.08] px-4 text-sm font-black text-sand transition hover:bg-sand/[0.12] sm:h-12 sm:flex-none"
               >
                 <Filter className="size-4" aria-hidden="true" />
                 Filters
@@ -978,7 +978,7 @@ function CreatePageInner() {
               <button
                 type="button"
                 onClick={() => setSortLabel((v) => v === "Newest" ? "Oldest" : "Newest")}
-                className="inline-flex h-12 items-center gap-2 rounded-full bg-sand/[0.08] px-4 text-sm font-black text-sand transition hover:bg-sand/[0.12]"
+                className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-sand/[0.08] px-4 text-sm font-black text-sand transition hover:bg-sand/[0.12] sm:h-12 sm:flex-none"
               >
                 {sortLabel}
                 <ChevronDown className="size-4 text-sand/55" aria-hidden="true" />
@@ -989,14 +989,14 @@ function CreatePageInner() {
                   key={chip}
                   type="button"
                   onClick={() => setToolbarNote(`${chip} filter coming soon.`)}
-                  className="h-12 rounded-full border border-sand/10 px-4 text-sm font-black text-sand transition hover:border-saffron/28"
+                  className="h-11 flex-1 rounded-full border border-sand/10 px-3 text-sm font-black text-sand transition hover:border-saffron/28 sm:h-12 sm:flex-none sm:px-4"
                 >
                   {chip}
                 </button>
               ))}
 
               {/* Pagination — single page, disabled */}
-              <div className="ml-auto flex items-center gap-2">
+              <div className="ml-0 flex items-center gap-2 sm:ml-auto">
                 <button
                   type="button"
                   disabled
@@ -1157,12 +1157,12 @@ function ComposerSlider({
   onChange: (value: number) => void
 }) {
   return (
-    <div className="flex min-h-12 items-center gap-3 rounded-xl bg-black/30 px-3">
-      <label className="flex min-w-[94px] items-center gap-1.5 text-xs font-black text-sand">
+    <div className="grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-xl bg-black/30 px-3 py-2 sm:flex sm:py-0">
+      <label className="flex min-w-0 items-center gap-1.5 text-xs font-black text-sand sm:w-24 sm:shrink-0">
         {label}
         <Info className="size-3 text-sand/45" aria-hidden="true" />
       </label>
-      <div className="relative min-w-0 flex-1">
+      <div className="relative col-span-2 min-w-0 flex-1 sm:col-span-1">
         <div
           className="pointer-events-none absolute left-0 right-0 top-1/2 h-5 -translate-y-1/2 opacity-45"
           style={{

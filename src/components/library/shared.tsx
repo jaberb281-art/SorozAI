@@ -55,7 +55,7 @@ export function SearchInput({
     placeholder: string
 }) {
     return (
-        <label className="relative min-w-[240px] flex-1">
+        <label className="relative min-w-0 flex-1 sm:min-w-[240px]">
             <span className="sr-only">{placeholder}</span>
             <Search
                 className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-sand/70"
@@ -207,11 +207,11 @@ export function SongRow({
     return (
         <article className="group rounded-2xl bg-white/[0.02] p-3 transition hover:bg-white/[0.04]">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-                <div className="flex min-w-0 flex-1 items-center gap-4">
+                <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
                     {showCheckbox && (
                         <span className="hidden size-3 rounded-sm border border-white/10 lg:block" />
                     )}
-                    <div className={`relative size-[78px] shrink-0 overflow-hidden rounded-xl ${song.coverClass}`}>
+                    <div className={`relative size-16 shrink-0 overflow-hidden rounded-xl sm:size-[78px] ${song.coverClass}`}>
                         {song.coverImage && (
                             /* eslint-disable-next-line @next/next/no-img-element */
                             <img
@@ -244,7 +244,7 @@ export function SongRow({
                             {song.prompt}
                         </p>
 
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2">
                             <IconPill
                                 label={`${isPlaying ? "Pause" : "Play"} ${song.title}`}
                                 onClick={onPlay}
@@ -289,12 +289,12 @@ export function SongRow({
                     </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-4 lg:ml-auto">
+                <div className="flex shrink-0 flex-wrap items-center gap-2 sm:gap-3 lg:ml-auto lg:justify-end">
                     {showRemix && (
                         <button
                             type="button"
                             onClick={() => router.push("/create")}
-                            className="inline-flex h-12 items-center gap-2 rounded-full bg-white/[0.055] px-5 text-sm font-black text-white transition hover:bg-white/[0.09]"
+                            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-white/[0.055] px-4 text-sm font-black text-white transition hover:bg-white/[0.09] sm:h-12 sm:flex-none sm:px-5"
                         >
                             <RefreshCcw className="size-4" aria-hidden={true} />
                             Remix
@@ -304,7 +304,7 @@ export function SongRow({
                         <button
                             type="button"
                             onClick={() => router.push("/pricing")}
-                            className="h-11 rounded-full bg-sand px-5 text-sm font-black text-[#161616] transition hover:bg-white"
+                            className="h-11 flex-1 rounded-full bg-sand px-4 text-sm font-black text-[#161616] transition hover:bg-white sm:flex-none sm:px-5"
                         >
                             Upgrade for full song
                         </button>
@@ -313,7 +313,7 @@ export function SongRow({
                         type="button"
                         aria-label={`More options for ${song.title}`}
                         onClick={() => setRowNote("More actions coming soon.")}
-                        className="inline-flex size-12 items-center justify-center rounded-full bg-white/[0.045] text-sand/45 transition hover:bg-white/[0.08] hover:text-white"
+                        className="inline-flex size-11 items-center justify-center rounded-full bg-white/[0.045] text-sand/45 transition hover:bg-white/[0.08] hover:text-white sm:size-12"
                     >
                         <MoreHorizontal className="size-5" aria-hidden={true} />
                     </button>

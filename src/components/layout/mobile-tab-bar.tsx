@@ -15,7 +15,7 @@ export function MobileTabBar() {
     const pathname = usePathname()
 
     return (
-        <nav aria-label="Primary mobile navigation" className="fixed bottom-0 left-0 right-0 z-[80] flex h-14 items-stretch border-t border-sand/8 bg-charcoal/96 backdrop-blur-2xl md:hidden">
+        <nav aria-label="Primary mobile navigation" className="fixed bottom-0 left-0 right-0 z-[80] flex h-[var(--app-mobile-tab-bar-height)] items-stretch border-t border-sand/8 bg-charcoal/96 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl lg:hidden">
             {MOBILE_NAV.map((item) => {
                 const Icon = item.icon
                 const isActive =

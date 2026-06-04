@@ -121,11 +121,11 @@ export function BottomPlayer() {
         `${min}:${String(sec).padStart(2, "0")}`
 
     return (
-        <div className="fixed bottom-14 left-0 right-0 z-[85] border-t border-sand/10 bg-charcoal/96 backdrop-blur-2xl transition-[left] duration-200 md:bottom-0 md:left-[var(--app-sidebar-width,210px)]">
-            <div className="mx-auto flex max-w-7xl items-center gap-3 px-3 py-2 md:gap-5 md:px-6 md:py-3">
+        <div className="fixed bottom-[var(--app-bottom-player-offset)] left-0 right-0 z-[85] border-t border-sand/10 bg-charcoal/96 backdrop-blur-2xl transition-[bottom,left] duration-200 lg:bottom-0 lg:left-[var(--app-sidebar-width,210px)]">
+            <div className="mx-auto flex min-h-[var(--app-bottom-player-height)] max-w-7xl items-center gap-3 px-3 py-2 lg:gap-5 lg:px-6 lg:py-3">
 
                 {/* Song info */}
-                <div className="flex min-w-0 flex-1 items-center gap-3 md:flex-none md:w-[220px]">
+                <div className="flex min-w-0 flex-1 items-center gap-3 lg:flex-none lg:w-[220px]">
                     <GenreCover genre={currentSong.genrePreset} />
                     <div className="min-w-0">
                         <p className="truncate text-sm font-black text-sand leading-tight">
@@ -140,13 +140,13 @@ export function BottomPlayer() {
                 {/* Center controls + progress */}
                 <div className="flex flex-1 flex-col items-center gap-1.5">
                     {/* Transport controls */}
-                    <div className="flex items-center gap-2 md:gap-3">
+                    <div className="flex items-center gap-2 lg:gap-3">
                         <button
                             type="button"
                             onClick={toggleLoop}
                             aria-label="Toggle loop"
                             aria-pressed={isLooping}
-                            className={`hidden size-8 items-center justify-center rounded-full transition hover:bg-sand/10 md:flex ${isLooping ? "text-saffron" : "text-sand/40 hover:text-sand"
+                            className={`hidden size-8 items-center justify-center rounded-full transition hover:bg-sand/10 lg:flex ${isLooping ? "text-saffron" : "text-sand/40 hover:text-sand"
                                 }`}
                         >
                             <Repeat className="size-3.5" aria-hidden="true" />
@@ -156,7 +156,7 @@ export function BottomPlayer() {
                             type="button"
                             onClick={playPrev}
                             aria-label="Previous song"
-                            className="flex size-10 items-center justify-center rounded-full text-sand/60 transition hover:bg-sand/10 hover:text-sand md:size-8"
+                            className="flex size-10 items-center justify-center rounded-full text-sand/60 transition hover:bg-sand/10 hover:text-sand lg:size-8"
                         >
                             <SkipBack className="size-4" aria-hidden="true" />
                         </button>
@@ -165,7 +165,7 @@ export function BottomPlayer() {
                             type="button"
                             onClick={isPlaying ? pause : resume}
                             aria-label={isPlaying ? "Pause" : "Play"}
-                            className="flex size-11 items-center justify-center rounded-full bg-sand text-charcoal shadow-[0_4px_16px_rgba(237,227,211,0.25)] transition hover:bg-saffron hover:text-sand md:size-10"
+                            className="flex size-11 items-center justify-center rounded-full bg-sand text-charcoal shadow-[0_4px_16px_rgba(237,227,211,0.25)] transition hover:bg-saffron hover:text-sand lg:size-10"
                         >
                             {isPlaying ? (
                                 <Pause className="size-4 fill-current" aria-hidden="true" />
@@ -178,7 +178,7 @@ export function BottomPlayer() {
                             type="button"
                             onClick={playNext}
                             aria-label="Next song"
-                            className="flex size-10 items-center justify-center rounded-full text-sand/60 transition hover:bg-sand/10 hover:text-sand md:size-8"
+                            className="flex size-10 items-center justify-center rounded-full text-sand/60 transition hover:bg-sand/10 hover:text-sand lg:size-8"
                         >
                             <SkipForward className="size-4" aria-hidden="true" />
                         </button>
@@ -188,14 +188,14 @@ export function BottomPlayer() {
                             type="button"
                             onClick={stop}
                             aria-label="Close player"
-                            className="flex size-10 items-center justify-center rounded-full text-sand/40 transition hover:bg-sand/10 hover:text-sand md:hidden"
+                            className="flex size-10 items-center justify-center rounded-full text-sand/40 transition hover:bg-sand/10 hover:text-sand lg:hidden"
                         >
                             <X className="size-3.5" aria-hidden="true" />
                         </button>
                     </div>
 
                     {/* Progress bar + times */}
-                    <div className="hidden w-full max-w-[480px] items-center gap-2 md:flex">
+                    <div className="hidden w-full max-w-[480px] items-center gap-2 lg:flex">
                         <span className="w-10 text-right text-[11px] font-semibold tabular-nums text-sand/40">
                             {formatTime(elapsedMin, elapsedSec)}
                         </span>
@@ -231,7 +231,7 @@ export function BottomPlayer() {
                 </div>
 
                 {/* Right controls (desktop only) */}
-                <div className="hidden w-[220px] items-center justify-end gap-2 md:flex">
+                <div className="hidden w-[220px] items-center justify-end gap-2 lg:flex">
                     <button
                         type="button"
                         onClick={() => setVolume(volume === 0 ? 0.8 : 0)}

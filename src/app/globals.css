@@ -6,6 +6,31 @@
   --deep-indigo: #1a3a5c;
   --sand: #ede3d3;
   --charcoal: #222222;
+  --app-sidebar-width: 228px;
+  --app-mobile-tab-bar-height: calc(3.5rem + env(safe-area-inset-bottom));
+  --app-bottom-player-height: 4rem;
+  --app-bottom-player-offset: var(--app-mobile-tab-bar-height);
+  --app-bottom-safe-area: var(--app-mobile-tab-bar-height);
+  --app-desktop-bottom-safe-area: 0px;
+}
+
+[data-has-bottom-player="true"] {
+  --app-bottom-safe-area: calc(
+    var(--app-mobile-tab-bar-height) + var(--app-bottom-player-height)
+  );
+  --app-desktop-bottom-safe-area: var(--app-bottom-player-height);
+}
+
+[data-has-mobile-tab-bar="false"] {
+  --app-mobile-tab-bar-height: env(safe-area-inset-bottom);
+  --app-bottom-player-offset: env(safe-area-inset-bottom);
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --app-bottom-player-height: 5.5rem;
+    --app-bottom-player-offset: 0px;
+  }
 }
 
 @theme {

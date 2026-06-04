@@ -122,7 +122,7 @@ const footerLinks = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-dvh overflow-x-hidden bg-[#0d0d0f] text-sand">
+    <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#0d0d0f] text-sand">
       <LandingNavbar />
       <LandingHero />
       <ProofStrip />
@@ -137,17 +137,17 @@ export default function HomePage() {
 
 function LandingNavbar() {
   return (
-    <header className="fixed left-0 right-0 top-0 z-50 px-4 py-4 sm:px-6 lg:px-8">
+    <header className="fixed left-0 right-0 top-0 z-50 px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
       <nav className="mx-auto flex max-w-[1440px] items-center justify-between gap-3">
         <Link
           href="/"
           aria-label="Zahirok home"
-          className="flex min-w-0 items-center gap-2.5"
+          className="flex min-w-0 items-center gap-2 sm:gap-2.5"
         >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-saffron/30 bg-saffron/10 text-saffron shadow-[0_0_28px_rgba(227,122,44,0.18)]">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-saffron/30 bg-saffron/10 text-saffron shadow-[0_0_28px_rgba(227,122,44,0.18)] sm:size-10">
             <Music2 className="size-5" aria-hidden="true" />
           </span>
-          <span className="text-xl font-black uppercase tracking-[0.18em] text-white sm:text-2xl">
+          <span className="text-lg font-black uppercase tracking-[0.14em] text-white sm:text-2xl sm:tracking-[0.18em]">
             Zahirok
           </span>
         </Link>
@@ -155,13 +155,13 @@ function LandingNavbar() {
         <div className="flex shrink-0 items-center gap-2">
           <Link
             href="/auth/sign-in"
-            className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-black/10 px-4 text-sm font-bold text-white/88 backdrop-blur-xl transition hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-12 sm:px-5"
+            className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-black/10 px-3 text-sm font-bold text-white/88 backdrop-blur-xl transition hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-12 sm:px-5"
           >
             Log in
           </Link>
           <Link
             href="/auth/sign-up"
-            className="inline-flex h-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ff3ca0,#e37a2c)] px-4 text-sm font-black text-white shadow-[0_14px_36px_rgba(227,122,44,0.28)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-12 sm:px-6"
+            className="inline-flex h-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ff3ca0,#e37a2c)] px-3 text-sm font-black text-white shadow-[0_14px_36px_rgba(227,122,44,0.28)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-12 sm:px-6"
           >
             <span className="hidden sm:inline">Join Zahirok for free</span>
             <span className="sm:hidden">Join free</span>
@@ -174,7 +174,7 @@ function LandingNavbar() {
 
 function LandingHero() {
   return (
-    <section className="relative isolate flex min-h-[88dvh] items-center overflow-hidden px-4 pb-10 pt-28 text-center sm:px-6 lg:px-8">
+    <section className="relative isolate flex min-h-[min(760px,86dvh)] items-center overflow-hidden px-4 pb-8 pt-24 text-center sm:px-6 sm:pb-10 sm:pt-28 lg:px-8">
       <div className="absolute inset-0 -z-30 bg-[#0c0b0b]" />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -186,7 +186,7 @@ function LandingHero() {
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_26%,rgba(227,122,44,0.3),transparent_23%),radial-gradient(circle_at_18%_18%,rgba(255,60,160,0.18),transparent_24%),radial-gradient(circle_at_84%_22%,rgba(26,58,92,0.48),transparent_30%),linear-gradient(180deg,rgba(12,12,14,0.34)_0%,rgba(12,12,14,0.72)_62%,#0d0d0f_100%)]" />
       <div className="absolute inset-0 -z-10 opacity-[0.08] [background-image:radial-gradient(rgba(237,227,211,0.65)_1px,transparent_1px)] [background-size:3px_3px]" />
 
-      <div className="pointer-events-none absolute inset-0 hidden lg:block">
+      <div className="pointer-events-none absolute inset-0 hidden xl:block">
         {floatingCards.map((card) => (
           <FloatingSongCard key={card.title} {...card} />
         ))}
@@ -257,7 +257,7 @@ function HeroComposer() {
         event.preventDefault()
         openCreate()
       }}
-      className="mx-auto mt-6 w-full max-w-[900px] rounded-[1.25rem] border border-white/12 bg-[#171311]/72 p-3 text-left shadow-[0_20px_58px_rgba(0,0,0,0.38)] backdrop-blur-2xl"
+      className="mx-auto mt-6 w-full max-w-[900px] rounded-[1.25rem] border border-white/12 bg-[#171311]/72 p-2.5 text-left shadow-[0_20px_58px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-3"
     >
       <label className="sr-only" htmlFor="landing-prompt">
         Chat to make Balochi music
@@ -418,14 +418,14 @@ function ProofStrip() {
 
 function SongShowcaseSection() {
   return (
-    <section className="bg-[#111113] px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
+    <section className="bg-[#111113] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28">
       <SectionHeading
         title="Balochi music ideas, instantly shaped into sound"
         body="From wedding rhythms to coastal folk, explore song drafts inspired by Balochistan's sound."
         align="center"
       />
 
-      <div className="mx-auto mt-14 flex max-w-[1500px] gap-5 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="mx-auto mt-10 flex max-w-[1500px] snap-x gap-4 overflow-x-auto pb-4 [scrollbar-width:none] sm:mt-12 sm:gap-5 [&::-webkit-scrollbar]:hidden">
         {showcaseSongs.map((song) => (
           <ShowcaseCard key={song.id} song={song} />
         ))}
@@ -441,7 +441,7 @@ function ShowcaseCard({ song }: { song: (typeof showcaseSongs)[number] }) {
     <button
       type="button"
       onClick={() => setIsPlaying((playing) => !playing)}
-      className="group w-[260px] shrink-0 text-left outline-none sm:w-[300px]"
+      className="group w-[min(78vw,260px)] shrink-0 snap-start text-left outline-none sm:w-[280px] lg:w-[300px]"
       aria-label={`${isPlaying ? "Pause" : "Play"} ${song.title}`}
     >
       <div className="relative aspect-[4/5] overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.04] shadow-[0_24px_80px_rgba(0,0,0,0.28)] transition group-hover:-translate-y-1 group-focus-visible:ring-2 group-focus-visible:ring-saffron">
@@ -477,14 +477,14 @@ function ShowcaseCard({ song }: { song: (typeof showcaseSongs)[number] }) {
 
 function FeatureGridSection() {
   return (
-    <section className="bg-[#111113] px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
+    <section className="bg-[#111113] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28">
       <div className="mx-auto max-w-6xl">
         <SectionHeading
           title="Everything you need to make Balochi music your way"
           body="A cinematic creation surface for prompt writing, style shaping, hooks, and future studio workflows."
         />
 
-        <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {features.map((feature) => (
             <FeatureCard key={feature.title} {...feature} />
           ))}
@@ -504,7 +504,7 @@ function FeatureCard({
   visual: string
 }) {
   return (
-    <article className="flex min-h-[360px] flex-col overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.045] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+    <article className="flex min-h-[300px] flex-col overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.045] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.22)] sm:min-h-[340px] sm:p-6">
       <h3 className="text-xl font-black text-white">{title}</h3>
       <p className="mt-4 text-sm font-semibold leading-6 text-white/58">{body}</p>
       <FeatureVisual type={visual} />
@@ -515,8 +515,8 @@ function FeatureCard({
 function FeatureVisual({ type }: { type: string }) {
   if (type === "prompt") {
     return (
-      <div className="mt-auto flex items-center justify-center pb-2 pt-10">
-        <div className="grid size-36 place-items-center rounded-full bg-[radial-gradient(circle,#ff3ca0_0%,#e37a2c_45%,rgba(227,122,44,0.04)_70%)] shadow-[0_0_0_16px_rgba(227,122,44,0.08),0_0_60px_rgba(255,60,160,0.28)]">
+      <div className="mt-auto flex items-center justify-center pb-2 pt-8 sm:pt-10">
+        <div className="grid size-32 place-items-center rounded-full bg-[radial-gradient(circle,#ff3ca0_0%,#e37a2c_45%,rgba(227,122,44,0.04)_70%)] shadow-[0_0_0_14px_rgba(227,122,44,0.08),0_0_60px_rgba(255,60,160,0.28)] sm:size-36 sm:shadow-[0_0_0_16px_rgba(227,122,44,0.08),0_0_60px_rgba(255,60,160,0.28)]">
           <Sparkles className="size-11 text-white" aria-hidden="true" />
         </div>
       </div>
@@ -525,16 +525,16 @@ function FeatureVisual({ type }: { type: string }) {
 
   if (type === "studio") {
     return (
-      <div className="mt-auto pt-10">
+      <div className="mt-auto pt-8 sm:pt-10">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/cards/explore-public-songs.png" alt="" aria-hidden="true" className="h-40 w-full rounded-xl object-cover opacity-82" />
+        <img src="/cards/explore-public-songs.png" alt="" aria-hidden="true" className="h-32 w-full rounded-xl object-cover opacity-82 sm:h-40" />
       </div>
     )
   }
 
   if (type === "controls") {
     return (
-      <div className="mt-auto space-y-4 pt-10">
+      <div className="mt-auto space-y-4 pt-8 sm:pt-10">
         {["Vocal color", "Weirdness", "Style influence"].map((label, index) => (
           <div key={label}>
             <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-[0.14em] text-white/40">
@@ -552,8 +552,8 @@ function FeatureVisual({ type }: { type: string }) {
 
   if (type === "hooks") {
     return (
-      <div className="mt-auto flex justify-center pt-10">
-        <div className="relative h-44 w-32 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(227,122,44,0.54),rgba(12,12,14,0.95))]">
+      <div className="mt-auto flex justify-center pt-8 sm:pt-10">
+        <div className="relative h-40 w-28 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(227,122,44,0.54),rgba(12,12,14,0.95))] sm:h-44 sm:w-32">
           <div className="absolute inset-x-4 bottom-5 h-16 rounded-full bg-saffron/40 blur-xl" />
           <Play className="absolute left-1/2 top-1/2 size-9 -translate-x-1/2 -translate-y-1/2 fill-current text-white" aria-hidden="true" />
         </div>
@@ -563,20 +563,20 @@ function FeatureVisual({ type }: { type: string }) {
 
   if (type === "share") {
     return (
-      <div className="relative mt-auto h-44 pt-10">
-        <div className="absolute bottom-6 left-3 rounded-xl bg-indigo-deep px-6 py-4 text-2xl font-black text-white shadow-xl">1k</div>
-        <div className="absolute bottom-12 left-24 rounded-xl bg-[linear-gradient(135deg,#e37a2c,#ff3ca0)] px-8 py-6 text-3xl font-black text-white shadow-xl">5k</div>
-        <div className="absolute bottom-20 right-4 rounded-xl bg-terracotta px-6 py-4 text-2xl font-black text-white shadow-xl">13k</div>
+      <div className="relative mt-auto h-40 pt-8 sm:h-44 sm:pt-10">
+        <div className="absolute bottom-6 left-2 rounded-xl bg-indigo-deep px-5 py-3 text-xl font-black text-white shadow-xl sm:left-3 sm:px-6 sm:py-4 sm:text-2xl">1k</div>
+        <div className="absolute bottom-12 left-20 rounded-xl bg-[linear-gradient(135deg,#e37a2c,#ff3ca0)] px-7 py-5 text-2xl font-black text-white shadow-xl sm:left-24 sm:px-8 sm:py-6 sm:text-3xl">5k</div>
+        <div className="absolute bottom-20 right-2 rounded-xl bg-terracotta px-5 py-3 text-xl font-black text-white shadow-xl sm:right-4 sm:px-6 sm:py-4 sm:text-2xl">13k</div>
       </div>
     )
   }
 
   return (
-    <div className="mt-auto pt-10">
+    <div className="mt-auto pt-8 sm:pt-10">
       <div className="grid gap-3">
         <div className="h-12 rounded-lg bg-[linear-gradient(90deg,#0c7df2,#1188ff)] px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-white">Vocals</div>
         <div className="ml-10 h-12 rounded-lg bg-saffron px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-[#171717]">Doholl</div>
-        <div className="ml-20 h-12 rounded-lg bg-[#08b45b] px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-white">Dambora</div>
+        <div className="ml-14 h-12 rounded-lg bg-[#08b45b] px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-white sm:ml-20">Dambora</div>
       </div>
     </div>
   )
@@ -586,7 +586,7 @@ function FaqSection() {
   const [openIndex, setOpenIndex] = useState(0)
 
   return (
-    <section className="bg-[#101012] px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
+    <section className="bg-[#101012] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28">
       <div className="mx-auto max-w-3xl">
         <SectionHeading
           title="Frequently asked questions"
@@ -594,7 +594,7 @@ function FaqSection() {
           align="center"
         />
 
-        <div className="mt-12 divide-y divide-white/10">
+        <div className="mt-10 divide-y divide-white/10">
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index
             return (
@@ -603,7 +603,7 @@ function FaqSection() {
                   type="button"
                   onClick={() => setOpenIndex(isOpen ? -1 : index)}
                   aria-expanded={isOpen}
-                  className="flex w-full items-center justify-between gap-4 py-6 text-left text-lg font-black text-white transition hover:text-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                  className="flex w-full items-center justify-between gap-4 py-5 text-left text-base font-black text-white transition hover:text-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:py-6 sm:text-lg"
                 >
                   {faq.question}
                   {isOpen ? (
@@ -613,7 +613,7 @@ function FaqSection() {
                   )}
                 </button>
                 {isOpen && (
-                  <p className="pb-6 text-base font-semibold leading-7 text-white/56">
+                  <p className="pb-5 text-sm font-semibold leading-6 text-white/56 sm:pb-6 sm:text-base sm:leading-7">
                     {faq.answer}
                   </p>
                 )}
@@ -628,21 +628,21 @@ function FaqSection() {
 
 function FinalCtaSection() {
   return (
-    <section className="bg-[#101012] px-4 pb-24 pt-4 text-center sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_50%_0%,rgba(227,122,44,0.2),transparent_32%),rgba(255,255,255,0.045)] px-6 py-16 shadow-[0_28px_90px_rgba(0,0,0,0.28)]">
-        <h2 className="text-4xl font-black leading-tight tracking-[-0.03em] text-white sm:text-6xl">
+    <section className="bg-[#101012] px-4 pb-16 pt-2 text-center sm:px-6 sm:pb-20 lg:px-8">
+      <div className="mx-auto max-w-4xl rounded-[1.5rem] border border-white/10 bg-[radial-gradient(circle_at_50%_0%,rgba(227,122,44,0.2),transparent_32%),rgba(255,255,255,0.045)] px-5 py-12 shadow-[0_28px_90px_rgba(0,0,0,0.28)] sm:rounded-[2rem] sm:px-6 sm:py-16">
+        <h2 className="text-3xl font-black leading-tight tracking-[-0.03em] text-white sm:text-6xl">
           Ready to make your first Zahirok track?
         </h2>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href="/auth/sign-up"
-            className="inline-flex h-12 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ff3ca0,#e37a2c)] px-7 text-sm font-black text-white shadow-[0_18px_42px_rgba(227,122,44,0.28)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[linear-gradient(135deg,#ff3ca0,#e37a2c)] px-7 text-sm font-black text-white shadow-[0_18px_42px_rgba(227,122,44,0.28)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:w-auto"
           >
             Join Zahirok for free
           </Link>
           <Link
             href="/create"
-            className="inline-flex h-12 items-center justify-center rounded-full border border-white/12 bg-white/[0.055] px-7 text-sm font-black text-white transition hover:bg-white/[0.09] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            className="inline-flex h-12 w-full items-center justify-center rounded-full border border-white/12 bg-white/[0.055] px-7 text-sm font-black text-white transition hover:bg-white/[0.09] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:w-auto"
           >
             Explore the demo
           </Link>
@@ -690,10 +690,10 @@ function SectionHeading({
 }) {
   return (
     <div className={align === "center" ? "mx-auto max-w-4xl text-center" : "max-w-4xl"}>
-      <h2 className="text-4xl font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-6xl lg:text-7xl">
+      <h2 className="text-3xl font-black leading-[1.04] tracking-[-0.03em] text-white sm:text-5xl lg:text-7xl">
         {title}
       </h2>
-      <p className="mt-6 max-w-3xl text-base font-semibold leading-7 text-white/58 sm:text-xl sm:leading-8">
+      <p className="mt-4 max-w-3xl text-sm font-semibold leading-6 text-white/58 sm:mt-6 sm:text-xl sm:leading-8">
         {body}
       </p>
     </div>
