@@ -58,7 +58,7 @@ const HOOKS: HookItem[] = [
         creator: "Shah Baloch",
         creatorHandle: "shahbaloch",
         caption: "A warm Makkuran refrain over sea-wind percussion.",
-        hashtags: ["#zahirouk", "#makkuran", "#doholl", "#damboora", "#balochimusic"],
+        hashtags: ["#zahirok", "#makkuran", "#doholl", "#damboora", "#balochimusic"],
         songTitle: "Makran Evening Hook",
         plays: 530000,
         likes: 4300,
@@ -79,7 +79,7 @@ const HOOKS: HookItem[] = [
         creator: "Meeral Gwadar",
         creatorHandle: "meeralgwadar",
         caption: "Doholl hits, soft claps, and a midnight call-and-response.",
-        hashtags: ["#zahirouk", "#makkuran", "#doholl", "#coastal", "#balochimusic"],
+        hashtags: ["#zahirok", "#makkuran", "#doholl", "#coastal", "#balochimusic"],
         songTitle: "Doholl Night",
         plays: 314000,
         likes: 1600,
@@ -100,7 +100,7 @@ const HOOKS: HookItem[] = [
         creator: "Bibi Hani",
         creatorHandle: "bibihani",
         caption: "A gentle devotional phrase shaped for Makkuran harmonies.",
-        hashtags: ["#zahirouk", "#makkuran", "#naat", "#suroz", "#balochimusic"],
+        hashtags: ["#zahirok", "#makkuran", "#naat", "#suroz", "#balochimusic"],
         songTitle: "Ya Nabi Salawat Hook",
         plays: 188000,
         likes: 2800,
@@ -121,7 +121,7 @@ const HOOKS: HookItem[] = [
         creator: "Rostam Kech",
         creatorHandle: "rostamkech",
         caption: "Slow Damboora pulse with modern bass and beach-fire ambience.",
-        hashtags: ["#zahirouk", "#makkuran", "#damboora", "#makran", "#balochimusic"],
+        hashtags: ["#zahirok", "#makkuran", "#damboora", "#makran", "#balochimusic"],
         songTitle: "Coastal Drift",
         plays: 92000,
         likes: 940,
@@ -276,23 +276,23 @@ export default function HooksPage() {
             ref={viewerRef}
             className="fixed inset-0 z-40 min-h-dvh w-full max-w-full overflow-hidden overflow-x-hidden bg-[#08080a] text-sand lg:left-[var(--app-sidebar-width,228px)] lg:w-auto"
         >
-            <header className="absolute left-0 right-0 top-0 z-[60] flex h-14 items-center justify-between gap-3 bg-[#08080a]/78 px-4 backdrop-blur-md lg:hidden">
+            <header className="absolute left-0 right-0 top-0 z-[60] flex h-12 items-center justify-between gap-2 bg-[#08080a]/48 px-3 backdrop-blur-sm lg:hidden">
                 <Link
                     href="/dashboard"
                     aria-label="Zahirok dashboard"
-                    className="flex min-w-0 items-center gap-2"
+                    className="flex min-w-0 items-center gap-1.5"
                 >
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-saffron/25 bg-saffron/10 text-saffron">
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-saffron/25 bg-saffron/10 text-saffron">
                         <Music2 className="size-4" aria-hidden="true" />
                     </span>
-                    <span className="truncate text-lg font-black uppercase tracking-[0.14em] text-white">
+                    <span className="truncate text-base font-black uppercase tracking-[0.12em] text-white">
                         Zahirok
                     </span>
                 </Link>
-                <div className="flex shrink-0 items-center gap-1.5">
+                <div className="flex shrink-0 items-center gap-1">
                     <Link
                         href="/pricing"
-                        className="inline-flex h-9 items-center justify-center rounded-full bg-white/[0.08] px-4 text-xs font-black text-white transition hover:bg-white/12"
+                        className="inline-flex h-8 items-center justify-center rounded-full bg-white/[0.08] px-3 text-[11px] font-black text-white transition hover:bg-white/12"
                     >
                         Upgrade
                     </Link>
@@ -366,9 +366,9 @@ export default function HooksPage() {
             )}
 
             {/* Full-screen on mobile; restored to a centered card on desktop. */}
-            <div className="absolute inset-0 z-10 lg:inset-x-0 lg:bottom-[84px] lg:top-[72px] lg:flex lg:items-center lg:justify-center">
+            <div className="absolute inset-0 z-10 lg:inset-x-0 lg:bottom-[80px] lg:top-[64px] lg:flex lg:items-center lg:justify-center">
                 <div
-                    className={`relative h-full w-full overflow-hidden lg:aspect-[9/16] lg:h-auto lg:max-h-full lg:w-[min(380px,calc((100dvh_-_200px)*9/16))] lg:rounded-2xl lg:border lg:border-white/[0.08] lg:shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_20px_60px_rgba(0,0,0,0.55)] ${activeHook.mediaClass}`}
+                    className={`relative h-full w-full overflow-hidden lg:aspect-[9/16] lg:h-auto lg:max-h-full lg:w-[min(430px,calc((100dvh_-_144px)*9/16))] lg:rounded-2xl lg:border lg:border-white/[0.08] lg:shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_20px_60px_rgba(0,0,0,0.55)] ${activeHook.mediaClass}`}
                 >
                     {/* Thumbnail image (if available) or decorative layers */}
                     {activeHook.thumbImage ? (
@@ -437,8 +437,12 @@ export default function HooksPage() {
                 <p className="mt-2 hidden text-[14px] font-semibold leading-[1.45] text-white line-clamp-2 sm:block">
                     {activeHook.caption}
                 </p>
-                <p className="mt-1 hidden text-[12px] leading-[1.4] text-sand/50 line-clamp-1 sm:block sm:line-clamp-2">
-                    {activeHook.hashtags.join(" ")}
+                <p className="mt-1 hidden text-[13px] font-semibold leading-[1.45] text-saffron/70 line-clamp-1 sm:block sm:line-clamp-2">
+                    {activeHook.hashtags.map((hashtag) => (
+                        <span key={hashtag} className="mr-2 transition-colors hover:text-saffron">
+                            {hashtag}
+                        </span>
+                    ))}
                 </p>
             </div>
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef } from "react"
+import Link from "next/link"
 import {
     Music2,
     Pause,
@@ -119,6 +120,7 @@ export function BottomPlayer() {
 
     const formatTime = (min: number, sec: number) =>
         `${min}:${String(sec).padStart(2, "0")}`
+    const songPath = `/song/${currentSong.id}`
 
     return (
         <div className="fixed bottom-[var(--app-bottom-player-offset)] left-0 right-0 z-[85] border-t border-sand/10 bg-charcoal/96 backdrop-blur-2xl transition-[bottom,left] duration-200 lg:bottom-0 lg:left-[var(--app-sidebar-width,210px)]">
@@ -126,15 +128,29 @@ export function BottomPlayer() {
 
                 {/* Song info */}
                 <div className="flex min-w-0 flex-1 items-center gap-3 lg:flex-none lg:w-[220px]">
-                    <GenreCover genre={currentSong.genrePreset} />
-                    <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-sand leading-tight">
+                    <Link
+                        href={songPath}
+                        aria-label="Open song page"
+                        title="Open song page"
+                        className="group shrink-0 cursor-pointer rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+                    >
+                        <span className="block transition duration-200 group-hover:brightness-125">
+                            <GenreCover genre={currentSong.genrePreset} />
+                        </span>
+                    </Link>
+                    <Link
+                        href={songPath}
+                        aria-label="Open song page"
+                        title="Open song page"
+                        className="group min-w-0 cursor-pointer rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+                    >
+                        <p className="truncate text-sm font-black leading-tight text-sand transition group-hover:text-saffron">
                             {currentSong.title}
                         </p>
-                        <p className="truncate text-xs font-semibold text-sand/50 leading-tight mt-0.5">
+                        <p className="mt-0.5 truncate text-xs font-semibold leading-tight text-sand/50">
                             {currentSong.genrePreset}
                         </p>
-                    </div>
+                    </Link>
                 </div>
 
                 {/* Center controls + progress */}

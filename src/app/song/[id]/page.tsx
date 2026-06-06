@@ -1,214 +1,541 @@
+"use client"
+
+import { useMemo, useState } from "react"
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { useParams } from "next/navigation"
 import {
     ArrowLeft,
+    Bookmark,
+    CalendarDays,
+    Clock3,
     Globe2,
+    Heart,
+    Headphones,
     Lock,
+    MessageCircle,
+    Music2,
+    Pause,
+    Play,
+    RefreshCcw,
+    Share2,
+    Sparkles,
+    UserPlus,
 } from "lucide-react"
 
-import { SongPlayer } from "@/components/songs/song-player"
-import { SongSocialPanel } from "@/components/songs/song-social-panel"
-import { SongStatusBadge } from "@/components/songs/song-status-badge"
-import { getSongById } from "@/lib/api-client"
-import { getMockSongById } from "@/lib/mock-songs"
+import { usePlaySong } from "@/hooks/use-play-song"
+import {
+    formatCount,
+    getFeedSongs,
+    getMockSongById,
+    toPlayerSong,
+    type MockSong,
+} from "@/lib/mock-songs"
 import { profilePathForCreator } from "@/lib/public-profiles"
-import type { Song } from "@/lib/types"
 
-// ── Local type ────────────────────────────────────────────────────────────────
+type DetailTab = "lyrics" | "prompt" | "details"
 
-// Extends Song with display-only fields not yet in the backend Song type
-type LocalSong = Song & {
-    dialect?: string
-    creator?: string
-    coverImage?: string
+const FEED_SONGS = getFeedSongs()
+const REACTIONS = ["🔥", "😍", "😱", "👏", "👍", "😎"] as const
+
+function getIdFromParams(value: string | string[] | undefined) {
+    if (Array.isArray(value)) return value[0] ?? ""
+    return value ?? ""
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-
-type SongDetailPageProps = {
-    params: Promise<{ id: string }>
+function getSongDescription(song: MockSong) {
+    return `A ${song.dialect} ${song.genrePreset} track shaped with coastal rhythm, warm vocals, and cinematic Balochi atmosphere.`
 }
 
-export default async function SongDetailPage({ params }: SongDetailPageProps) {
-    const { id } = await params
+function pickRelatedSongs(song: MockSong) {
+    const related = FEED_SONGS.filter((candidate) => candidate.id !== song.id)
+        .sort((a, b) => {
+            const aScore =
+                (a.creator === song.creator ? 3 : 0) +
+                (a.genrePreset === song.genrePreset ? 2 : 0) +
+                (a.dialect === song.dialect ? 1 : 0)
+            const bScore =
+                (b.creator === song.creator ? 3 : 0) +
+                (b.genrePreset === song.genrePreset ? 2 : 0) +
+                (b.dialect === song.dialect ? 1 : 0)
 
-    // Step 1: try the real api-client (covers song-1, song-2 from legacy MOCK_SONGS)
-    const songDetail = await getSongById(id)
-    const apiSong = songDetail?.song as LocalSong | undefined
+            return bScore - aScore
+        })
 
-    // Step 2: fall back to the unified mock data source
-    // MOCK: replace with api-client.getSongById() once backend supports all song IDs
-    const mockSong = getMockSongById(id)
-    const mockLocal: LocalSong | undefined = mockSong
-        ? { ...mockSong, dialect: mockSong.dialect, creator: mockSong.creator }
-        : undefined
+    return related.slice(0, 6)
+}
 
-    const song: LocalSong | undefined = apiSong ?? mockLocal
+function formatCreatedAt(value: string) {
+    return new Intl.DateTimeFormat("en", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    }).format(new Date(value))
+}
+
+export default function SongDetailPage() {
+    const params = useParams()
+    const id = getIdFromParams(params.id)
+    const song = getMockSongById(id)
+    const [activeTab, setActiveTab] = useState<DetailTab>("lyrics")
+    const [liked, setLiked] = useState(false)
+    const [saved, setSaved] = useState(false)
+    const [message, setMessage] = useState("")
+    const { playSong, isCurrentSong, isPlaying } = usePlaySong()
+
+    const relatedSongs = useMemo(() => (song ? pickRelatedSongs(song) : []), [song])
+    const queue = useMemo(() => {
+        if (!song) return FEED_SONGS.map(toPlayerSong)
+
+        const ordered = [
+            song,
+            ...FEED_SONGS.filter((candidate) => candidate.id !== song.id),
+        ]
+
+        return ordered.map(toPlayerSong)
+    }, [song])
 
     if (!song) {
-        notFound()
+        return <SongNotFound />
     }
 
-    // Derive social stats: prefer api response, fall back to song fields
-    const socialStats = songDetail?.socialStats ?? {
-        plays: song.plays,
-        likes: song.likes,
-        remixes: song.remixes,
+    const playerSong = toPlayerSong(song)
+    const isThisPlaying = isCurrentSong(playerSong) && isPlaying
+    const displayLikes = liked ? song.likes + 1 : song.likes
+
+    function handlePlay() {
+        playSong(playerSong, queue)
+    }
+
+    async function handleShare() {
+        const fallbackPath = `/song/${playerSong.id}`
+
+        try {
+            if (typeof window !== "undefined" && navigator.clipboard) {
+                await navigator.clipboard.writeText(`${window.location.origin}${fallbackPath}`)
+                setMessage("Song link copied.")
+                return
+            }
+        } catch {
+            // Fall through to status message.
+        }
+
+        setMessage("Share options will be connected later.")
     }
 
     return (
-        <div className="relative min-h-screen overflow-x-hidden bg-charcoal text-sand">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_52%_14%,rgba(227,122,44,0.22),transparent_29%),radial-gradient(circle_at_16%_24%,rgba(183,62,31,0.2),transparent_27%),radial-gradient(circle_at_84%_18%,rgba(26,58,92,0.82),transparent_35%),linear-gradient(135deg,var(--charcoal)_0%,var(--deep-indigo)_44%,var(--charcoal)_100%)]" />
-            <div className="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:linear-gradient(90deg,rgba(237,227,211,0.45)_1px,transparent_1px),linear-gradient(rgba(237,227,211,0.35)_1px,transparent_1px)] [background-size:34px_34px]" />
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-charcoal/85 to-transparent" />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-charcoal to-transparent" />
+        <div className="relative min-h-dvh overflow-x-hidden bg-[#08080a] pb-[calc(var(--app-bottom-player-height)+var(--app-mobile-tab-bar-height)+1rem)] text-sand lg:pb-[calc(var(--app-bottom-player-height)+2rem)]">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(227,122,44,0.25),transparent_28%),radial-gradient(circle_at_88%_8%,rgba(26,58,92,0.85),transparent_34%),linear-gradient(135deg,#08080a_0%,#10141b_42%,#08080a_100%)]" />
+            <div className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:linear-gradient(90deg,rgba(237,227,211,0.36)_1px,transparent_1px),linear-gradient(rgba(237,227,211,0.28)_1px,transparent_1px)] [background-size:38px_38px]" />
 
-            <section className="relative z-10 mx-auto w-full max-w-6xl px-5 pb-8 pt-8 md:px-6 md:pt-10 xl:px-8">
+            <main className="relative z-10 mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
                 <Link
-                    href="/library"
-                    className="inline-flex items-center gap-2 rounded-full border border-sand/15 bg-sand/8 px-4 py-2 text-sm font-bold text-sand/82 transition hover:bg-sand/12 hover:text-sand"
+                    href="/feed"
+                    className="inline-flex items-center gap-2 rounded-full border border-sand/12 bg-sand/[0.06] px-4 py-2 text-sm font-bold text-sand/80 transition hover:border-saffron/35 hover:bg-saffron/10 hover:text-saffron"
                 >
                     <ArrowLeft className="size-4" aria-hidden="true" />
-                    Back to Library
+                    Back to Explore
                 </Link>
 
-                <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
-                    <div>
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                            <div>
-                                <p className="text-xs font-black uppercase tracking-[0.24em] text-saffron">
-                                    Song Detail
-                                </p>
-                                <h1 className="mt-3 text-3xl font-black leading-tight text-sand sm:text-4xl md:text-5xl">
-                                    {song.title}
-                                </h1>
-                                {song.creator && (
-                                    <p className="mt-2 text-sm font-bold text-sand/55">
-                                        by{" "}
-                                        <Link
-                                            href={profilePathForCreator(song.creator)}
-                                            className="transition hover:text-saffron"
-                                        >
-                                            {song.creator}
-                                        </Link>
-                                    </p>
+                <section className="mt-5 grid min-w-0 gap-6 lg:grid-cols-[minmax(280px,420px)_minmax(0,1fr)] lg:items-center">
+                    <CoverArtwork song={song} size="hero" />
+
+                    <div className="min-w-0">
+                        <div className="flex flex-wrap gap-2">
+                            <Badge>{song.dialect}</Badge>
+                            <Badge>{song.genrePreset}</Badge>
+                            <Badge tone={song.isPublic ? "orange" : "muted"}>
+                                {song.isPublic ? (
+                                    <Globe2 className="size-3.5" aria-hidden="true" />
+                                ) : (
+                                    <Lock className="size-3.5" aria-hidden="true" />
                                 )}
-                            </div>
-                            <SongStatusBadge status={song.status} />
+                                {song.isPublic ? "Public" : "Private"}
+                            </Badge>
                         </div>
 
-                        <div className="mt-8">
-                            <SongPlayer song={song} />
+                        <h1 className="mt-4 max-w-4xl text-4xl font-black leading-[0.98] text-sand sm:text-5xl lg:text-7xl">
+                            {song.title}
+                        </h1>
+
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                            <Link
+                                href={profilePathForCreator(song.creator)}
+                                className="inline-flex items-center gap-2 rounded-full border border-sand/12 bg-sand/[0.06] py-1.5 pl-1.5 pr-4 text-sm font-black text-sand transition hover:border-saffron/35 hover:text-saffron"
+                            >
+                                <span className="size-8 rounded-full bg-[radial-gradient(circle_at_30%_30%,#f2d1aa_0%,#e37a2c_36%,#2f8f9a_100%)]" />
+                                {song.creator}
+                            </Link>
+                            <button
+                                type="button"
+                                aria-label={`Follow ${song.creator}`}
+                                className="inline-flex h-10 items-center gap-2 rounded-full bg-sand/10 px-4 text-sm font-black text-sand transition hover:bg-saffron hover:text-sand"
+                            >
+                                <UserPlus className="size-4" aria-hidden="true" />
+                                Follow
+                            </button>
+                        </div>
+
+                        <p className="mt-5 max-w-3xl text-base font-semibold leading-7 text-sand/66 lg:text-lg">
+                            {getSongDescription(song)}
+                        </p>
+
+                        <div className="mt-5 flex flex-wrap gap-3 text-sm font-bold text-sand/60">
+                            <Stat icon={<Clock3 className="size-4" />} label={song.duration} />
+                            <Stat icon={<Headphones className="size-4" />} label={`${formatCount(song.plays)} plays`} />
+                            <Stat icon={<Heart className="size-4" />} label={`${formatCount(displayLikes)} likes`} />
+                            <Stat icon={<CalendarDays className="size-4" />} label={formatCreatedAt(song.createdAt)} />
+                        </div>
+
+                        <div className="mt-6 flex flex-wrap gap-2.5">
+                            <button
+                                type="button"
+                                onClick={handlePlay}
+                                aria-label={`${isThisPlaying ? "Pause" : "Play"} ${song.title}`}
+                                className="inline-flex h-12 items-center gap-2 rounded-full bg-saffron px-5 text-sm font-black text-sand shadow-[0_16px_42px_rgba(227,122,44,0.25)] transition hover:bg-terracotta"
+                            >
+                                {isThisPlaying ? (
+                                    <Pause className="size-4 fill-current" aria-hidden="true" />
+                                ) : (
+                                    <Play className="size-4 fill-current" aria-hidden="true" />
+                                )}
+                                {isThisPlaying ? "Pause" : "Play"}
+                            </button>
+                            <ActionButton
+                                ariaLabel={`${liked ? "Unlike" : "Like"} ${song.title}`}
+                                active={liked}
+                                onClick={() => setLiked((value) => !value)}
+                                icon={<Heart className={`size-4 ${liked ? "fill-current" : ""}`} />}
+                            >
+                                Like
+                            </ActionButton>
+                            <ActionButton
+                                ariaLabel={`${saved ? "Unsave" : "Save"} ${song.title}`}
+                                active={saved}
+                                onClick={() => {
+                                    setSaved((value) => !value)
+                                    setMessage(saved ? "Removed from saved songs." : "Saved to your library.")
+                                }}
+                                icon={<Bookmark className={`size-4 ${saved ? "fill-current" : ""}`} />}
+                            >
+                                Save
+                            </ActionButton>
+                            <ActionButton
+                                ariaLabel={`Share ${song.title}`}
+                                onClick={handleShare}
+                                icon={<Share2 className="size-4" />}
+                            >
+                                Share
+                            </ActionButton>
+                            <Link
+                                href="/create#composer"
+                                aria-label={`Remix ${song.title}`}
+                                className="inline-flex h-12 items-center gap-2 rounded-full border border-saffron/28 bg-saffron/10 px-4 text-sm font-black text-saffron transition hover:bg-saffron/15"
+                            >
+                                <RefreshCcw className="size-4" aria-hidden="true" />
+                                Remix
+                            </Link>
+                        </div>
+
+                        {message ? (
+                            <p role="status" className="mt-4 rounded-2xl border border-saffron/25 bg-saffron/10 px-4 py-3 text-sm font-bold text-saffron">
+                                {message}
+                            </p>
+                        ) : null}
+                    </div>
+                </section>
+
+                <section className="mt-7 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+                    <div className="min-w-0 rounded-[1.5rem] border border-sand/12 bg-sand/[0.07] p-3 shadow-[0_22px_70px_rgba(0,0,0,0.32)] backdrop-blur-2xl">
+                        <div className="rounded-[1.15rem] border border-sand/10 bg-[#111215]/72 p-4 sm:p-5">
+                            <div role="tablist" aria-label="Song information" className="flex flex-wrap gap-2">
+                                {(["lyrics", "prompt", "details"] as const).map((tab) => (
+                                    <button
+                                        key={tab}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={activeTab === tab}
+                                        onClick={() => setActiveTab(tab)}
+                                        className={`h-10 rounded-full px-4 text-sm font-black capitalize transition ${
+                                            activeTab === tab
+                                                ? "bg-saffron text-sand"
+                                                : "bg-sand/[0.07] text-sand/62 hover:bg-sand/10 hover:text-sand"
+                                        }`}
+                                    >
+                                        {tab}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="mt-5 min-h-56">
+                                {activeTab === "lyrics" && (
+                                    <TextPanel
+                                        title="Lyrics"
+                                        text={song.lyrics || "Lyrics are not available for this preview yet."}
+                                    />
+                                )}
+                                {activeTab === "prompt" && (
+                                    <TextPanel
+                                        title="Prompt"
+                                        text={song.prompt || "Prompt preview coming soon."}
+                                    />
+                                )}
+                                {activeTab === "details" && (
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                        <DetailCard label="Dialect" value={song.dialect} />
+                                        <DetailCard label="Genre preset" value={song.genrePreset} />
+                                        <DetailCard label="Instruments" value={song.instruments.join(", ")} />
+                                        <DetailCard label="Visibility" value={song.isPublic ? "Public" : "Private"} />
+                                        <DetailCard label="Duration" value={song.duration} />
+                                        <DetailCard label="Plays" value={formatCount(song.plays)} />
+                                        <DetailCard label="Likes" value={formatCount(displayLikes)} />
+                                        <DetailCard label="Created" value={formatCreatedAt(song.createdAt)} />
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Metadata sidebar */}
-                    <aside className="rounded-[1.5rem] border border-sand/15 bg-sand/10 p-2.5 shadow-[0_20px_56px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
-                        <div className="rounded-[1.15rem] border border-sand/10 bg-charcoal/50 p-4">
-                            <p className="text-xs font-black uppercase tracking-[0.22em] text-sand/50">
-                                Track Metadata
-                            </p>
-                            <div className="mt-4 grid gap-3">
-                                <MetadataCard label="Genre" value={song.genrePreset} />
-
-                                {song.dialect && (
-                                    <MetadataCard label="Dialect" value={song.dialect} />
-                                )}
-
-                                <MetadataCard
-                                    label="Instruments"
-                                    value={song.instruments.join(", ")}
-                                />
-
-                                <MetadataCard
-                                    label="Visibility"
-                                    value={song.isPublic ? "Public" : "Private"}
-                                    icon={
-                                        song.isPublic ? (
-                                            <Globe2 className="size-4" aria-hidden="true" />
-                                        ) : (
-                                            <Lock className="size-4" aria-hidden="true" />
-                                        )
-                                    }
-                                />
-
-                                <MetadataCard label="Duration" value={song.duration} />
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <MetadataCard
-                                        label="Plays"
-                                        value={socialStats.plays.toLocaleString()}
-                                    />
-                                    <MetadataCard
-                                        label="Likes"
-                                        value={socialStats.likes.toLocaleString()}
-                                    />
+                    <aside className="grid min-w-0 gap-5">
+                        <CommentsPanel />
+                        <div className="rounded-[1.5rem] border border-sand/12 bg-sand/[0.07] p-3 shadow-[0_22px_70px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
+                            <div className="rounded-[1.15rem] border border-sand/10 bg-[#111215]/72 p-4">
+                                <div className="flex items-center gap-2">
+                                    <Sparkles className="size-4 text-saffron" aria-hidden="true" />
+                                    <h2 className="text-lg font-black text-sand">Related Songs</h2>
                                 </div>
-
-                                <MetadataCard
-                                    label="Created"
-                                    value={new Intl.DateTimeFormat("en", {
-                                        month: "long",
-                                        day: "numeric",
-                                        year: "numeric",
-                                    }).format(new Date(song.createdAt))}
-                                />
+                                <div className="mt-4 grid gap-3">
+                                    {relatedSongs.map((relatedSong) => (
+                                        <RelatedSongCard
+                                            key={relatedSong.id}
+                                            song={relatedSong}
+                                            queue={queue}
+                                        />
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </aside>
-                </div>
+                </section>
+            </main>
+        </div>
+    )
+}
 
-                <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
-                    {/* Lyrics / Prompt */}
-                    <section className="rounded-[1.5rem] border border-sand/15 bg-sand/10 p-2.5 shadow-[0_20px_56px_rgba(0,0,0,0.26)] backdrop-blur-2xl">
-                        <div className="rounded-[1.15rem] border border-sand/10 bg-charcoal/50 p-4 sm:p-5">
-                            <p className="text-xs font-black uppercase tracking-[0.22em] text-saffron">
-                                Lyrics / Prompt
-                            </p>
-                            <div className="mt-4 text-base leading-8 text-sand/78">
-                                <span className="block font-black text-sand">Prompt</span>
-                                <span className="mt-2 block text-sand/72">
-                                    {song.prompt || "No prompt provided."}
-                                </span>
-                                {song.lyrics && (
-                                    <>
-                                        <span className="mt-6 block font-black text-sand">
-                                            Lyrics
-                                        </span>
-                                        <span className="mt-2 block text-sand/72">
-                                            {song.lyrics}
-                                        </span>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </section>
-
-                    <SongSocialPanel song={song} />
+function SongNotFound() {
+    return (
+        <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-[#08080a] px-4 pb-[calc(var(--app-bottom-player-height)+var(--app-mobile-tab-bar-height)+1rem)] text-sand lg:pb-[calc(var(--app-bottom-player-height)+2rem)]">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(227,122,44,0.22),transparent_30%),linear-gradient(135deg,#08080a,#10141b_52%,#08080a)]" />
+            <section className="relative z-10 w-full max-w-lg rounded-[1.5rem] border border-sand/12 bg-sand/[0.07] p-3 text-center shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+                <div className="rounded-[1.15rem] border border-sand/10 bg-[#111215]/76 px-5 py-8">
+                    <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-saffron/12 text-saffron">
+                        <Music2 className="size-7" aria-hidden="true" />
+                    </div>
+                    <h1 className="mt-5 text-3xl font-black text-sand">Song not found</h1>
+                    <p className="mx-auto mt-3 max-w-sm text-sm font-semibold leading-6 text-sand/58">
+                        This track may have been removed or is not available.
+                    </p>
+                    <Link
+                        href="/feed"
+                        className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-saffron px-5 text-sm font-black text-sand transition hover:bg-terracotta"
+                    >
+                        Back to Explore
+                    </Link>
                 </div>
             </section>
         </div>
     )
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+function CoverArtwork({ song, size }: { song: MockSong; size: "hero" | "card" }) {
+    const sizeClass =
+        size === "hero"
+            ? "aspect-square w-full max-w-[420px] justify-self-center lg:justify-self-start"
+            : "size-16"
 
-function MetadataCard({
-    icon,
-    label,
-    value,
+    return (
+        <div
+            className={`relative overflow-hidden rounded-[1.6rem] border border-sand/12 bg-[#15171b] shadow-[0_28px_90px_rgba(0,0,0,0.42)] ${sizeClass}`}
+            style={{ background: song.gradient }}
+        >
+            {song.coverImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                    src={song.coverImage}
+                    alt={`${song.title} cover artwork`}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    onError={(event) => {
+                        ;(event.currentTarget as HTMLImageElement).style.display = "none"
+                    }}
+                />
+            ) : null}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(237,227,211,0.24),transparent_22%),linear-gradient(180deg,transparent_45%,rgba(0,0,0,0.55))]" />
+            <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(45deg,rgba(237,227,211,0.24)_1px,transparent_1px),linear-gradient(-45deg,rgba(227,122,44,0.24)_1px,transparent_1px)] [background-size:18px_18px]" />
+            {!song.coverImage ? (
+                <Music2 className="absolute left-1/2 top-1/2 size-14 -translate-x-1/2 -translate-y-1/2 text-sand/18" aria-hidden="true" />
+            ) : null}
+        </div>
+    )
+}
+
+function Badge({
+    children,
+    tone = "muted",
 }: {
-    icon?: React.ReactNode
-    label: string
-    value: string
+    children: React.ReactNode
+    tone?: "muted" | "orange"
 }) {
     return (
-        <div className="rounded-2xl border border-sand/10 bg-sand/8 p-4">
-            <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-sand/45">
-                {icon}
+        <span
+            className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-black uppercase tracking-[0.14em] ${
+                tone === "orange"
+                    ? "border-saffron/35 bg-saffron/12 text-saffron"
+                    : "border-sand/12 bg-sand/[0.07] text-sand/64"
+            }`}
+        >
+            {children}
+        </span>
+    )
+}
+
+function Stat({ icon, label }: { icon: React.ReactNode; label: string }) {
+    return (
+        <span className="inline-flex items-center gap-2 rounded-full border border-sand/10 bg-sand/[0.06] px-3 py-2">
+            <span className="text-saffron" aria-hidden="true">{icon}</span>
+            {label}
+        </span>
+    )
+}
+
+function ActionButton({
+    active,
+    ariaLabel,
+    children,
+    icon,
+    onClick,
+}: {
+    active?: boolean
+    ariaLabel: string
+    children: React.ReactNode
+    icon: React.ReactNode
+    onClick: () => void
+}) {
+    return (
+        <button
+            type="button"
+            aria-label={ariaLabel}
+            aria-pressed={active}
+            onClick={onClick}
+            className={`inline-flex h-12 items-center gap-2 rounded-full border px-4 text-sm font-black transition ${
+                active
+                    ? "border-saffron/40 bg-saffron/14 text-saffron"
+                    : "border-sand/12 bg-sand/[0.06] text-sand hover:bg-sand/10"
+            }`}
+        >
+            <span aria-hidden="true">{icon}</span>
+            {children}
+        </button>
+    )
+}
+
+function TextPanel({ title, text }: { title: string; text: string }) {
+    return (
+        <article>
+            <h2 className="text-xl font-black text-sand">{title}</h2>
+            <p className="mt-4 whitespace-pre-line text-base font-semibold leading-8 text-sand/70">
+                {text}
+            </p>
+        </article>
+    )
+}
+
+function DetailCard({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="rounded-2xl border border-sand/10 bg-sand/[0.06] p-4">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-sand/42">
                 {label}
             </p>
-            <p className="mt-2 text-sm font-bold leading-6 text-sand">{value}</p>
+            <p className="mt-2 text-sm font-bold leading-6 text-sand/82">{value}</p>
         </div>
+    )
+}
+
+function CommentsPanel() {
+    return (
+        <section className="rounded-[1.5rem] border border-sand/12 bg-sand/[0.07] p-3 shadow-[0_22px_70px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
+            <div className="rounded-[1.15rem] border border-sand/10 bg-[#111215]/72 p-4">
+                <div className="flex items-center gap-2">
+                    <MessageCircle className="size-4 text-saffron" aria-hidden="true" />
+                    <h2 className="text-lg font-black text-sand">Comments</h2>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                    {REACTIONS.map((reaction) => (
+                        <button
+                            key={reaction}
+                            type="button"
+                            aria-label={`React with ${reaction}`}
+                            className="flex size-10 items-center justify-center rounded-full border border-sand/10 bg-sand/[0.07] text-xl transition hover:border-saffron/35 hover:bg-saffron/10"
+                        >
+                            {reaction}
+                        </button>
+                    ))}
+                </div>
+                <label className="mt-4 block">
+                    <span className="sr-only">Write a comment</span>
+                    <input
+                        placeholder="Write a comment"
+                        className="h-12 w-full rounded-full border border-sand/12 bg-sand/[0.07] px-4 text-sm font-bold text-sand outline-none transition placeholder:text-sand/42 focus:border-saffron/45 focus:bg-sand/10"
+                    />
+                </label>
+                <div className="mt-6 rounded-2xl border border-sand/10 bg-[#08080a]/42 px-4 py-8 text-center">
+                    <p className="text-xl font-black text-sand">No comments yet</p>
+                    <p className="mt-2 text-sm font-semibold leading-6 text-sand/48">
+                        Be the first to show your love for this song
+                    </p>
+                </div>
+            </div>
+        </section>
+    )
+}
+
+function RelatedSongCard({ song, queue }: { song: MockSong; queue: ReturnType<typeof toPlayerSong>[] }) {
+    const { playSong, isCurrentSong, isPlaying } = usePlaySong()
+    const playerSong = toPlayerSong(song)
+    const isThisPlaying = isCurrentSong(playerSong) && isPlaying
+
+    return (
+        <article className="grid grid-cols-[4rem_minmax(0,1fr)_2.5rem] items-center gap-3 rounded-2xl border border-sand/10 bg-sand/[0.06] p-2.5">
+            <Link
+                href={`/song/${song.id}`}
+                aria-label={`Open ${song.title}`}
+                className="rounded-[1rem] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+            >
+                <CoverArtwork song={song} size="card" />
+            </Link>
+            <Link
+                href={`/song/${song.id}`}
+                className="min-w-0 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+            >
+                <h3 className="truncate text-sm font-black text-sand transition hover:text-saffron">
+                    {song.title}
+                </h3>
+                <p className="mt-1 truncate text-xs font-bold text-sand/48">{song.creator}</p>
+                <p className="mt-1 flex items-center gap-2 text-[11px] font-bold text-sand/36">
+                    <span>{formatCount(song.plays)} plays</span>
+                    <span>{song.duration}</span>
+                </p>
+            </Link>
+            <button
+                type="button"
+                onClick={() => playSong(playerSong, queue)}
+                aria-label={`${isThisPlaying ? "Pause" : "Play"} ${song.title}`}
+                className="flex size-10 items-center justify-center rounded-full bg-sand/10 text-sand transition hover:bg-saffron hover:text-sand"
+            >
+                {isThisPlaying ? (
+                    <Pause className="size-4 fill-current" aria-hidden="true" />
+                ) : (
+                    <Play className="size-4 fill-current" aria-hidden="true" />
+                )}
+            </button>
+        </article>
     )
 }
