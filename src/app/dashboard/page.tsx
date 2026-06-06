@@ -262,7 +262,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* ── Hero ── */}
-                <section className="mx-auto mt-9 max-w-2xl text-center lg:mt-14">
+                <section className="mx-auto mt-9 max-w-2xl text-center lg:mt-10">
                     <h1 className="text-[2rem] font-black leading-[1.08] tracking-tight text-sand sm:text-[2.6rem] md:text-[3rem]">
                         <span className="lg:hidden">Let&apos;s make a song</span>
                         <span className="hidden lg:inline">Bring your sound to life</span>
@@ -362,7 +362,7 @@ export default function DashboardPage() {
                     isPlaying={isPlaying}
                 />
 
-                <section className="mt-12 hidden lg:block">
+                <section className="mt-9 hidden lg:block">
                     <div className="grid gap-4 lg:grid-cols-3">
                         {COLLECTIONS.map((col) => (
                             <CollectionCard

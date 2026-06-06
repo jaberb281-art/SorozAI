@@ -337,6 +337,18 @@ function CreatePageInner() {
     playSong(toPlayerSong(song), queue)
   }
 
+  // Bring the composer into view and focus it (composer lives in the left panel,
+  // which is stacked above the workspace on mobile).
+  function handleStartCreating() {
+    setCreateMode("Simple")
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" })
+      window.requestAnimationFrame(() => {
+        document.getElementById("simple-song-description")?.focus()
+      })
+    }
+  }
+
   function handleWand() {
     if (lyricsMode === "instrumental") {
       setPanelNote("Switch out of Instrumental to generate lyrics.")
@@ -421,7 +433,7 @@ function CreatePageInner() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_6%,rgba(227,122,44,0.14),transparent_24%),radial-gradient(circle_at_82%_10%,rgba(26,58,92,0.48),transparent_28%),linear-gradient(135deg,#141414_0%,#191716_48%,#101010_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.045] [background-image:linear-gradient(90deg,rgba(237,227,211,0.35)_1px,transparent_1px),linear-gradient(rgba(237,227,211,0.25)_1px,transparent_1px)] [background-size:36px_36px]" />
 
-      <main className="relative z-10 grid grid-cols-1 gap-3 px-3 py-3 xl:h-dvh xl:min-h-0 xl:grid-cols-[minmax(420px,500px)_minmax(0,1fr)] xl:gap-0 xl:overflow-hidden xl:px-0 xl:py-0">
+      <main className="relative z-10 grid grid-cols-1 gap-3 px-3 py-3 xl:h-dvh xl:min-h-0 xl:grid-cols-[minmax(420px,480px)_minmax(0,1fr)] xl:gap-0 xl:overflow-hidden xl:px-0 xl:py-0">
         {/* ── LEFT PANEL ── */}
         <section className="rounded-2xl border border-sand/10 bg-[#181818]/95 shadow-[0_20px_60px_rgba(0,0,0,0.34)] xl:h-full xl:min-h-0 xl:rounded-none xl:border-y-0 xl:border-l-0 xl:border-r xl:bg-[#171717]/92">
           <div className="flex h-full min-h-0 flex-col overflow-x-visible p-3 pb-28 sm:p-4 sm:pb-32 lg:pb-4 xl:overflow-y-auto xl:p-5 xl:pb-6">
@@ -1136,11 +1148,22 @@ function CreatePageInner() {
             <div className="flex flex-1 flex-col">
               {generatedSongs.length === 0 ? (
                 <div className="flex flex-1 items-center justify-center py-24 text-center">
-                  <div>
-                    <p className="text-base font-black text-sand/55">No songs found</p>
-                    <p className="mt-2 text-sm font-semibold text-sand/38">
-                      Create your first Zahirok track from the left panel.
+                  <div className="flex flex-col items-center">
+                    <span className="flex size-14 items-center justify-center rounded-2xl border border-saffron/20 bg-saffron/[0.08] text-saffron">
+                      <Music2 className="size-7" aria-hidden="true" />
+                    </span>
+                    <p className="mt-5 text-base font-black text-sand/72">No tracks yet</p>
+                    <p className="mt-2 max-w-xs text-sm font-semibold text-sand/40">
+                      Describe your song on the left and generate your first Makkuran track.
                     </p>
+                    <button
+                      type="button"
+                      onClick={handleStartCreating}
+                      className="mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-saffron px-5 text-sm font-black text-[#171717] shadow-[0_12px_30px_rgba(227,122,44,0.2)] transition hover:bg-[#f09a4f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                    >
+                      <Sparkles className="size-4" aria-hidden="true" />
+                      Start creating
+                    </button>
                   </div>
                 </div>
               ) : (

@@ -209,15 +209,24 @@ export function AppSidebar() {
             <div className={`relative flex h-full min-h-0 flex-col pb-4 pt-0 ${isCollapsed ? "px-0" : "px-3"}`}>
                 <div className="shrink-0">
                     {isCollapsed ? (
-                        <div className="flex h-[118px] items-start justify-center pt-[51px]">
+                        <div className="flex flex-col items-center gap-2 pt-4">
+                            <Link
+                                href="/dashboard"
+                                aria-label="Zahirok AI home"
+                                title="Zahirok"
+                                className="flex size-10 items-center justify-center rounded-xl border border-saffron/25 bg-saffron/10 text-saffron shadow-[0_0_16px_rgba(227,122,44,0.12)] transition hover:bg-saffron/15"
+                            >
+                                <Music className="size-[19px]" aria-hidden={true} />
+                            </Link>
                             <button
                                 type="button"
                                 aria-label="Expand sidebar"
                                 aria-pressed={true}
+                                title="Expand sidebar"
                                 onClick={toggleCollapsed}
-                                className="inline-flex size-12 items-center justify-center rounded-lg bg-white/[0.045] text-sand/54 transition hover:bg-white/[0.08] hover:text-sand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+                                className="inline-flex size-8 items-center justify-center rounded-lg text-sand/45 transition hover:bg-white/[0.06] hover:text-sand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
                             >
-                                <ChevronRight className="size-6" aria-hidden={true} />
+                                <ChevronRight className="size-[18px]" aria-hidden={true} />
                             </button>
                         </div>
                     ) : (
@@ -303,7 +312,7 @@ export function AppSidebar() {
                 {isCollapsed ? (
                     <nav
                         aria-label="Desktop navigation"
-                        className="mt-20 flex min-h-0 flex-1 flex-col items-center gap-3 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                        className="mt-6 flex min-h-0 flex-1 flex-col items-center gap-2.5 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                         {[...MAIN_NAV_ITEMS, ...SECONDARY_NAV_ITEMS].map((item) => (
                             <SidebarLink

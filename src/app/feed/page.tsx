@@ -449,7 +449,7 @@ function SuggestedCreatorsSection({
 
             <div
                 ref={rowRef}
-                className="mt-5 flex snap-x gap-5 overflow-x-auto pb-3 [scrollbar-color:rgba(237,227,211,0.28)_transparent] [scrollbar-width:thin] md:gap-8 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sand/20"
+                className="mt-5 flex snap-x gap-5 overflow-x-auto pb-3 [scrollbar-width:none] md:gap-8 [&::-webkit-scrollbar]:hidden"
             >
                 {SUGGESTED_CREATORS.map((creator) => (
                     <Link
@@ -499,7 +499,7 @@ function ExploreHooksSection({
             <div className="relative mt-4">
                 <div
                     ref={rowRef}
-                    className="flex snap-x gap-3 overflow-x-auto pb-3 [scrollbar-color:rgba(237,227,211,0.28)_transparent] [scrollbar-width:thin] sm:gap-4 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sand/20"
+                    className="flex snap-x gap-3 overflow-x-auto pb-3 [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden"
                 >
                     {EXPLORE_HOOKS.map((hook) => (
                         <Link
@@ -564,7 +564,7 @@ function BestOfSection({
             <div className="flex items-center justify-between gap-4">
                 <div>
                     <h2 className="text-xl font-black text-white sm:text-2xl">
-                        Best Of
+                        Best of Zahirok
                     </h2>
                     {notice ? (
                         <p className="mt-1 text-sm font-bold text-saffron/85" role="status">
@@ -585,7 +585,7 @@ function BestOfSection({
             <div className="relative mt-5">
                 <div
                     ref={rowRef}
-                    className="flex snap-x gap-4 overflow-x-auto pb-3 [scrollbar-color:rgba(237,227,211,0.28)_transparent] [scrollbar-width:thin] md:gap-6 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sand/20"
+                    className="flex snap-x gap-4 overflow-x-auto pb-3 [scrollbar-width:none] md:gap-6 [&::-webkit-scrollbar]:hidden"
                 >
                     {BEST_OF_COLLECTIONS.map((collection) => (
                         <button
