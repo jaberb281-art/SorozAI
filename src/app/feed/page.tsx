@@ -305,7 +305,7 @@ export default function FeedPage() {
 
                 {/* ── Category filter chips ── */}
                 {!isSearching && (
-                    <div className="mt-5 flex snap-x gap-2 overflow-x-auto pb-2 [scrollbar-color:rgba(237,227,211,0.28)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sand/20">
+                    <div className="mt-5 flex snap-x gap-2 overflow-x-auto pb-2 scroll-pr-6 [scrollbar-color:rgba(237,227,211,0.28)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sand/20">
                         {CATEGORIES.map((cat) => (
                             <button
                                 key={cat.key}
@@ -402,7 +402,7 @@ export default function FeedPage() {
                                 </div>
 
                                 {/* Horizontal card row */}
-                                <div className="mt-4 flex snap-x gap-3 overflow-x-auto pb-3 [scrollbar-color:rgba(237,227,211,0.28)_transparent] [scrollbar-width:thin] sm:gap-4 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sand/20">
+                                <div className="mt-4 flex snap-x gap-3 overflow-x-auto pb-3 scroll-pr-6 [scrollbar-color:rgba(237,227,211,0.28)_transparent] [scrollbar-width:thin] sm:gap-4 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sand/20">
                                     {section.songs.map((song) => (
                                         <div key={song.id} className="w-[min(46vw,164px)] shrink-0 snap-start sm:w-[180px] lg:w-[192px]">
                                             <SongCard
@@ -447,9 +447,10 @@ function SuggestedCreatorsSection({
                 </button>
             </div>
 
+            <div className="relative mt-5">
             <div
                 ref={rowRef}
-                className="mt-5 flex snap-x gap-5 overflow-x-auto pb-3 [scrollbar-width:none] md:gap-8 [&::-webkit-scrollbar]:hidden"
+                className="flex snap-x gap-5 overflow-x-auto pb-3 [scrollbar-width:none] md:gap-8 [&::-webkit-scrollbar]:hidden"
             >
                 {SUGGESTED_CREATORS.map((creator) => (
                     <Link
@@ -461,7 +462,7 @@ function SuggestedCreatorsSection({
                             className={`block aspect-square rounded-full border border-sand/10 shadow-[0_18px_48px_rgba(0,0,0,0.28)] transition duration-300 group-hover:scale-[1.03] group-hover:border-saffron/35 ${creator.avatarClass}`}
                             aria-hidden="true"
                         />
-                        <span className="mt-4 block truncate text-lg font-black leading-tight text-white transition group-hover:text-saffron">
+                        <span className="mt-4 block line-clamp-2 text-lg font-black leading-tight text-white transition group-hover:text-saffron">
                             {creator.name}
                         </span>
                         <span className="mt-1 block text-sm font-semibold text-sand/48">
@@ -469,6 +470,8 @@ function SuggestedCreatorsSection({
                         </span>
                     </Link>
                 ))}
+            </div>
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-charcoal to-transparent" aria-hidden="true" />
             </div>
         </section>
     )
@@ -534,6 +537,8 @@ function ExploreHooksSection({
                         </Link>
                     ))}
                 </div>
+
+                <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-charcoal to-transparent" aria-hidden="true" />
 
                 <button
                     type="button"
@@ -612,6 +617,8 @@ function BestOfSection({
                         </button>
                     ))}
                 </div>
+
+                <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-charcoal to-transparent" aria-hidden="true" />
 
                 <button
                     type="button"

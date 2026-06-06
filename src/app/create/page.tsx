@@ -3,19 +3,15 @@
 import { useEffect, useMemo, useRef, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import {
-  AudioLines,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Dices,
-  Drum,
   Filter,
   Folder,
   FolderSearch,
-  Guitar,
   Heart,
   Info,
-  KeyboardMusic,
   Maximize2,
   Loader2,
   Mic2,
@@ -30,7 +26,6 @@ import {
   Trash2,
   Upload,
   Wand2,
-  WavesHorizontal,
   X,
 } from "lucide-react"
 
@@ -262,6 +257,18 @@ function CreatePageInner() {
     status as Exclude<StudioStatus, "idle" | "done">,
   )
   const queue = useMemo(() => generatedSongs.map(toPlayerSong), [generatedSongs])
+  // Active style chips are derived from the comma-separated style prompt, so the
+  // icon buttons reflect (and toggle) the same value the textarea already holds.
+  const activeStyleTokens = useMemo(
+    () =>
+      new Set(
+        stylePrompt
+          .split(",")
+          .map((token) => token.trim().toLowerCase())
+          .filter(Boolean),
+      ),
+    [stylePrompt],
+  )
 
   // MOCK: replace with api-client call when backend is ready
   useEffect(() => {
@@ -364,6 +371,22 @@ function CreatePageInner() {
     setImportedPrompt(false)
   }
 
+  // Toggle a style label in/out of the comma-separated style prompt.
+  function toggleStyleChip(label: string) {
+    setStylePrompt((value) => {
+      const tokens = value
+        .split(",")
+        .map((token) => token.trim())
+        .filter(Boolean)
+      const exists = tokens.some((token) => token.toLowerCase() === label.toLowerCase())
+      const next = exists
+        ? tokens.filter((token) => token.toLowerCase() !== label.toLowerCase())
+        : [...tokens, label]
+      return next.join(", ")
+    })
+    setImportedPrompt(false)
+  }
+
   function handleTopTabClick(tab: InputTab) {
     setInputTab(tab)
     setIsAudioMenuOpen(false)
@@ -433,10 +456,10 @@ function CreatePageInner() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_6%,rgba(227,122,44,0.14),transparent_24%),radial-gradient(circle_at_82%_10%,rgba(26,58,92,0.48),transparent_28%),linear-gradient(135deg,#141414_0%,#191716_48%,#101010_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.045] [background-image:linear-gradient(90deg,rgba(237,227,211,0.35)_1px,transparent_1px),linear-gradient(rgba(237,227,211,0.25)_1px,transparent_1px)] [background-size:36px_36px]" />
 
-      <main className="relative z-10 grid grid-cols-1 gap-3 px-3 py-3 xl:h-dvh xl:min-h-0 xl:grid-cols-[minmax(420px,480px)_minmax(0,1fr)] xl:gap-0 xl:overflow-hidden xl:px-0 xl:py-0">
+      <main className="relative z-10 grid grid-cols-1 gap-3 px-3 py-3 lg:h-dvh lg:min-h-0 lg:grid-cols-[minmax(420px,480px)_minmax(0,1fr)] lg:gap-0 lg:overflow-hidden lg:px-0 lg:py-0">
         {/* ── LEFT PANEL ── */}
-        <section className="rounded-2xl border border-sand/10 bg-[#181818]/95 shadow-[0_20px_60px_rgba(0,0,0,0.34)] xl:h-full xl:min-h-0 xl:rounded-none xl:border-y-0 xl:border-l-0 xl:border-r xl:bg-[#171717]/92">
-          <div className="flex h-full min-h-0 flex-col overflow-x-visible p-3 pb-28 sm:p-4 sm:pb-32 lg:pb-4 xl:overflow-y-auto xl:p-5 xl:pb-6">
+        <section className="rounded-2xl border border-sand/10 bg-[#181818]/95 shadow-[0_20px_60px_rgba(0,0,0,0.34)] lg:h-full lg:min-h-0 lg:rounded-none lg:border-y-0 lg:border-l-0 lg:border-r lg:bg-[#171717]/92">
+          <div className="flex h-full min-h-0 flex-col overflow-x-visible p-3 pb-28 sm:p-4 sm:pb-32 lg:overflow-y-auto lg:p-5 lg:pb-6 lg:[scrollbar-width:none] lg:[&::-webkit-scrollbar]:hidden">
             {/* Top controls */}
             <div className="flex flex-wrap items-center gap-3">
               <div className="inline-flex h-10 rounded-full border border-sand/10 bg-black/20 p-1">
@@ -595,7 +618,7 @@ function CreatePageInner() {
                       disabled={isGenerating}
                       rows={3}
                       placeholder="Jazzy pop song about being invisible"
-                      className="mt-4 min-h-24 w-full resize-none bg-transparent text-base font-semibold leading-6 text-sand outline-none placeholder:text-sand/38 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-28"
+                      className="mt-3 min-h-16 w-full resize-none bg-transparent text-base font-semibold leading-6 text-sand outline-none placeholder:text-sand/40 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-20"
                     />
                   </div>
                   <button
@@ -648,8 +671,8 @@ function CreatePageInner() {
                 </div>
 
                 <div className="mt-3">
-                  <p className="text-sm font-black text-sand/34">Suggestions</p>
-                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <p className="text-sm font-black text-sand/45">Suggestions</p>
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:overflow-visible">
                     {STYLE_SUGGESTIONS.map((suggestion) => (
                       <button
                         key={suggestion}
@@ -724,7 +747,7 @@ function CreatePageInner() {
                         disabled={isGenerating}
                         rows={5}
                         placeholder={"[Verse]\nThis is where you write your rhymes\nor give our Magic Wand a try ↙\nSection [tags] can help instruct your\nsongs to feel more tight and structured"}
-                        className="min-h-28 flex-1 resize-none bg-transparent text-sm leading-6 text-sand outline-none placeholder:text-sand/32 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32"
+                        className="min-h-28 flex-1 resize-none bg-transparent text-[15px] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32 sm:text-sm"
                       />
                     )}
 
@@ -735,7 +758,7 @@ function CreatePageInner() {
                         disabled={isGenerating}
                         rows={5}
                         placeholder={"What do you want your lyrics to be about? Suno will write\nnew lyrics every generation. Leave this blank for a random\ntopic."}
-                        className="min-h-28 flex-1 resize-none bg-transparent text-sm leading-6 text-sand outline-none placeholder:text-sand/32 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32"
+                        className="min-h-28 flex-1 resize-none bg-transparent text-[15px] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32 sm:text-sm"
                       />
                     )}
 
@@ -822,7 +845,7 @@ function CreatePageInner() {
                       disabled={isGenerating}
                       rows={4}
                       placeholder="Suroz, Benju, Rabab, Duholl, Dambora, Makkuran vocal, coastal folk"
-                      className="min-h-24 flex-1 resize-none bg-transparent text-sm leading-6 text-sand outline-none placeholder:text-sand/32 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="min-h-24 flex-1 resize-none bg-transparent text-[15px] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
                     />
 
                     <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -856,25 +879,31 @@ function CreatePageInner() {
                       >
                         <RefreshCw className="size-4" aria-hidden="true" />
                       </button>
+                    </div>
 
-                      {ADVANCED_STYLE_CHIPS.map((chip) => (
-                        <button
-                          key={chip.label}
-                          type="button"
-                          onClick={() =>
-                            setStylePrompt((value) =>
-                              value ? `${value}, ${chip.label}` : chip.label,
-                            )
-                          }
-                          disabled={isGenerating}
-                          className="group inline-flex items-center gap-2 rounded-full bg-sand/[0.08] py-1.5 pl-2 pr-3 text-xs font-black text-sand transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40"
-                        >
-                          <span className="inline-flex size-6 items-center justify-center rounded-full bg-black/22 text-saffron transition group-hover:text-[#171717]">
+                    {/* Icon-first style options — names exposed via aria-label/title */}
+                    <div className="mt-3 flex flex-wrap gap-2 sm:gap-2.5">
+                      {ADVANCED_STYLE_CHIPS.map((chip) => {
+                        const isActive = activeStyleTokens.has(chip.label.toLowerCase())
+                        return (
+                          <button
+                            key={chip.label}
+                            type="button"
+                            onClick={() => toggleStyleChip(chip.label)}
+                            disabled={isGenerating}
+                            aria-label={chip.label}
+                            aria-pressed={isActive}
+                            title={chip.label}
+                            className={`inline-flex size-11 shrink-0 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron disabled:cursor-not-allowed disabled:opacity-40 ${
+                              isActive
+                                ? "border-saffron bg-saffron text-[#171717] shadow-[0_8px_20px_rgba(227,122,44,0.22)]"
+                                : "border-sand/10 bg-sand/[0.07] text-saffron/80 hover:border-saffron/40 hover:text-saffron"
+                            }`}
+                          >
                             <StyleChipGlyph icon={chip.icon} />
-                          </span>
-                          {chip.label}
-                        </button>
-                      ))}
+                          </button>
+                        )
+                      })}
                     </div>
                     </div>
                   )}
@@ -983,7 +1012,7 @@ function CreatePageInner() {
             )}
 
             {/* Bottom: progress + create */}
-            <div className="fixed bottom-[calc(var(--app-mobile-tab-bar-height)+0.75rem)] left-3 right-3 z-50 rounded-2xl border border-sand/10 bg-[#181818]/96 p-2 shadow-[0_18px_48px_rgba(0,0,0,0.38)] backdrop-blur-xl lg:static lg:mx-0 lg:mt-4 lg:border-0 lg:bg-transparent lg:p-0 lg:pt-5 lg:shadow-none lg:backdrop-blur-none xl:mt-auto">
+            <div className="fixed bottom-[calc(var(--app-mobile-tab-bar-height)+0.75rem)] left-3 right-3 z-50 rounded-2xl border border-sand/10 bg-[#181818]/96 p-2 shadow-[0_18px_48px_rgba(0,0,0,0.38)] backdrop-blur-xl lg:static lg:mx-0 lg:mt-auto lg:border-0 lg:bg-transparent lg:p-0 lg:pt-5 lg:shadow-none lg:backdrop-blur-none">
               <GenerationProgress
                 status={status}
                 progress={progress}
@@ -1020,7 +1049,7 @@ function CreatePageInner() {
                   type="button"
                   onClick={handleCreate}
                   disabled={!canCreate}
-                  className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-saffron text-base font-black text-[#171717] shadow-[0_14px_34px_rgba(227,122,44,0.22)] transition hover:bg-[#f09a4f] disabled:cursor-not-allowed disabled:bg-sand/10 disabled:text-sand/28 disabled:shadow-none sm:h-14"
+                  className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-saffron text-base font-black text-[#171717] shadow-[0_14px_34px_rgba(227,122,44,0.22)] transition hover:bg-[#f09a4f] disabled:cursor-not-allowed disabled:border disabled:border-sand/15 disabled:bg-sand/[0.12] disabled:text-sand/55 disabled:shadow-none sm:h-14"
                 >
                   {isGenerating ? (
                     <Loader2 className="size-4 animate-spin" aria-hidden="true" />
@@ -1035,8 +1064,8 @@ function CreatePageInner() {
         </section>
 
         {/* ── RIGHT PANEL (Workspace) ── */}
-        <section className="flex flex-col rounded-2xl border border-sand/10 bg-[#111111]/82 shadow-[0_20px_60px_rgba(0,0,0,0.26)] xl:h-full xl:min-h-0 xl:rounded-none xl:border-0 xl:bg-transparent">
-          <div className="flex min-h-0 flex-1 flex-col px-4 py-5 sm:px-5 sm:py-6 xl:overflow-y-auto xl:px-6 xl:py-7">
+        <section className="flex flex-col rounded-2xl border border-sand/10 bg-[#111111]/82 shadow-[0_20px_60px_rgba(0,0,0,0.26)] lg:h-full lg:min-h-0 lg:rounded-none lg:border-0 lg:bg-transparent">
+          <div className="flex min-h-0 flex-1 flex-col px-4 py-5 sm:px-5 sm:py-6 lg:overflow-y-auto lg:px-6 lg:py-7 lg:[scrollbar-width:none] lg:[&::-webkit-scrollbar]:hidden">
             <div className="flex flex-wrap items-center gap-2 text-lg font-black">
               <span>Workspaces</span>
               <ChevronRight className="size-4 text-sand/35" aria-hidden="true" />
@@ -1251,24 +1280,124 @@ function CreatePageInner() {
   )
 }
 
-function StyleChipGlyph({ icon }: { icon: StyleChipIconKind }) {
-  const className = "size-3.5"
+// ── Custom Balochi instrument/style icons (inline SVG, inherit currentColor) ──
+// Hand-drawn line glyphs so each style reads as a distinct, real instrument
+// rather than a generic Lucide shape.
 
+type StyleIconProps = { className?: string }
+
+const SVG_BASE = {
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.7,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  "aria-hidden": true as const,
+}
+
+// Suroz — bowed spike fiddle: round body, long neck, bow across the strings
+function SurozIcon({ className }: StyleIconProps) {
+  return (
+    <svg className={className} {...SVG_BASE}>
+      <circle cx="7.5" cy="16.3" r="3.4" />
+      <path d="M9.9 13.9 18.5 5.3" />
+      <path d="M17.6 4.4 19.8 6.6" />
+      <path d="M3.6 11.4 20.4 17" />
+    </svg>
+  )
+}
+
+// Benju — keyed box zither: a body with a row of keys/buttons and a string
+function BenjuIcon({ className }: StyleIconProps) {
+  return (
+    <svg className={className} {...SVG_BASE}>
+      <rect x="3" y="9" width="18" height="8" rx="1.8" />
+      <circle cx="7" cy="13" r="1" />
+      <circle cx="10.5" cy="13" r="1" />
+      <circle cx="14" cy="13" r="1" />
+      <path d="M17.5 11v4" />
+    </svg>
+  )
+}
+
+// Rabab — short-necked lute: rounded body with sound hole, short pegged neck
+function RababIcon({ className }: StyleIconProps) {
+  return (
+    <svg className={className} {...SVG_BASE}>
+      <circle cx="8.6" cy="16.4" r="4.3" />
+      <circle cx="8.6" cy="16.4" r="1.3" />
+      <path d="M11.3 13.2 16.8 7.4" />
+      <path d="M15.9 6.5 18 8.6" />
+      <path d="M17.4 5 19.5 7.1" />
+    </svg>
+  )
+}
+
+// Duholl — double-headed barrel drum with diagonal rope lacing
+function DuhollIcon({ className }: StyleIconProps) {
+  return (
+    <svg className={className} {...SVG_BASE}>
+      <rect x="3.3" y="8.5" width="17.4" height="7" rx="3.5" />
+      <path d="M4.4 9.2 6.8 14.8" />
+      <path d="M8.4 8.6 10.8 15.4" />
+      <path d="M12.4 8.6 14.8 15.4" />
+      <path d="M16.4 9 18.6 14.6" />
+    </svg>
+  )
+}
+
+// Dambora — long-necked two-string lute: small body, very long neck, 2 strings
+function DamboraIcon({ className }: StyleIconProps) {
+  return (
+    <svg className={className} {...SVG_BASE}>
+      <circle cx="7.2" cy="17" r="3.2" />
+      <path d="M9.2 14.6 18.7 5.1" />
+      <path d="M8.3 13.7 17.8 4.2" />
+      <path d="M18 4 20 6" />
+    </svg>
+  )
+}
+
+// Makkuran vocal — a singer with sound waves projecting from the voice
+function MakkuranVocalIcon({ className }: StyleIconProps) {
+  return (
+    <svg className={className} {...SVG_BASE}>
+      <circle cx="8.5" cy="7" r="3" />
+      <path d="M3.8 19c0-3 2.1-4.8 4.7-4.8 1.5 0 2.8.6 3.6 1.6" />
+      <path d="M16 7.2c1.1 1.4 1.1 3.9 0 5.3" />
+      <path d="M18.7 5c1.9 2.4 1.9 6.9 0 9.3" />
+    </svg>
+  )
+}
+
+// Coastal folk — layered sea waves under a low sun
+function CoastalFolkIcon({ className }: StyleIconProps) {
+  return (
+    <svg className={className} {...SVG_BASE}>
+      <circle cx="17" cy="6.6" r="2.4" />
+      <path d="M3 13.5q2.25-2.2 4.5 0t4.5 0 4.5 0 4.5 0" />
+      <path d="M3 17.5q2.25-2.2 4.5 0t4.5 0 4.5 0 4.5 0" />
+    </svg>
+  )
+}
+
+function StyleChipGlyph({ icon, className = "size-5" }: { icon: StyleChipIconKind; className?: string }) {
   switch (icon) {
     case "suroz":
-      return <AudioLines className={className} aria-hidden="true" />
+      return <SurozIcon className={className} />
     case "benju":
-      return <KeyboardMusic className={className} aria-hidden="true" />
+      return <BenjuIcon className={className} />
     case "rabab":
-      return <Guitar className={className} aria-hidden="true" />
+      return <RababIcon className={className} />
     case "duholl":
-      return <Drum className={className} aria-hidden="true" />
+      return <DuhollIcon className={className} />
     case "dambora":
-      return <Music2 className={className} aria-hidden="true" />
+      return <DamboraIcon className={className} />
     case "vocal":
-      return <Mic2 className={className} aria-hidden="true" />
+      return <MakkuranVocalIcon className={className} />
     case "coastal":
-      return <WavesHorizontal className={className} aria-hidden="true" />
+      return <CoastalFolkIcon className={className} />
   }
 }
 
