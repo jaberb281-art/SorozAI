@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, Suspense } from "react"
 import type { ReactNode } from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   ChevronDown,
   ChevronLeft,
@@ -49,6 +49,7 @@ type ModePlaceholder = "voice" | "track"
 type DurationOption = "30s" | "1min" | "2min" | "4min"
 type VariationCount = 1 | 2 | 4
 type TrackInputTab = "upload" | "workspace"
+type TrackDownloadFormat = "MP3" | "WAV"
 type MusicKey =
   | "Auto"
   | "C major"
@@ -103,6 +104,7 @@ const TRACK_INPUT_MAX_SIZE_BYTES = 50 * 1024 * 1024
 const TRACK_INPUT_MAX_SIZE_LABEL = "50MB"
 const TRACK_INPUT_MAX_DURATION_LABEL = "8 minutes"
 const TRACK_INPUT_PLACEHOLDER_DURATION = "~3:20"
+const TRACK_ACTIONS_COMING_SOON = ["Extend", "Cover", "Stems", "Make Persona"] as const
 const BPM_QUICK_PICKS = [
   { label: "Slow", value: 70 },
   { label: "Mid", value: 100 },
@@ -474,6 +476,7 @@ export default function CreatePage() {
 }
 
 function CreatePageInner() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const initialPrompt = searchParams.get("prompt")?.slice(0, SONG_DESCRIPTION_MAX_LENGTH) ?? ""
   const [createMode, setCreateMode] = useState<CreateMode>("Simple")
@@ -507,6 +510,7 @@ function CreatePageInner() {
   const [isMoreOptionsOpen, setIsMoreOptionsOpen] = useState(true)
   const [sortLabel, setSortLabel] = useState<"Newest" | "Oldest">("Newest")
   const [toolbarNote, setToolbarNote] = useState("")
+  const [remixTrackId, setRemixTrackId] = useState<string | null>(null)
   const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null)
   const [generationElapsedSeconds, setGenerationElapsedSeconds] = useState(0)
   const [activeGeneration, setActiveGeneration] = useState<PendingGeneration | null>(null)
@@ -761,6 +765,61 @@ function CreatePageInner() {
 
   function handlePlay(song: GeneratedSong) {
     playSong(toPlayerSong(song), queue)
+  }
+
+  function handleRenameTrack(songId: string, title: string) {
+    const nextTitle = title.trim()
+    if (!nextTitle) return
+
+    setGeneratedSongs((songs) =>
+      songs.map((song) =>
+        song.id === songId ? { ...song, title: nextTitle } : song,
+      ),
+    )
+    setToolbarNote("Track title updated.")
+  }
+
+  function handleDeleteTrack(songId: string) {
+    const track = generatedSongs.find((song) => song.id === songId)
+
+    setGeneratedSongs((songs) => songs.filter((song) => song.id !== songId))
+    setLikedIds((current) => {
+      const next = new Set(current)
+      next.delete(songId)
+      return next
+    })
+    setRemixTrackId((current) => (current === songId ? null : current))
+    setToolbarNote(track ? `${track.title} deleted.` : "Track deleted.")
+  }
+
+  function handleRemixTrack(song: GeneratedSong) {
+    setRemixTrackId(song.id)
+    setToolbarNote(`${song.title} loaded as a remix reference.`)
+    router.push("/create?mode=remix")
+  }
+
+  function handleTrackDownload(format: TrackDownloadFormat) {
+    setToolbarNote(
+      `Download will be available after generation is connected. ${format} export is not ready yet.`,
+    )
+  }
+
+  async function handleCopyTrackLink(song: GeneratedSong) {
+    const shareUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/song/${song.id}`
+        : `/song/${song.id}`
+
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard unavailable")
+      }
+
+      await navigator.clipboard.writeText(shareUrl)
+      setToolbarNote("Mock share link copied.")
+    } catch {
+      setToolbarNote("Could not copy link. Clipboard is unavailable.")
+    }
   }
 
   // Bring the composer into view and focus it (composer lives in the left panel,
@@ -1083,7 +1142,9 @@ function CreatePageInner() {
 
             {currentModeConfig.topPlaceholder === "track" ? (
               <TrackInput
+                key={remixTrackId ?? "track-input"}
                 generatedTracks={generatedSongs}
+                initialSelectedTrackId={remixTrackId}
                 isGenerating={isGenerating}
               />
             ) : currentModeConfig.topPlaceholder ? (
@@ -1583,6 +1644,7 @@ function CreatePageInner() {
                       setImportedPrompt(false)
                       setComposerNotice("")
                       setSelectedAudioFile(null)
+                      setRemixTrackId(null)
                       if (audioInputRef.current) {
                         audioInputRef.current.value = ""
                       }
@@ -1739,8 +1801,12 @@ function CreatePageInner() {
                         isLiked={isLiked}
                         playing={playing}
                         song={song}
-                        onOpenActions={() => setToolbarNote("Track actions coming soon.")}
+                        onCopyLink={() => handleCopyTrackLink(song)}
+                        onDelete={() => handleDeleteTrack(song.id)}
+                        onDownload={handleTrackDownload}
                         onPlay={() => handlePlay(song)}
+                        onRemix={() => handleRemixTrack(song)}
+                        onRename={(title) => handleRenameTrack(song.id, title)}
                         onToggleLiked={() => toggleLiked(song.id)}
                       />
                     )
@@ -1759,19 +1825,104 @@ function CreatePageInner() {
 
 function GeneratedTrackCard({
   isLiked,
-  onOpenActions,
+  onCopyLink,
+  onDelete,
+  onDownload,
   onPlay,
+  onRemix,
+  onRename,
   onToggleLiked,
   playing,
   song,
 }: {
   isLiked: boolean
-  onOpenActions: () => void
+  onCopyLink: () => Promise<void>
+  onDelete: () => void
+  onDownload: (format: TrackDownloadFormat) => void
   onPlay: () => void
+  onRemix: () => void
+  onRename: (title: string) => void
   onToggleLiked: () => void
   playing: boolean
   song: GeneratedSong
 }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+  const [titleDraft, setTitleDraft] = useState(song.title)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const menuId = `track-actions-${song.id}`
+
+  useEffect(() => {
+    if (!isMenuOpen) return
+
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsMenuOpen(false)
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown)
+    document.addEventListener("keydown", handleEscape)
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown)
+      document.removeEventListener("keydown", handleEscape)
+    }
+  }, [isMenuOpen])
+
+  function openTitleEditor() {
+    setTitleDraft(song.title)
+    setIsEditingTitle(true)
+    setIsConfirmingDelete(false)
+    setIsMenuOpen(false)
+  }
+
+  function handleTitleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    const nextTitle = titleDraft.trim()
+    if (!nextTitle) return
+
+    onRename(nextTitle)
+    setIsEditingTitle(false)
+  }
+
+  function cancelTitleEdit() {
+    setTitleDraft(song.title)
+    setIsEditingTitle(false)
+  }
+
+  function requestDelete() {
+    setIsEditingTitle(false)
+    setIsConfirmingDelete(true)
+    setIsMenuOpen(false)
+  }
+
+  function confirmDelete() {
+    setIsConfirmingDelete(false)
+    onDelete()
+  }
+
+  async function handleCopyLink() {
+    setIsMenuOpen(false)
+    await onCopyLink()
+  }
+
+  function handleDownload(format: TrackDownloadFormat) {
+    setIsMenuOpen(false)
+    onDownload(format)
+  }
+
   return (
     <article className="group rounded-2xl border border-sand/8 bg-sand/[0.045] p-3 transition hover:border-saffron/20 hover:bg-sand/[0.065]">
       <div className="flex items-center gap-3">
@@ -1829,16 +1980,180 @@ function GeneratedTrackCard({
           >
             <Heart className={`size-4 ${isLiked ? "fill-current" : ""}`} aria-hidden="true" />
           </button>
-          <button
-            type="button"
-            onClick={onOpenActions}
-            aria-label={`Open actions for ${song.title}`}
-            className="inline-flex size-9 items-center justify-center rounded-full text-sand/45 transition hover:bg-sand/8 hover:text-sand"
-          >
-            <MoreHorizontal className="size-4" aria-hidden="true" />
-          </button>
+          <div ref={menuRef} className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIsMenuOpen((open) => !open)
+                setIsConfirmingDelete(false)
+              }}
+              aria-controls={menuId}
+              aria-expanded={isMenuOpen}
+              aria-haspopup="menu"
+              aria-label={`Open actions for ${song.title}`}
+              title={`Open actions for ${song.title}`}
+              className="inline-flex size-9 items-center justify-center rounded-full text-sand/45 transition hover:bg-sand/8 hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            >
+              <MoreHorizontal className="size-4" aria-hidden="true" />
+            </button>
+
+            {isMenuOpen && (
+              <div
+                id={menuId}
+                role="menu"
+                aria-label={`Actions for ${song.title}`}
+                className="absolute right-0 top-11 z-50 w-56 rounded-2xl border border-sand/12 bg-[#111113] p-1.5 text-left text-sm font-bold text-sand shadow-[0_18px_44px_rgba(0,0,0,0.45)]"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsMenuOpen(false)
+                    onPlay()
+                  }}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sand/88 transition hover:bg-sand/10 hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                >
+                  {playing ? "Pause" : "Play"}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={openTitleEditor}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sand/88 transition hover:bg-sand/10 hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                >
+                  Edit title
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsMenuOpen(false)
+                    onRemix()
+                  }}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sand/88 transition hover:bg-sand/10 hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                >
+                  Remix
+                </button>
+
+                <div className="my-1 border-y border-sand/8 py-1">
+                  <p className="px-3 py-1 text-[var(--text-micro)] font-black uppercase tracking-[0.14em] text-sand/42">
+                    Download
+                  </p>
+                  <div className="grid grid-cols-2 gap-1 px-1">
+                    {(["MP3", "WAV"] as const).map((format) => (
+                      <button
+                        key={format}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => handleDownload(format)}
+                        className="rounded-lg px-2.5 py-2 text-xs font-black text-sand/76 transition hover:bg-sand/10 hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                      >
+                        {format}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    void handleCopyLink()
+                  }}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sand/88 transition hover:bg-sand/10 hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                >
+                  Copy link
+                </button>
+
+                <div className="my-1 border-y border-sand/8 py-1">
+                  {TRACK_ACTIONS_COMING_SOON.map((action) => (
+                    <button
+                      key={action}
+                      type="button"
+                      role="menuitem"
+                      disabled
+                      aria-disabled="true"
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sand/28"
+                    >
+                      {action}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={requestDelete}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-[#ff9585] transition hover:bg-[#ff9585]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff9585]"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {isEditingTitle && (
+        <form
+          onSubmit={handleTitleSubmit}
+          className="mt-3 rounded-2xl border border-sand/10 bg-black/18 p-3"
+        >
+          <label className="text-xs font-black uppercase tracking-[0.14em] text-sand/42">
+            Edit title
+          </label>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+            <input
+              type="text"
+              value={titleDraft}
+              onChange={(event) => setTitleDraft(event.target.value)}
+              autoFocus
+              className="min-h-10 min-w-0 flex-1 rounded-full border border-sand/10 bg-sand/[0.055] px-3 text-sm font-semibold text-sand outline-none placeholder:text-sand/35 focus:border-saffron/35"
+            />
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                disabled={!titleDraft.trim()}
+                className="h-10 rounded-full bg-saffron px-4 text-xs font-black text-[#171717] transition hover:bg-[#f09a4f] disabled:cursor-not-allowed disabled:bg-sand/12 disabled:text-sand/42"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={cancelTitleEdit}
+                className="h-10 rounded-full bg-sand/[0.08] px-4 text-xs font-black text-sand/70 transition hover:bg-sand/[0.12] hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {isConfirmingDelete && (
+        <div className="mt-3 rounded-2xl border border-[#ff9585]/20 bg-[#ff9585]/10 p-3">
+          <p className="text-sm font-black text-sand">Delete this track?</p>
+          <p className="mt-1 text-xs font-semibold text-sand/48">
+            This only removes the local mock track from this workspace.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={confirmDelete}
+              className="h-9 rounded-full bg-[#ff9585] px-4 text-xs font-black text-[#171717] transition hover:bg-[#ffad9f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff9585]"
+            >
+              Delete
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsConfirmingDelete(false)}
+              className="h-9 rounded-full bg-sand/[0.08] px-4 text-xs font-black text-sand/70 transition hover:bg-sand/[0.12] hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </article>
   )
 }
@@ -2057,14 +2372,19 @@ function CreateAudioOptionsMenu({
 
 function TrackInput({
   generatedTracks,
+  initialSelectedTrackId,
   isGenerating,
 }: {
   generatedTracks: GeneratedSong[]
+  initialSelectedTrackId: string | null
   isGenerating: boolean
 }) {
-  const [activeTab, setActiveTab] = useState<TrackInputTab>("upload")
+  const [activeTab, setActiveTab] = useState<TrackInputTab>(
+    initialSelectedTrackId ? "workspace" : "upload",
+  )
   const [selectedUpload, setSelectedUpload] = useState<File | null>(null)
-  const [selectedWorkspaceTrackId, setSelectedWorkspaceTrackId] = useState<string | null>(null)
+  const [selectedWorkspaceTrackId, setSelectedWorkspaceTrackId] =
+    useState<string | null>(initialSelectedTrackId)
   const [playingReferenceId, setPlayingReferenceId] = useState<string | null>(null)
   const [fileError, setFileError] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
