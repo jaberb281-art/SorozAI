@@ -15,6 +15,7 @@ import {
   Info,
   Maximize2,
   Loader2,
+  MoreHorizontal,
   Mic2,
   Music2,
   Pause,
@@ -45,9 +46,23 @@ type CreatePageMode = "create" | "lyrics" | "instrument" | "voice" | "remix"
 type ModeSection = "description" | "lyrics" | "styles" | "moreOptions" | "title"
 type SuggestionTarget = "description" | "styles"
 type ModePlaceholder = "voice" | "track"
+type DurationOption = "30s" | "1min" | "2min" | "4min"
+type VariationCount = 1 | 2 | 4
+type MusicKey =
+  | "Auto"
+  | "C major"
+  | "G major"
+  | "D major"
+  | "A minor"
+  | "E minor"
+  | "D minor"
+  | "F major"
+  | "Bb major"
+type MusicControl = "bpm" | "key"
 
 const SONG_DESCRIPTION_MAX_LENGTH = 200
 const SONG_DESCRIPTION_WARNING_LENGTH = 180
+const USER_CREDITS = 75
 const LANGUAGE_OPTIONS = ["Balochi", "Urdu", "English", "Arabic", "Brahui"] as const
 type SongLanguage = (typeof LANGUAGE_OPTIONS)[number]
 
@@ -62,6 +77,43 @@ const LYRICS_STRUCTURE_TAGS = [
   "[Hook]",
 ] as const
 
+const DURATION_OPTIONS: {
+  value: DurationOption
+  label: string
+  credits: number
+}[] = [
+  { value: "30s", label: "30s", credits: 5 },
+  { value: "1min", label: "1min", credits: 8 },
+  { value: "2min", label: "2min", credits: 10 },
+  { value: "4min", label: "4min", credits: 20 },
+]
+
+const DURATION_CREDIT_COST: Record<DurationOption, number> = {
+  "30s": 5,
+  "1min": 8,
+  "2min": 10,
+  "4min": 20,
+}
+
+const VARIATION_OPTIONS: VariationCount[] = [1, 2, 4]
+const BPM_QUICK_PICKS = [
+  { label: "Slow", value: 70 },
+  { label: "Mid", value: 100 },
+  { label: "Fast", value: 130 },
+  { label: "Driving", value: 160 },
+] as const
+const KEY_OPTIONS: MusicKey[] = [
+  "Auto",
+  "C major",
+  "G major",
+  "D major",
+  "A minor",
+  "E minor",
+  "D minor",
+  "F major",
+  "Bb major",
+]
+
 interface GeneratedSong {
   id: string
   title: string
@@ -75,6 +127,23 @@ interface GeneratedSong {
   isPublic: boolean
   likes: number
   plays: number
+  bpm: number
+  musicKey: MusicKey
+  creditsUsed: number
+  variationIndex: number
+  variationCount: VariationCount
+}
+
+interface PendingGeneration {
+  prompt: string
+  lyrics: string
+  title: string
+  duration: DurationOption
+  bpm: number
+  musicKey: MusicKey
+  creditsUsed: number
+  variationCount: VariationCount
+  modeLabel: string
 }
 
 const STATUS_LABELS: Record<StudioStatus, string> = {
@@ -133,6 +202,9 @@ const modeConfig = {
     sectionOrder: ["lyrics", "styles", "moreOptions", "title"],
     suggestionTarget: "description",
     suggestionTags: STYLE_SUGGESTIONS,
+    prominentControls: [],
+    surpriseTarget: "description",
+    surprisePrompts: SIMPLE_PROMPT_IDEAS,
   },
   lyrics: {
     label: "Lyrics to Song",
@@ -149,6 +221,15 @@ const modeConfig = {
       "wedding hook",
       "call and response",
       "poetic bridge",
+    ],
+    prominentControls: [],
+    surpriseTarget: "description",
+    surprisePrompts: [
+      "Poetic Balochi lyrics about a voice crossing the Makran coast",
+      "A heartfelt chorus about returning home after years away",
+      "Wedding lyrics with call-and-response energy and a bright hook",
+      "A longing verse and memorable chorus about desert rain",
+      "A modern folk lyric about identity, family, and the sea",
     ],
   },
   instrument: {
@@ -167,6 +248,15 @@ const modeConfig = {
       "Benju texture",
       "ambient intro",
     ],
+    prominentControls: ["bpm", "key"],
+    surpriseTarget: "styles",
+    surprisePrompts: [
+      "Suroz lead, Dambora pulse, Duholl groove, coastal folk build",
+      "Benju texture, Rabab counter melody, warm percussion, cinematic intro",
+      "Dambora ostinato, deep Duholl rhythm, atmospheric guitars, no vocals",
+      "Fast coastal dance rhythm with Suroz flourishes and bright Benju",
+      "Slow instrumental Zahirok with Rabab, Suroz, and spacious ambience",
+    ],
   },
   voice: {
     label: "Voice Style",
@@ -183,6 +273,15 @@ const modeConfig = {
       "Makkuran phrasing",
       "low harmony",
       "spoken intro",
+    ],
+    prominentControls: [],
+    surpriseTarget: "description",
+    surprisePrompts: [
+      "Warm Makkuran vocal style with a low intimate lead and soft harmonies",
+      "Expressive female vocal over a gentle Zahirok folk-pop arrangement",
+      "Spoken Balochi intro that opens into a melodic coastal chorus",
+      "Layered harmonies around a tender hook about missing home",
+      "Raw emotional vocal take with Damboora textures and soft percussion",
     ],
   },
   remix: {
@@ -201,6 +300,15 @@ const modeConfig = {
       "club percussion",
       "cinematic drop",
     ],
+    prominentControls: ["key"],
+    surpriseTarget: "description",
+    surprisePrompts: [
+      "Keep the original hook, add brighter percussion, and lift the chorus",
+      "Turn the reference into a faster folk-trap remix with a cinematic drop",
+      "Preserve the vocal mood while adding Duholl rhythm and Benju sparkle",
+      "Make a spacious night-drive remix with deep bass and Suroz accents",
+      "Rebuild the track as a celebratory coastal dance version",
+    ],
   },
 } satisfies Record<
   CreatePageMode,
@@ -214,6 +322,9 @@ const modeConfig = {
     sectionOrder: readonly ModeSection[]
     suggestionTarget: SuggestionTarget
     suggestionTags: readonly string[]
+    prominentControls: readonly MusicControl[]
+    surpriseTarget: SuggestionTarget
+    surprisePrompts: readonly string[]
   }
 >
 
@@ -253,28 +364,69 @@ function hasModeSection(
   return sections.includes(section)
 }
 
+function hasProminentControl(
+  controls: readonly MusicControl[],
+  control: MusicControl,
+): boolean {
+  return controls.includes(control)
+}
+
+function formatElapsedTime(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`
+}
+
+function formatSongDate(createdAt: string): string {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(createdAt))
+}
+
 function makeGeneratedSong({
+  bpm,
+  creditsUsed,
+  duration,
+  musicKey,
   prompt,
   lyrics,
   title,
+  variationCount,
+  variationIndex,
 }: {
+  bpm: number
+  creditsUsed: number
+  duration: DurationOption
+  musicKey: MusicKey
   prompt: string
   lyrics: string
   title?: string
+  variationCount: VariationCount
+  variationIndex: number
 }): GeneratedSong {
+  const baseTitle = title || getMockTitle()
   return {
-    id: `mock-create-${Date.now()}`,
-    title: title || getMockTitle(),
+    id: `mock-create-${Date.now()}-${variationIndex}-${Math.random().toString(36).slice(2, 8)}`,
+    title:
+      variationCount > 1
+        ? `${baseTitle} V${variationIndex}`
+        : baseTitle,
     prompt,
     lyrics,
     genre: "Zahirok",
     dialect: MVP_DIALECT,
     instruments: ["Damboora", "Suroz"],
-    duration: "3:24",
+    duration,
     createdAt: new Date().toISOString(),
     isPublic: false,
     likes: 0,
     plays: 0,
+    bpm,
+    musicKey,
+    creditsUsed,
+    variationIndex,
+    variationCount,
   }
 }
 
@@ -321,6 +473,10 @@ function CreatePageInner() {
   const [stylePrompt, setStylePrompt] = useState("")
   const [songTitle, setSongTitle] = useState("")
   const [selectedLanguage, setSelectedLanguage] = useState<SongLanguage>("Balochi")
+  const [selectedDuration, setSelectedDuration] = useState<DurationOption>("2min")
+  const [variationCount, setVariationCount] = useState<VariationCount>(2)
+  const [bpm, setBpm] = useState(100)
+  const [musicKey, setMusicKey] = useState<MusicKey>("Auto")
   const [vocalGender, setVocalGender] = useState<VocalGender>("male")
   const [weirdness, setWeirdness] = useState(50)
   const [styleInfluence, setStyleInfluence] = useState(50)
@@ -339,13 +495,27 @@ function CreatePageInner() {
   const [isMoreOptionsOpen, setIsMoreOptionsOpen] = useState(true)
   const [sortLabel, setSortLabel] = useState<"Newest" | "Oldest">("Newest")
   const [toolbarNote, setToolbarNote] = useState("")
+  const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null)
+  const [generationElapsedSeconds, setGenerationElapsedSeconds] = useState(0)
+  const [activeGeneration, setActiveGeneration] = useState<PendingGeneration | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const pendingGenerationRef = useRef({ prompt: "", lyrics: "", title: "" })
+  const pendingGenerationRef = useRef<PendingGeneration>({
+    prompt: "",
+    lyrics: "",
+    title: "",
+    duration: "2min",
+    bpm: 100,
+    musicKey: "Auto",
+    creditsUsed: 10,
+    variationCount: 2,
+    modeLabel: "Create Song",
+  })
   const audioMenuRef = useRef<HTMLDivElement>(null)
   const audioInputRef = useRef<HTMLInputElement>(null)
   const lyricsTextareaRef = useRef<HTMLTextAreaElement>(null)
   const { playSong, isCurrentSong, isPlaying } = usePlaySong()
   const prefilled = useRef(Boolean(initialPrompt))
+  const lastSurprisePromptRef = useRef<string | null>(null)
   const activeMode = resolveCreatePageMode(searchParams.get("mode"))
   const currentModeConfig = modeConfig[activeMode]
   const effectiveCreateMode = currentModeConfig.lockCreateMode
@@ -357,6 +527,10 @@ function CreatePageInner() {
   const lyricsDir = RTL_LYRICS_LANGUAGES.has(selectedLanguage) ? "rtl" : "ltr"
   const isSongDescriptionWarning =
     songDescription.length >= SONG_DESCRIPTION_WARNING_LENGTH
+  const durationCreditCost = DURATION_CREDIT_COST[selectedDuration]
+  const totalCreditCost = durationCreditCost * variationCount
+  const isBpmProminent = hasProminentControl(currentModeConfig.prominentControls, "bpm")
+  const isKeyProminent = hasProminentControl(currentModeConfig.prominentControls, "key")
 
   // Prefill song description from dashboard ?prompt= query param (once only)
   useEffect(() => {
@@ -441,6 +615,18 @@ function CreatePageInner() {
     [stylePrompt],
   )
 
+  useEffect(() => {
+    if (!isGenerating || generationStartedAt == null) return
+
+    const elapsedTimer = window.setInterval(() => {
+      setGenerationElapsedSeconds(
+        Math.max(0, Math.floor((Date.now() - generationStartedAt) / 1000)),
+      )
+    }, 1000)
+
+    return () => window.clearInterval(elapsedTimer)
+  }, [generationStartedAt, isGenerating])
+
   // MOCK: replace with api-client call when backend is ready
   useEffect(() => {
     function clearTimer() {
@@ -484,11 +670,27 @@ function CreatePageInner() {
         setProgress((prev) => {
           if (prev >= 100) {
             clearTimer()
-            setGeneratedSongs((songs) => [
-              makeGeneratedSong(pendingGenerationRef.current),
-              ...songs,
-            ])
+            setGeneratedSongs((songs) => {
+              const pending = pendingGenerationRef.current
+              const nextSongs = Array.from({ length: pending.variationCount }, (_, index) =>
+                makeGeneratedSong({
+                  bpm: pending.bpm,
+                  creditsUsed: pending.creditsUsed,
+                  duration: pending.duration,
+                  musicKey: pending.musicKey,
+                  prompt: pending.prompt,
+                  lyrics: pending.lyrics,
+                  title: pending.title,
+                  variationCount: pending.variationCount,
+                  variationIndex: index + 1,
+                }),
+              )
+
+              return [...nextSongs, ...songs]
+            })
             setStatus("done")
+            setGenerationStartedAt(null)
+            setActiveGeneration(null)
             return 100
           }
           return prev + 3
@@ -503,16 +705,42 @@ function CreatePageInner() {
     const promptParts = [
       songDescription.trim(),
       stylePrompt.trim() ? `Styles: ${stylePrompt.trim()}` : "",
+      `Duration: ${selectedDuration}`,
+      `Variations: ${variationCount}`,
+      `BPM: ${bpm}`,
+      `Key: ${musicKey}`,
     ].filter(Boolean)
 
-    pendingGenerationRef.current = {
+    const pendingGeneration: PendingGeneration = {
       prompt: promptParts.join("\n") || "Zahirok folk with Damboora and Suroz",
       lyrics: lyricsMode === "instrumental" ? "" : lyrics.trim() || lyricsPrompt.trim(),
       title: songTitle.trim(),
+      duration: selectedDuration,
+      bpm,
+      musicKey,
+      creditsUsed: totalCreditCost,
+      variationCount,
+      modeLabel: currentModeConfig.label,
     }
+    pendingGenerationRef.current = pendingGeneration
 
     setProgress(3)
+    setActiveGeneration(pendingGeneration)
+    setGenerationElapsedSeconds(0)
+    setGenerationStartedAt(Date.now())
     setStatus("queued")
+  }
+
+  function handleCancelGeneration() {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+    setStatus("idle")
+    setProgress(0)
+    setGenerationStartedAt(null)
+    setGenerationElapsedSeconds(0)
+    setActiveGeneration(null)
   }
 
   function handlePlay(song: GeneratedSong) {
@@ -540,10 +768,22 @@ function CreatePageInner() {
     setLyrics((prev) => prev + getRandomLyricIdea())
   }
 
-  function handleRandomDescription() {
-    const idea = SIMPLE_PROMPT_IDEAS[Math.floor(Math.random() * SIMPLE_PROMPT_IDEAS.length)]
-    setSongDescription(idea.slice(0, SONG_DESCRIPTION_MAX_LENGTH))
-    setImportedPrompt(false)
+  function handleSurpriseMe() {
+    const prompts = currentModeConfig.surprisePrompts
+    const candidates =
+      prompts.length > 1
+        ? prompts.filter((prompt) => prompt !== lastSurprisePromptRef.current)
+        : prompts
+    const idea = candidates[Math.floor(Math.random() * candidates.length)]
+
+    lastSurprisePromptRef.current = idea
+
+    if (currentModeConfig.surpriseTarget === "styles") {
+      setStylePrompt(idea)
+    } else {
+      setSongDescription(idea.slice(0, SONG_DESCRIPTION_MAX_LENGTH))
+      setImportedPrompt(false)
+    }
   }
 
   function handleSongDescriptionChange(value: string) {
@@ -844,7 +1084,7 @@ function CreatePageInner() {
                 isWarning={isSongDescriptionWarning}
                 suggestionTags={currentModeConfig.suggestionTags}
                 onChange={handleSongDescriptionChange}
-                onRandom={handleRandomDescription}
+                onRandom={handleSurpriseMe}
                 onSuggestionClick={appendSuggestionTag}
                 actions={
                   <div className="mt-4 flex items-center justify-between gap-3 border-b border-sand/8 pb-4">
@@ -897,7 +1137,7 @@ function CreatePageInner() {
                     isWarning={isSongDescriptionWarning}
                     suggestionTags={currentModeConfig.suggestionTags}
                     onChange={handleSongDescriptionChange}
-                    onRandom={handleRandomDescription}
+                    onRandom={handleSurpriseMe}
                     onSuggestionClick={appendSuggestionTag}
                   />
                 )}
@@ -1056,12 +1296,13 @@ function CreatePageInner() {
                     isWarning={isSongDescriptionWarning}
                     suggestionTags={currentModeConfig.suggestionTags}
                     onChange={handleSongDescriptionChange}
-                    onRandom={handleRandomDescription}
+                    onRandom={handleSurpriseMe}
                     onSuggestionClick={appendSuggestionTag}
                   />
                 )}
 
                 {/* Styles section */}
+                {hasModeSection(currentModeConfig.sectionOrder, "styles") && (
                 <div className="mt-3 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-4 sm:rounded-[1.35rem] sm:p-4">
                   <div className="flex items-center gap-2">
                     <button
@@ -1105,16 +1346,29 @@ function CreatePageInner() {
                       </button>
                       <button
                         type="button"
-                        onClick={() =>
+                        onClick={() => {
+                          if (currentModeConfig.surpriseTarget === "styles") {
+                            handleSurpriseMe()
+                            return
+                          }
+
                           setStylePrompt((value) =>
                             value ? `${value}, Suroz` : "Suroz",
                           )
-                        }
+                        }}
                         disabled={isGenerating}
                         className="inline-flex size-10 items-center justify-center rounded-full bg-saffron text-[#171717] transition hover:bg-[#f09a4f] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
-                        aria-label="Generate style idea"
+                        aria-label={
+                          currentModeConfig.surpriseTarget === "styles"
+                            ? "Surprise me"
+                            : "Generate style idea"
+                        }
                       >
-                        <Wand2 className="size-4" aria-hidden="true" />
+                        {currentModeConfig.surpriseTarget === "styles" ? (
+                          <Dices className="size-4" aria-hidden="true" />
+                        ) : (
+                          <Wand2 className="size-4" aria-hidden="true" />
+                        )}
                       </button>
                       <button
                         type="button"
@@ -1161,8 +1415,10 @@ function CreatePageInner() {
                     </div>
                   )}
                 </div>
+                )}
 
                 {/* More Options section */}
+                {hasModeSection(currentModeConfig.sectionOrder, "moreOptions") && (
                 <div className="mt-3 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-4 sm:rounded-[1.35rem] sm:p-4">
                   <button
                     type="button"
@@ -1217,8 +1473,10 @@ function CreatePageInner() {
                     </div>
                   )}
                 </div>
+                )}
 
                 {/* Title and workspace section */}
+                {hasModeSection(currentModeConfig.sectionOrder, "title") && (
                 <div className="mt-3 overflow-hidden rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] sm:mt-4 sm:rounded-[1.35rem]">
                   <label className="flex h-14 items-center gap-3 px-4">
                     <Music2 className="size-4 shrink-0 text-sand/72" aria-hidden="true" />
@@ -1245,10 +1503,27 @@ function CreatePageInner() {
                     </button>
                   </div>
                 </div>
+                )}
               </>
             ) : (
               <ModePlaceholderPanel type={effectiveInputTab === "Voice" ? "voice" : "track"} />
             )}
+
+            <GenerationSettingsPanel
+              key={activeMode}
+              bpm={bpm}
+              duration={selectedDuration}
+              isBpmProminent={isBpmProminent}
+              isGenerating={isGenerating}
+              isKeyProminent={isKeyProminent}
+              musicKey={musicKey}
+              totalCreditCost={totalCreditCost}
+              variationCount={variationCount}
+              onBpmChange={setBpm}
+              onDurationChange={setSelectedDuration}
+              onKeyChange={setMusicKey}
+              onVariationChange={setVariationCount}
+            />
 
             {/* Bottom: progress + create */}
             <div className="fixed bottom-[calc(var(--app-mobile-tab-bar-height)+0.75rem)] left-3 right-3 z-50 rounded-2xl border border-sand/10 bg-[#181818]/96 p-2 shadow-[0_18px_48px_rgba(0,0,0,0.38)] backdrop-blur-xl lg:static lg:mx-0 lg:mt-auto lg:border-0 lg:bg-transparent lg:p-0 lg:pt-5 lg:shadow-none lg:backdrop-blur-none">
@@ -1260,7 +1535,7 @@ function CreatePageInner() {
               />
 
               <p className="mt-2 text-center text-xs font-bold text-sand/48 sm:mt-3">
-                You have 75 credits remaining
+                You have {USER_CREDITS} credits remaining
               </p>
 
               <div className="mt-2 flex items-center gap-2 sm:gap-3">
@@ -1274,6 +1549,10 @@ function CreatePageInner() {
                       setStylePrompt("")
                       setSongTitle("")
                       setSelectedLanguage("Balochi")
+                      setSelectedDuration("2min")
+                      setVariationCount(2)
+                      setBpm(100)
+                      setMusicKey("Auto")
                       setVocalGender("male")
                       setWeirdness(50)
                       setStyleInfluence(50)
@@ -1301,7 +1580,7 @@ function CreatePageInner() {
                   ) : (
                     <Music2 className="size-4" aria-hidden="true" />
                   )}
-                  {isGenerating ? "Generating..." : "Generate — 10 credits"}
+                  {isGenerating ? "Generating..." : `Generate — ${totalCreditCost} credits`}
                 </button>
               </div>
             </div>
@@ -1392,30 +1671,12 @@ function CreatePageInner() {
               </p>
             )}
 
-            {/* Generation banner */}
-            {isGenerating && (
-              <div className="mt-5 rounded-2xl border border-saffron/18 bg-saffron/[0.06] p-4">
-                <div className="flex items-center gap-3">
-                  <Loader2 className="size-5 animate-spin text-saffron" aria-hidden="true" />
-                  <div>
-                    <p className="text-sm font-black text-saffron">
-                      {STATUS_LABELS[status]}
-                    </p>
-                    <p className="mt-0.5 text-xs font-semibold text-sand/48">
-                      Building a mock Zahirok track for this workspace.
-                    </p>
-                  </div>
-                  <span className="ml-auto text-xs font-black tabular-nums text-sand/58">
-                    {progress}%
-                  </span>
-                </div>
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-sand/10">
-                  <div
-                    className="h-full rounded-full bg-saffron transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
+            {isGenerating && activeGeneration && (
+              <GenerationJobCard
+                elapsedSeconds={generationElapsedSeconds}
+                pendingGeneration={activeGeneration}
+                onCancel={handleCancelGeneration}
+              />
             )}
 
             {/* Generated songs */}
@@ -1449,68 +1710,15 @@ function CreatePageInner() {
                     const isLiked = likedIds.has(song.id)
 
                     return (
-                      <article
+                      <GeneratedTrackCard
                         key={song.id}
-                        className="group rounded-2xl border border-sand/8 bg-sand/[0.045] p-3 transition hover:border-saffron/20 hover:bg-sand/[0.065]"
-                      >
-                        <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => handlePlay(song)}
-                            aria-label={`${playing ? "Pause" : "Play"} ${song.title}`}
-                            className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-saffron text-[#151515] shadow-[0_10px_24px_rgba(227,122,44,0.18)] transition hover:bg-[#f09a4f]"
-                          >
-                            {playing ? (
-                              <Pause className="size-5 fill-current" aria-hidden="true" />
-                            ) : (
-                              <Play className="ml-0.5 size-5 fill-current" aria-hidden="true" />
-                            )}
-                          </button>
-
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h2 className="truncate text-base font-black text-sand">
-                                {song.title}
-                              </h2>
-                              <span className="rounded-full border border-saffron/20 bg-saffron/8 px-2 py-0.5 text-[var(--text-micro)] font-black uppercase tracking-[0.12em] text-saffron">
-                                {song.dialect}
-                              </span>
-                            </div>
-                            <p className="mt-1 truncate text-xs font-semibold text-sand/45">
-                              {song.genre} with {song.instruments.join(", ")}
-                            </p>
-                          </div>
-
-                          <div className="hidden h-10 flex-1 items-end gap-px md:flex">
-                            {Array.from({ length: 46 }, (_, i) => (
-                              <span
-                                key={i}
-                                className={`w-full rounded-full ${
-                                  i < 18 ? "bg-saffron/70" : "bg-sand/20"
-                                }`}
-                                style={{ height: `${8 + ((i * 13 + 9) % 28)}px` }}
-                              />
-                            ))}
-                          </div>
-
-                          <div className="flex items-center gap-3 text-xs font-bold text-sand/45">
-                            <span>{song.duration}</span>
-                            <button
-                              type="button"
-                              onClick={() => toggleLiked(song.id)}
-                              aria-label={isLiked ? "Unlike song" : "Like song"}
-                              aria-pressed={isLiked}
-                              className={`inline-flex size-9 items-center justify-center rounded-full transition ${
-                                isLiked
-                                  ? "bg-saffron/15 text-saffron"
-                                  : "text-sand/45 hover:bg-sand/8 hover:text-sand"
-                              }`}
-                            >
-                              <Heart className={`size-4 ${isLiked ? "fill-current" : ""}`} aria-hidden="true" />
-                            </button>
-                          </div>
-                        </div>
-                      </article>
+                        isLiked={isLiked}
+                        playing={playing}
+                        song={song}
+                        onOpenActions={() => setToolbarNote("Track actions coming soon.")}
+                        onPlay={() => handlePlay(song)}
+                        onToggleLiked={() => toggleLiked(song.id)}
+                      />
                     )
                   })}
                 </div>
@@ -1522,6 +1730,92 @@ function CreatePageInner() {
         </section>
       </main>
     </div>
+  )
+}
+
+function GeneratedTrackCard({
+  isLiked,
+  onOpenActions,
+  onPlay,
+  onToggleLiked,
+  playing,
+  song,
+}: {
+  isLiked: boolean
+  onOpenActions: () => void
+  onPlay: () => void
+  onToggleLiked: () => void
+  playing: boolean
+  song: GeneratedSong
+}) {
+  return (
+    <article className="group rounded-2xl border border-sand/8 bg-sand/[0.045] p-3 transition hover:border-saffron/20 hover:bg-sand/[0.065]">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onPlay}
+          aria-label={`${playing ? "Pause" : "Play"} ${song.title}`}
+          className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-saffron text-[#151515] shadow-[0_10px_24px_rgba(227,122,44,0.18)] transition hover:bg-[#f09a4f]"
+        >
+          {playing ? (
+            <Pause className="size-5 fill-current" aria-hidden="true" />
+          ) : (
+            <Play className="ml-0.5 size-5 fill-current" aria-hidden="true" />
+          )}
+        </button>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="truncate text-base font-black text-sand">
+              {song.title}
+            </h2>
+            <span className="rounded-full border border-saffron/20 bg-saffron/8 px-2 py-0.5 text-[var(--text-micro)] font-black uppercase tracking-[0.12em] text-saffron">
+              {song.dialect}
+            </span>
+          </div>
+          <p className="mt-1 truncate text-xs font-semibold text-sand/45">
+            {formatSongDate(song.createdAt)} | {song.duration} | {song.bpm} BPM | {song.musicKey}
+          </p>
+        </div>
+
+        <div className="hidden h-10 flex-1 items-end gap-px md:flex" aria-hidden="true">
+          {Array.from({ length: 46 }, (_, i) => (
+            <span
+              key={i}
+              className={`w-full rounded-full ${
+                i < 18 ? "bg-saffron/70" : "bg-sand/20"
+              }`}
+              style={{ height: `${8 + ((i * 13 + 9) % 28)}px` }}
+            />
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3 text-xs font-bold text-sand/45">
+          <span className="hidden tabular-nums sm:inline">{song.duration}</span>
+          <button
+            type="button"
+            onClick={onToggleLiked}
+            aria-label={isLiked ? "Unlike song" : "Like song"}
+            aria-pressed={isLiked}
+            className={`inline-flex size-9 items-center justify-center rounded-full transition ${
+              isLiked
+                ? "bg-saffron/15 text-saffron"
+                : "text-sand/45 hover:bg-sand/8 hover:text-sand"
+            }`}
+          >
+            <Heart className={`size-4 ${isLiked ? "fill-current" : ""}`} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={onOpenActions}
+            aria-label={`Open actions for ${song.title}`}
+            className="inline-flex size-9 items-center justify-center rounded-full text-sand/45 transition hover:bg-sand/8 hover:text-sand"
+          >
+            <MoreHorizontal className="size-4" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </article>
   )
 }
 
@@ -1851,7 +2145,8 @@ function SongDescriptionPanel({
           onClick={onRandom}
           disabled={isGenerating}
           className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-sand/[0.08] text-sand/70 transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
-          aria-label="Random song description"
+          aria-label="Surprise me"
+          title="Surprise me"
         >
           <Dices className="size-5" aria-hidden="true" />
         </button>
@@ -1892,6 +2187,251 @@ function SuggestionTags({
             {suggestion}
           </button>
         ))}
+      </div>
+    </div>
+  )
+}
+
+function GenerationSettingsPanel({
+  bpm,
+  duration,
+  isBpmProminent,
+  isGenerating,
+  isKeyProminent,
+  musicKey,
+  onBpmChange,
+  onDurationChange,
+  onKeyChange,
+  onVariationChange,
+  totalCreditCost,
+  variationCount,
+}: {
+  bpm: number
+  duration: DurationOption
+  isBpmProminent: boolean
+  isGenerating: boolean
+  isKeyProminent: boolean
+  musicKey: MusicKey
+  onBpmChange: (value: number) => void
+  onDurationChange: (value: DurationOption) => void
+  onKeyChange: (value: MusicKey) => void
+  onVariationChange: (value: VariationCount) => void
+  totalCreditCost: number
+  variationCount: VariationCount
+}) {
+  const isTuningProminent = isBpmProminent || isKeyProminent
+  const [isTuningOpen, setIsTuningOpen] = useState(isTuningProminent)
+
+  return (
+    <div className="mt-3 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-4 sm:rounded-[1.35rem] sm:p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm font-black text-sand">Generation</span>
+        <span className="ml-auto rounded-full border border-saffron/20 bg-saffron/8 px-2.5 py-1 text-xs font-black text-saffron">
+          {totalCreditCost} credits
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-3">
+        <OptionPillGroup
+          label="Duration"
+          options={DURATION_OPTIONS.map((option) => ({
+            label: option.label,
+            meta: `${option.credits}`,
+            value: option.value,
+          }))}
+          value={duration}
+          disabled={isGenerating}
+          onChange={onDurationChange}
+        />
+
+        <OptionPillGroup
+          label="Variations"
+          options={VARIATION_OPTIONS.map((option) => ({
+            label: `${option}`,
+            value: option,
+          }))}
+          value={variationCount}
+          disabled={isGenerating}
+          onChange={onVariationChange}
+        />
+      </div>
+
+      <details
+        className="mt-3 rounded-2xl bg-black/18 p-3 open:border open:border-sand/8"
+        open={isTuningOpen}
+        onToggle={(event) => setIsTuningOpen(event.currentTarget.open)}
+      >
+        <summary className="cursor-pointer list-none text-xs font-black uppercase tracking-[0.16em] text-sand/48 marker:hidden">
+          BPM / Key
+        </summary>
+
+        <div className="mt-3 grid gap-3">
+          <div
+            className={`rounded-xl bg-black/30 p-3 ${
+              isBpmProminent ? "ring-1 ring-saffron/25" : ""
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black text-sand">BPM</span>
+              <span className="ml-auto text-xs font-black tabular-nums text-saffron">
+                {bpm}
+              </span>
+            </div>
+            <input
+              type="range"
+              min={60}
+              max={200}
+              value={bpm}
+              disabled={isGenerating}
+              onChange={(event) => onBpmChange(Number(event.target.value))}
+              className="mt-3 h-6 w-full cursor-pointer appearance-none bg-transparent accent-[#e37a2c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron disabled:cursor-not-allowed disabled:opacity-45"
+              aria-label="BPM"
+            />
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {BPM_QUICK_PICKS.map((pick) => (
+                <button
+                  key={pick.label}
+                  type="button"
+                  onClick={() => onBpmChange(pick.value)}
+                  disabled={isGenerating}
+                  aria-pressed={bpm === pick.value}
+                  className={`rounded-full px-2.5 py-1 text-xs font-black transition disabled:opacity-40 ${
+                    bpm === pick.value
+                      ? "bg-saffron text-[#171717]"
+                      : "bg-sand/[0.08] text-sand/58 hover:text-sand"
+                  }`}
+                >
+                  {pick.label} {pick.value}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div
+            className={`rounded-xl bg-black/30 p-3 ${
+              isKeyProminent ? "ring-1 ring-saffron/25" : ""
+            }`}
+          >
+            <span className="text-xs font-black text-sand">Key</span>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {KEY_OPTIONS.map((keyOption) => (
+                <button
+                  key={keyOption}
+                  type="button"
+                  onClick={() => onKeyChange(keyOption)}
+                  disabled={isGenerating}
+                  aria-pressed={musicKey === keyOption}
+                  className={`rounded-full px-2.5 py-1.5 text-xs font-black transition disabled:opacity-40 ${
+                    musicKey === keyOption
+                      ? "bg-saffron text-[#171717]"
+                      : "bg-sand/[0.08] text-sand/62 hover:text-sand"
+                  }`}
+                >
+                  {keyOption}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+  )
+}
+
+function OptionPillGroup<T extends string | number>({
+  disabled,
+  label,
+  onChange,
+  options,
+  value,
+}: {
+  disabled: boolean
+  label: string
+  onChange: (value: T) => void
+  options: { label: string; meta?: string; value: T }[]
+  value: T
+}) {
+  return (
+    <div className="rounded-xl bg-black/18 p-2">
+      <div className="mb-2 px-1 text-xs font-black text-sand/58">{label}</div>
+      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+        {options.map((option) => (
+          <button
+            key={`${option.value}`}
+            type="button"
+            onClick={() => onChange(option.value)}
+            disabled={disabled}
+            aria-pressed={value === option.value}
+            className={`min-h-10 rounded-full border px-3 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-45 ${
+              value === option.value
+                ? "border-saffron bg-saffron text-[#171717]"
+                : "border-sand/10 bg-sand/[0.07] text-sand/72 hover:border-saffron/28 hover:text-sand"
+            }`}
+          >
+            {option.label}
+            {option.meta && (
+              <span className="ml-1 text-[var(--text-micro)] opacity-70">
+                {option.meta}cr
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function GenerationJobCard({
+  elapsedSeconds,
+  onCancel,
+  pendingGeneration,
+}: {
+  elapsedSeconds: number
+  onCancel: () => void
+  pendingGeneration: PendingGeneration
+}) {
+  const promptSnippet =
+    pendingGeneration.prompt.length > 120
+      ? `${pendingGeneration.prompt.slice(0, 120).trim()}...`
+      : pendingGeneration.prompt
+
+  return (
+    <div className="mt-5 rounded-2xl border border-saffron/18 bg-saffron/[0.06] p-4">
+      <div className="flex items-start gap-3">
+        <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-saffron/12 text-saffron">
+          <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-black text-saffron">
+              Generating your track...
+            </p>
+            <span className="rounded-full border border-sand/10 bg-black/18 px-2 py-0.5 text-[var(--text-micro)] font-black uppercase tracking-[0.12em] text-sand/52">
+              {pendingGeneration.modeLabel}
+            </span>
+          </div>
+          <p className="mt-1 text-xs font-semibold text-sand/52">
+            Elapsed {formatElapsedTime(elapsedSeconds)}
+          </p>
+          <p className="mt-3 line-clamp-2 text-sm font-semibold leading-5 text-sand/70">
+            {promptSnippet || "Zahirok folk with Damboora and Suroz"}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2 text-[var(--text-micro)] font-black uppercase tracking-[0.12em] text-sand/42">
+            <span>{pendingGeneration.duration}</span>
+            <span>{pendingGeneration.variationCount} variations</span>
+            <span>{pendingGeneration.creditsUsed} credits</span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-full border border-sand/10 bg-black/18 px-3 py-1.5 text-xs font-black text-sand/70 transition hover:border-saffron/30 hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+        >
+          Cancel
+        </button>
+      </div>
+      <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-sand/10">
+        <div className="h-full w-1/3 animate-pulse rounded-full bg-saffron" />
       </div>
     </div>
   )
