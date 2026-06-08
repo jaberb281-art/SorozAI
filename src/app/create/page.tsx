@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState, Suspense } from "react"
+import type { ReactNode } from "react"
 import { useSearchParams } from "next/navigation"
 import {
   ChevronDown,
@@ -40,6 +41,26 @@ type LyricsMode = "write" | "prompt" | "instrumental"
 type CreateMode = "Simple" | "Advanced"
 type InputTab = "Audio" | "Voice" | "Inspo"
 type VocalGender = "male" | "female"
+type CreatePageMode = "create" | "lyrics" | "instrument" | "voice" | "remix"
+type ModeSection = "description" | "lyrics" | "styles" | "moreOptions" | "title"
+type SuggestionTarget = "description" | "styles"
+type ModePlaceholder = "voice" | "track"
+
+const SONG_DESCRIPTION_MAX_LENGTH = 200
+const SONG_DESCRIPTION_WARNING_LENGTH = 180
+const LANGUAGE_OPTIONS = ["Balochi", "Urdu", "English", "Arabic", "Brahui"] as const
+type SongLanguage = (typeof LANGUAGE_OPTIONS)[number]
+
+const RTL_LYRICS_LANGUAGES = new Set<SongLanguage>(["Balochi", "Urdu", "Arabic"])
+const LYRICS_STRUCTURE_TAGS = [
+  "[Intro]",
+  "[Verse]",
+  "[Chorus]",
+  "[Bridge]",
+  "[Outro]",
+  "[Instrumental]",
+  "[Hook]",
+] as const
 
 interface GeneratedSong {
   id: string
@@ -101,6 +122,101 @@ const SIMPLE_PROMPT_IDEAS = [
   "Soft folk-pop track with layered harmonies and warm percussion",
 ] as const
 
+const modeConfig = {
+  create: {
+    label: "Create Song",
+    createMode: "Simple",
+    inputTab: "Audio",
+    lockCreateMode: false,
+    defaultLyricsMode: "write",
+    topPlaceholder: null,
+    sectionOrder: ["lyrics", "styles", "moreOptions", "title"],
+    suggestionTarget: "description",
+    suggestionTags: STYLE_SUGGESTIONS,
+  },
+  lyrics: {
+    label: "Lyrics to Song",
+    createMode: "Advanced",
+    inputTab: "Audio",
+    lockCreateMode: true,
+    defaultLyricsMode: "write",
+    topPlaceholder: null,
+    sectionOrder: ["lyrics", "description", "styles", "moreOptions", "title"],
+    suggestionTarget: "description",
+    suggestionTags: [
+      "Zahirok chorus",
+      "coastal longing",
+      "wedding hook",
+      "call and response",
+      "poetic bridge",
+    ],
+  },
+  instrument: {
+    label: "Instrument First",
+    createMode: "Advanced",
+    inputTab: "Audio",
+    lockCreateMode: true,
+    defaultLyricsMode: "instrumental",
+    topPlaceholder: null,
+    sectionOrder: ["styles", "moreOptions", "title"],
+    suggestionTarget: "styles",
+    suggestionTags: [
+      "Suroz lead",
+      "Dambora pulse",
+      "Duholl groove",
+      "Benju texture",
+      "ambient intro",
+    ],
+  },
+  voice: {
+    label: "Voice Style",
+    createMode: "Advanced",
+    inputTab: "Voice",
+    lockCreateMode: true,
+    defaultLyricsMode: "write",
+    topPlaceholder: "voice",
+    sectionOrder: ["description", "lyrics", "styles", "moreOptions", "title"],
+    suggestionTarget: "description",
+    suggestionTags: [
+      "warm male vocal",
+      "soft female vocal",
+      "Makkuran phrasing",
+      "low harmony",
+      "spoken intro",
+    ],
+  },
+  remix: {
+    label: "Remix",
+    createMode: "Advanced",
+    inputTab: "Audio",
+    lockCreateMode: true,
+    defaultLyricsMode: "write",
+    topPlaceholder: "track",
+    sectionOrder: ["description", "lyrics", "styles", "moreOptions", "title"],
+    suggestionTarget: "description",
+    suggestionTags: [
+      "keep original hook",
+      "faster tempo",
+      "folk to trap",
+      "club percussion",
+      "cinematic drop",
+    ],
+  },
+} satisfies Record<
+  CreatePageMode,
+  {
+    label: string
+    createMode: CreateMode
+    inputTab: InputTab
+    lockCreateMode: boolean
+    defaultLyricsMode: LyricsMode
+    topPlaceholder: ModePlaceholder | null
+    sectionOrder: readonly ModeSection[]
+    suggestionTarget: SuggestionTarget
+    suggestionTags: readonly string[]
+  }
+>
+
 // MOCK: Makkuran/Balochi-inspired lyric fragments for the Wand button
 const MOCK_LYRIC_IDEAS = [
   "\n[Verse]\nThe Makran wind carries forgotten names\nDamboora strings echo across the dunes",
@@ -116,6 +232,25 @@ function getMockTitle(): string {
 
 function getRandomLyricIdea(): string {
   return MOCK_LYRIC_IDEAS[Math.floor(Math.random() * MOCK_LYRIC_IDEAS.length)]
+}
+
+function resolveCreatePageMode(mode: string | null): CreatePageMode {
+  if (mode === "default" || mode === "create" || mode == null) {
+    return "create"
+  }
+
+  if (mode in modeConfig) {
+    return mode as CreatePageMode
+  }
+
+  return "create"
+}
+
+function hasModeSection(
+  sections: readonly ModeSection[],
+  section: ModeSection,
+): boolean {
+  return sections.includes(section)
 }
 
 function makeGeneratedSong({
@@ -176,13 +311,16 @@ export default function CreatePage() {
 
 function CreatePageInner() {
   const searchParams = useSearchParams()
+  const initialPrompt = searchParams.get("prompt")?.slice(0, SONG_DESCRIPTION_MAX_LENGTH) ?? ""
   const [createMode, setCreateMode] = useState<CreateMode>("Simple")
   const [inputTab, setInputTab] = useState<InputTab>("Audio")
   const [lyricsMode, setLyricsMode] = useState<LyricsMode>("write")
   const [lyrics, setLyrics] = useState("")
   const [lyricsPrompt, setLyricsPrompt] = useState("")
+  const [songDescription, setSongDescription] = useState(initialPrompt)
   const [stylePrompt, setStylePrompt] = useState("")
   const [songTitle, setSongTitle] = useState("")
+  const [selectedLanguage, setSelectedLanguage] = useState<SongLanguage>("Balochi")
   const [vocalGender, setVocalGender] = useState<VocalGender>("male")
   const [weirdness, setWeirdness] = useState(50)
   const [styleInfluence, setStyleInfluence] = useState(50)
@@ -190,7 +328,7 @@ function CreatePageInner() {
   const [progress, setProgress] = useState(0)
   const [generatedSongs, setGeneratedSongs] = useState<GeneratedSong[]>([])
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
-  const [importedPrompt, setImportedPrompt] = useState(false)
+  const [importedPrompt, setImportedPrompt] = useState(Boolean(initialPrompt))
   const [panelNote, setPanelNote] = useState("")
   const [isAudioMenuOpen, setIsAudioMenuOpen] = useState(false)
   const [selectedAudioFile, setSelectedAudioFile] = useState<File | null>(null)
@@ -205,19 +343,51 @@ function CreatePageInner() {
   const pendingGenerationRef = useRef({ prompt: "", lyrics: "", title: "" })
   const audioMenuRef = useRef<HTMLDivElement>(null)
   const audioInputRef = useRef<HTMLInputElement>(null)
+  const lyricsTextareaRef = useRef<HTMLTextAreaElement>(null)
   const { playSong, isCurrentSong, isPlaying } = usePlaySong()
-  const prefilled = useRef(false)
+  const prefilled = useRef(Boolean(initialPrompt))
+  const activeMode = resolveCreatePageMode(searchParams.get("mode"))
+  const currentModeConfig = modeConfig[activeMode]
+  const effectiveCreateMode = currentModeConfig.lockCreateMode
+    ? currentModeConfig.createMode
+    : createMode
+  const effectiveInputTab = currentModeConfig.lockCreateMode
+    ? currentModeConfig.inputTab
+    : inputTab
+  const lyricsDir = RTL_LYRICS_LANGUAGES.has(selectedLanguage) ? "rtl" : "ltr"
+  const isSongDescriptionWarning =
+    songDescription.length >= SONG_DESCRIPTION_WARNING_LENGTH
 
-  // Prefill style prompt from dashboard ?prompt= query param (once only)
+  // Prefill song description from dashboard ?prompt= query param (once only)
   useEffect(() => {
     if (prefilled.current) return
+
     const incoming = searchParams.get("prompt")
-    if (incoming) {
+    if (!incoming) return
+
+    const timeoutId = window.setTimeout(() => {
       prefilled.current = true
-      setStylePrompt(incoming)
+      setSongDescription(incoming.slice(0, SONG_DESCRIPTION_MAX_LENGTH))
       setImportedPrompt(true)
-    }
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [searchParams])
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setCreateMode(currentModeConfig.createMode)
+      setInputTab(currentModeConfig.inputTab)
+      setLyricsMode(currentModeConfig.defaultLyricsMode)
+      setIsLyricsOpen(hasModeSection(currentModeConfig.sectionOrder, "lyrics"))
+      setIsStylesOpen(hasModeSection(currentModeConfig.sectionOrder, "styles"))
+      setIsAudioMenuOpen(false)
+      setComposerNotice("")
+      setPanelNote("")
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [currentModeConfig])
 
   useEffect(() => {
     if (!isAudioMenuOpen) return
@@ -250,6 +420,7 @@ function CreatePageInner() {
     lyricsMode === "instrumental" ||
     lyrics.trim().length > 0 ||
     lyricsPrompt.trim().length > 0 ||
+    songDescription.trim().length > 0 ||
     stylePrompt.trim().length > 0
   const isGenerating = status === "queued" || status === "generating" || status === "mixing"
   const canCreate = hasCreationInput && !isGenerating
@@ -329,9 +500,13 @@ function CreatePageInner() {
 
   function handleCreate() {
     if (!canCreate) return
+    const promptParts = [
+      songDescription.trim(),
+      stylePrompt.trim() ? `Styles: ${stylePrompt.trim()}` : "",
+    ].filter(Boolean)
 
     pendingGenerationRef.current = {
-      prompt: stylePrompt.trim() || "Zahirok folk with Damboora and Suroz",
+      prompt: promptParts.join("\n") || "Zahirok folk with Damboora and Suroz",
       lyrics: lyricsMode === "instrumental" ? "" : lyrics.trim() || lyricsPrompt.trim(),
       title: songTitle.trim(),
     }
@@ -351,7 +526,7 @@ function CreatePageInner() {
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" })
       window.requestAnimationFrame(() => {
-        document.getElementById("simple-song-description")?.focus()
+        document.getElementById("song-description")?.focus()
       })
     }
   }
@@ -367,8 +542,57 @@ function CreatePageInner() {
 
   function handleRandomDescription() {
     const idea = SIMPLE_PROMPT_IDEAS[Math.floor(Math.random() * SIMPLE_PROMPT_IDEAS.length)]
-    setStylePrompt(idea)
+    setSongDescription(idea.slice(0, SONG_DESCRIPTION_MAX_LENGTH))
     setImportedPrompt(false)
+  }
+
+  function handleSongDescriptionChange(value: string) {
+    setSongDescription(value.slice(0, SONG_DESCRIPTION_MAX_LENGTH))
+    setImportedPrompt(false)
+  }
+
+  function appendSuggestionTag(suggestion: string) {
+    if (currentModeConfig.suggestionTarget === "styles") {
+      setStylePrompt((value) => (value ? `${value}, ${suggestion}` : suggestion))
+      setImportedPrompt(false)
+      return
+    }
+
+    setSongDescription((value) => {
+      const next = value ? `${value}, ${suggestion}` : suggestion
+      return next.slice(0, SONG_DESCRIPTION_MAX_LENGTH)
+    })
+    setImportedPrompt(false)
+  }
+
+  function insertLyricsStructureTag(tag: (typeof LYRICS_STRUCTURE_TAGS)[number]) {
+    if (isGenerating) return
+
+    setLyricsMode("write")
+    setPanelNote("")
+
+    const textarea = lyricsTextareaRef.current
+    let nextCursorPosition = 0
+
+    setLyrics((value) => {
+      const start = textarea?.selectionStart ?? value.length
+      const end = textarea?.selectionEnd ?? value.length
+      const before = value.slice(0, start)
+      const after = value.slice(end)
+      const prefix = before && !before.endsWith("\n") ? "\n" : ""
+      const suffix = after && !after.startsWith("\n") ? "\n" : ""
+
+      nextCursorPosition = before.length + prefix.length + tag.length
+      return `${before}${prefix}${tag}${suffix}${after}`
+    })
+
+    window.requestAnimationFrame(() => {
+      lyricsTextareaRef.current?.focus()
+      lyricsTextareaRef.current?.setSelectionRange(
+        nextCursorPosition,
+        nextCursorPosition,
+      )
+    })
   }
 
   // Toggle a style label in/out of the comma-separated style prompt.
@@ -467,10 +691,14 @@ function CreatePageInner() {
                   <button
                     key={mode}
                     type="button"
-                    onClick={() => setCreateMode(mode)}
-                    aria-pressed={createMode === mode}
+                    onClick={() => {
+                      if (!currentModeConfig.lockCreateMode) {
+                        setCreateMode(mode)
+                      }
+                    }}
+                    aria-pressed={effectiveCreateMode === mode}
                     className={`rounded-full px-3.5 text-sm font-black transition ${
-                      createMode === mode
+                      effectiveCreateMode === mode
                         ? "bg-sand/12 text-sand"
                         : "text-sand/50 hover:text-sand/75"
                     }`}
@@ -484,7 +712,7 @@ function CreatePageInner() {
             {/* Input tabs */}
             <div className="relative z-30 mt-4 grid grid-cols-3 overflow-visible rounded-[1.25rem] border border-sand/8 bg-black/18 sm:mt-5 sm:rounded-[1.45rem]">
               {(["Audio", "Voice", "Inspo"] as const).map((tab) => {
-                const isActive = inputTab === tab
+                const isActive = effectiveInputTab === tab
 
                 if (tab === "Audio") {
                   const isAudioActive = isActive || isAudioMenuOpen
@@ -597,104 +825,84 @@ function CreatePageInner() {
               </div>
             )}
 
+            {currentModeConfig.topPlaceholder && (
+              <ModePlaceholderPanel type={currentModeConfig.topPlaceholder} />
+            )}
+
+            <LanguageSelector
+              value={selectedLanguage}
+              onChange={setSelectedLanguage}
+            />
+
             {/* Tab content */}
-            {createMode === "Simple" && inputTab === "Audio" ? (
-              <div className="mt-4 rounded-[1.35rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-5 sm:p-4">
-                <div className="flex items-start gap-3">
-                  <div className="min-w-0 flex-1">
-                    <label
-                      htmlFor="simple-song-description"
-                      className="text-sm font-black text-sand/82"
-                    >
-                      Song Description
-                    </label>
-                    <textarea
-                      id="simple-song-description"
-                      value={stylePrompt}
-                      onChange={(event) => {
-                        setStylePrompt(event.target.value)
-                        setImportedPrompt(false)
+            {effectiveCreateMode === "Simple" && effectiveInputTab === "Audio" ? (
+              <SongDescriptionPanel
+                id="song-description"
+                value={songDescription}
+                importedPrompt={importedPrompt}
+                isGenerating={isGenerating}
+                isWarning={isSongDescriptionWarning}
+                suggestionTags={currentModeConfig.suggestionTags}
+                onChange={handleSongDescriptionChange}
+                onRandom={handleRandomDescription}
+                onSuggestionClick={appendSuggestionTag}
+                actions={
+                  <div className="mt-4 flex items-center justify-between gap-3 border-b border-sand/8 pb-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCreateMode("Advanced")
+                        setIsLyricsOpen(true)
+                        setLyricsMode("write")
                       }}
-                      disabled={isGenerating}
-                      rows={3}
-                      placeholder="Jazzy pop song about being invisible"
-                      className="mt-3 min-h-16 w-full resize-none bg-transparent text-base font-semibold leading-6 text-sand outline-none placeholder:text-sand/40 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-20"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleRandomDescription}
-                    disabled={isGenerating}
-                    className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-sand/[0.08] text-sand/70 transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
-                    aria-label="Random song description"
-                  >
-                    <Dices className="size-5" aria-hidden="true" />
-                  </button>
-                </div>
+                      className="inline-flex h-10 items-center gap-2 rounded-full bg-sand/[0.08] px-4 text-sm font-black text-sand transition hover:bg-sand/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                    >
+                      <Plus className="size-4" aria-hidden="true" />
+                      Lyrics
+                    </button>
 
-                <div className="mt-4 flex items-center justify-between gap-3 border-b border-sand/8 pb-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCreateMode("Advanced")
-                      setIsLyricsOpen(true)
-                      setLyricsMode("write")
-                    }}
-                    className="inline-flex h-10 items-center gap-2 rounded-full bg-sand/[0.08] px-4 text-sm font-black text-sand transition hover:bg-sand/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
-                  >
-                    <Plus className="size-4" aria-hidden="true" />
-                    Lyrics
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setLyricsMode((mode) => mode === "instrumental" ? "write" : "instrumental")
-                    }
-                    aria-pressed={lyricsMode === "instrumental"}
-                    className={`inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron ${
-                      lyricsMode === "instrumental"
-                        ? "border-saffron/35 bg-saffron/12 text-saffron"
-                        : "border-sand/10 bg-black/10 text-sand/60 hover:text-sand"
-                    }`}
-                  >
-                    <span
-                      className={`size-4 rounded-full border ${
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLyricsMode((mode) => mode === "instrumental" ? "write" : "instrumental")
+                      }
+                      aria-pressed={lyricsMode === "instrumental"}
+                      className={`inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron ${
                         lyricsMode === "instrumental"
-                          ? "border-saffron bg-saffron shadow-[inset_0_0_0_3px_#171717]"
-                          : "border-sand/18 bg-sand/[0.05]"
+                          ? "border-saffron/35 bg-saffron/12 text-saffron"
+                          : "border-sand/10 bg-black/10 text-sand/60 hover:text-sand"
                       }`}
-                      aria-hidden="true"
-                    />
-                    Instrumental
-                  </button>
-                </div>
-
-                <div className="mt-3">
-                  <p className="text-sm font-black text-sand/45">Suggestions</p>
-                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:overflow-visible">
-                    {STYLE_SUGGESTIONS.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        type="button"
-                        onClick={() => {
-                          setStylePrompt((value) =>
-                            value ? `${value}, ${suggestion}` : suggestion,
-                          )
-                          setImportedPrompt(false)
-                        }}
-                        disabled={isGenerating}
-                        className="shrink-0 rounded-full bg-sand/[0.08] px-4 py-2 text-sm font-black text-sand/82 transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
+                    >
+                      <span
+                        className={`size-4 rounded-full border ${
+                          lyricsMode === "instrumental"
+                            ? "border-saffron bg-saffron shadow-[inset_0_0_0_3px_#171717]"
+                            : "border-sand/18 bg-sand/[0.05]"
+                        }`}
+                        aria-hidden="true"
+                      />
+                      Instrumental
+                    </button>
                   </div>
-                </div>
-              </div>
-            ) : inputTab === "Audio" ? (
+                }
+              />
+            ) : effectiveInputTab === "Audio" || currentModeConfig.lockCreateMode ? (
               <>
-                {/* Lyrics section */}
+                {currentModeConfig.sectionOrder[0] === "description" && (
+                  <SongDescriptionPanel
+                    id="song-description"
+                    value={songDescription}
+                    importedPrompt={importedPrompt}
+                    isGenerating={isGenerating}
+                    isWarning={isSongDescriptionWarning}
+                    suggestionTags={currentModeConfig.suggestionTags}
+                    onChange={handleSongDescriptionChange}
+                    onRandom={handleRandomDescription}
+                    onSuggestionClick={appendSuggestionTag}
+                  />
+                )}
+
+                {hasModeSection(currentModeConfig.sectionOrder, "lyrics") && (
                 <div className="mt-4 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-5 sm:rounded-[1.35rem] sm:p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <button
@@ -741,24 +949,46 @@ function CreatePageInner() {
                         }`}
                       >
                     {lyricsMode === "write" && (
-                      <textarea
+                      <>
+                        <div className="mb-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                          {LYRICS_STRUCTURE_TAGS.map((tag) => (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => insertLyricsStructureTag(tag)}
+                              disabled={isGenerating}
+                              className="shrink-0 rounded-full bg-sand/[0.08] px-3 py-1.5 text-xs font-black text-sand/72 transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40"
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+                        <textarea
+                        ref={lyricsTextareaRef}
                         value={lyrics}
                         onChange={(e) => setLyrics(e.target.value)}
+                        dir={lyricsDir}
                         disabled={isGenerating}
                         rows={5}
                         placeholder={"[Verse]\nThis is where you write your rhymes\nor give our Magic Wand a try ↙\nSection [tags] can help instruct your\nsongs to feel more tight and structured"}
-                        className="min-h-28 flex-1 resize-none bg-transparent text-[var(--text-body)] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32 sm:text-sm"
+                        className={`min-h-28 flex-1 resize-none bg-transparent text-[var(--text-body)] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32 sm:text-sm ${
+                          lyricsDir === "rtl" ? "text-right" : ""
+                        }`}
                       />
+                      </>
                     )}
 
                     {lyricsMode === "prompt" && (
                       <textarea
                         value={lyricsPrompt}
                         onChange={(e) => setLyricsPrompt(e.target.value)}
+                        dir={lyricsDir}
                         disabled={isGenerating}
                         rows={5}
                         placeholder={"What do you want your lyrics to be about? Suno will write\nnew lyrics every generation. Leave this blank for a random\ntopic."}
-                        className="min-h-28 flex-1 resize-none bg-transparent text-[var(--text-body)] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32 sm:text-sm"
+                        className={`min-h-28 flex-1 resize-none bg-transparent text-[var(--text-body)] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32 sm:text-sm ${
+                          lyricsDir === "rtl" ? "text-right" : ""
+                        }`}
                       />
                     )}
 
@@ -814,6 +1044,22 @@ function CreatePageInner() {
                     </div>
                   )}
                 </div>
+                )}
+
+                {hasModeSection(currentModeConfig.sectionOrder, "description") &&
+                  currentModeConfig.sectionOrder[0] !== "description" && (
+                  <SongDescriptionPanel
+                    id="song-description"
+                    value={songDescription}
+                    importedPrompt={importedPrompt}
+                    isGenerating={isGenerating}
+                    isWarning={isSongDescriptionWarning}
+                    suggestionTags={currentModeConfig.suggestionTags}
+                    onChange={handleSongDescriptionChange}
+                    onRandom={handleRandomDescription}
+                    onSuggestionClick={appendSuggestionTag}
+                  />
+                )}
 
                 {/* Styles section */}
                 <div className="mt-3 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-4 sm:rounded-[1.35rem] sm:p-4">
@@ -905,6 +1151,13 @@ function CreatePageInner() {
                         )
                       })}
                     </div>
+                    {currentModeConfig.suggestionTarget === "styles" && (
+                      <SuggestionTags
+                        tags={currentModeConfig.suggestionTags}
+                        isGenerating={isGenerating}
+                        onClick={appendSuggestionTag}
+                      />
+                    )}
                     </div>
                   )}
                 </div>
@@ -994,21 +1247,7 @@ function CreatePageInner() {
                 </div>
               </>
             ) : (
-              /* Voice / Inspo placeholder */
-              <div className="mt-4 flex min-h-[220px] flex-1 items-center justify-center rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-5 text-center sm:mt-5 sm:min-h-[280px] sm:rounded-[1.35rem] sm:p-6">
-                <div>
-                  {inputTab === "Voice" ? (
-                    <Mic2 className="mx-auto size-10 text-saffron/50" aria-hidden="true" />
-                  ) : (
-                    <Sparkles className="mx-auto size-10 text-saffron/50" aria-hidden="true" />
-                  )}
-                  <p className="mt-4 text-sm font-semibold text-sand/55">
-                    {inputTab === "Voice"
-                      ? "Voice controls are coming soon."
-                      : "Inspiration prompts are coming soon."}
-                  </p>
-                </div>
-              </div>
+              <ModePlaceholderPanel type={effectiveInputTab === "Voice" ? "voice" : "track"} />
             )}
 
             {/* Bottom: progress + create */}
@@ -1020,15 +1259,21 @@ function CreatePageInner() {
                 stageIndex={stageIndex}
               />
 
-              <div className="mt-2 flex items-center gap-2 sm:mt-3 sm:gap-3">
-                {createMode === "Advanced" && (
+              <p className="mt-2 text-center text-xs font-bold text-sand/48 sm:mt-3">
+                You have 75 credits remaining
+              </p>
+
+              <div className="mt-2 flex items-center gap-2 sm:gap-3">
+                {effectiveCreateMode === "Advanced" && (
                   <button
                     type="button"
                     onClick={() => {
                       setLyrics("")
                       setLyricsPrompt("")
+                      setSongDescription("")
                       setStylePrompt("")
                       setSongTitle("")
+                      setSelectedLanguage("Balochi")
                       setVocalGender("male")
                       setWeirdness(50)
                       setStyleInfluence(50)
@@ -1056,7 +1301,7 @@ function CreatePageInner() {
                   ) : (
                     <Music2 className="size-4" aria-hidden="true" />
                   )}
-                  Create
+                  {isGenerating ? "Generating..." : "Generate — 10 credits"}
                 </button>
               </div>
             </div>
@@ -1492,6 +1737,166 @@ function CreateAudioOptionsMenu({
   )
 }
 
+function ModePlaceholderPanel({ type }: { type: ModePlaceholder }) {
+  const Icon = type === "voice" ? Mic2 : Upload
+  const title = type === "voice" ? "Voice style" : "Track reference"
+  const description =
+    type === "voice"
+      ? "Voice controls are coming soon."
+      : "Track controls are coming soon."
+
+  return (
+    <div className="mt-4 flex min-h-[140px] items-center justify-center rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-5 text-center sm:mt-5 sm:rounded-[1.35rem] sm:p-6">
+      <div>
+        <Icon className="mx-auto size-10 text-saffron/50" aria-hidden="true" />
+        <p className="mt-4 text-sm font-black text-sand/72">{title}</p>
+        <p className="mt-2 text-sm font-semibold text-sand/55">{description}</p>
+      </div>
+    </div>
+  )
+}
+
+function LanguageSelector({
+  onChange,
+  value,
+}: {
+  onChange: (language: SongLanguage) => void
+  value: SongLanguage
+}) {
+  return (
+    <div className="mt-4 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-5 sm:rounded-[1.35rem] sm:p-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-sm font-black text-sand/82">Language</span>
+        <div className="ml-auto flex flex-wrap gap-1.5">
+          {LANGUAGE_OPTIONS.map((language) => (
+            <button
+              key={language}
+              type="button"
+              onClick={() => onChange(language)}
+              aria-pressed={value === language}
+              className={`rounded-full px-3 py-1.5 text-xs font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron ${
+                value === language
+                  ? "bg-sand/12 text-sand"
+                  : "bg-black/10 text-sand/50 hover:text-sand/75"
+              }`}
+            >
+              {language}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SongDescriptionPanel({
+  actions,
+  id,
+  importedPrompt,
+  isGenerating,
+  isWarning,
+  onChange,
+  onRandom,
+  onSuggestionClick,
+  suggestionTags,
+  value,
+}: {
+  actions?: ReactNode
+  id: string
+  importedPrompt: boolean
+  isGenerating: boolean
+  isWarning: boolean
+  onChange: (value: string) => void
+  onRandom: () => void
+  onSuggestionClick: (suggestion: string) => void
+  suggestionTags: readonly string[]
+  value: string
+}) {
+  return (
+    <div className="mt-4 rounded-[1.35rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-5 sm:p-4">
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <label htmlFor={id} className="text-sm font-black text-sand/82">
+              Song Description
+            </label>
+            {importedPrompt && (
+              <span className="text-[var(--text-micro)] font-bold uppercase tracking-wide text-saffron/70">
+                Prompt imported
+              </span>
+            )}
+          </div>
+          <textarea
+            id={id}
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            disabled={isGenerating}
+            rows={3}
+            maxLength={SONG_DESCRIPTION_MAX_LENGTH}
+            aria-describedby={`${id}-counter`}
+            placeholder="Jazzy pop song about being invisible"
+            className="mt-3 min-h-16 w-full resize-none bg-transparent text-base font-semibold leading-6 text-sand outline-none placeholder:text-sand/40 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-20"
+          />
+          <p
+            id={`${id}-counter`}
+            className={`mt-1 text-right text-xs font-black tabular-nums ${
+              isWarning ? "text-saffron" : "text-sand/42"
+            }`}
+          >
+            {value.length} / {SONG_DESCRIPTION_MAX_LENGTH}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onRandom}
+          disabled={isGenerating}
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-sand/[0.08] text-sand/70 transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+          aria-label="Random song description"
+        >
+          <Dices className="size-5" aria-hidden="true" />
+        </button>
+      </div>
+
+      {actions}
+
+      <SuggestionTags
+        tags={suggestionTags}
+        isGenerating={isGenerating}
+        onClick={onSuggestionClick}
+      />
+    </div>
+  )
+}
+
+function SuggestionTags({
+  isGenerating,
+  onClick,
+  tags,
+}: {
+  isGenerating: boolean
+  onClick: (suggestion: string) => void
+  tags: readonly string[]
+}) {
+  return (
+    <div className="mt-3">
+      <p className="text-sm font-black text-sand/45">Suggestions</p>
+      <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:overflow-visible">
+        {tags.map((suggestion) => (
+          <button
+            key={suggestion}
+            type="button"
+            onClick={() => onClick(suggestion)}
+            disabled={isGenerating}
+            className="shrink-0 rounded-full bg-sand/[0.08] px-4 py-2 text-sm font-black text-sand/82 transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40"
+          >
+            {suggestion}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 interface GenerationProgressProps {
   status: StudioStatus
   progress: number
@@ -1514,21 +1919,33 @@ function GenerationProgress({
   )
 
   useEffect(() => {
-    if (etaSeconds == null) {
-      setSecondsLeft(null)
-      return
+    let interval: ReturnType<typeof setInterval> | null = null
+    const timeout = window.setTimeout(() => {
+      if (etaSeconds == null) {
+        setSecondsLeft(null)
+        return
+      }
+
+      setSecondsLeft(etaSeconds)
+      interval = setInterval(() => {
+        setSecondsLeft((prev) => {
+          if (prev == null || prev <= 1) {
+            if (interval) {
+              clearInterval(interval)
+            }
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeout)
+      if (interval) {
+        clearInterval(interval)
+      }
     }
-    setSecondsLeft(etaSeconds)
-    const interval = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev == null || prev <= 1) {
-          clearInterval(interval)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-    return () => clearInterval(interval)
   }, [etaSeconds])
 
   if (!isGenerating && status !== "done") return null
