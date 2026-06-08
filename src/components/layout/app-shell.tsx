@@ -1,11 +1,12 @@
 "use client"
 
+import { Suspense } from "react"
 import { usePathname } from "next/navigation"
 
-import { AppSidebar } from "@/components/layout/app-sidebar"
 import { BottomPlayer } from "@/components/layout/bottom-player"
 import { MobileAppNavbar } from "@/components/layout/mobile-app-navbar"
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar"
+import { StudioRail } from "@/components/layout/studio-rail"
 
 /** Routes where global music playback BottomPlayer should appear */
 const PLAYER_ROUTES = [
@@ -13,6 +14,7 @@ const PLAYER_ROUTES = [
     "/create",
     "/library",
     "/feed",
+    "/radio",
     "/song/",
     "/notifications",
     "/labs",
@@ -43,14 +45,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             data-has-bottom-player={showPlayer ? "true" : "false"}
             data-has-mobile-tab-bar={showMobileTabBar ? "true" : "false"}
         >
-            {/* Desktop sidebar */}
-            <AppSidebar />
+            {/* Desktop studio rail */}
+            <Suspense fallback={<StudioRailFallback />}>
+                <StudioRail />
+            </Suspense>
 
             {/* Shared mobile top navbar */}
             {showMobileAppNavbar && <MobileAppNavbar />}
 
             {/* Main scrollable area; the shell owns fixed-nav safe-area spacing. */}
-            <main className={`flex min-h-dvh w-full min-w-0 flex-col pb-[var(--app-bottom-safe-area)] transition-[margin-left,padding-bottom] duration-200 lg:ml-[var(--app-sidebar-width,228px)] lg:w-auto lg:flex-1 lg:pb-0 lg:pt-0 ${showMobileAppNavbar ? "pt-14" : "pt-0"}`}>
+            <main className={`main-content flex min-h-dvh w-full min-w-0 flex-col pb-[var(--app-bottom-safe-area)] transition-[margin-left,padding-bottom] duration-200 lg:ms-[var(--app-sidebar-width,248px)] lg:w-auto lg:flex-1 lg:pb-0 lg:pt-0 ${showMobileAppNavbar ? "pt-14" : "pt-0"}`}>
                 <div className="flex-1">
                     {children}
                 </div>
@@ -62,5 +66,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {/* Mobile tab bar */}
             {showMobileTabBar && <MobileTabBar />}
         </div>
+    )
+}
+
+function StudioRailFallback() {
+    return (
+        <div
+            aria-hidden={true}
+            className="app-sidebar fixed inset-y-0 left-0 z-[90] hidden h-screen w-[248px] border-e border-white/[0.1] bg-[#11100f] lg:flex"
+        />
     )
 }

@@ -6,7 +6,22 @@
   --deep-indigo: #1a3a5c;
   --sand: #ede3d3;
   --charcoal: #222222;
-  --app-sidebar-width: 228px;
+  --gradient-brand: linear-gradient(135deg, #e37a2c 0%, #b73e1f 100%);
+  --gradient-brand-hover: linear-gradient(135deg, #f09a4f 0%, #c44a29 100%);
+  /* Type scale */
+  --text-hero: clamp(2.5rem, 5vw, 4rem);
+  --text-hero-lh: 1.1;
+  --text-heading: clamp(1.5rem, 3vw, 2rem);
+  --text-heading-lh: 1.2;
+  --text-subheading: 1.125rem;
+  --text-subheading-lh: 1.35;
+  --text-body: 0.9375rem;
+  --text-body-lh: 1.6;
+  --text-caption: 0.8125rem;
+  --text-caption-lh: 1.4;
+  --text-micro: 0.6875rem;
+  --text-micro-lh: 1.4;
+  --app-sidebar-width: 248px;
   --app-mobile-tab-bar-height: calc(3.5rem + env(safe-area-inset-bottom));
   --app-bottom-player-height: 4rem;
   --app-bottom-player-offset: var(--app-mobile-tab-bar-height);
@@ -37,6 +52,14 @@
   --color-indigo-deep: #1a3a5c;
   --color-sand: #ede3d3;
   --color-charcoal: #222222;
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), var(--font-body), sans-serif;
+  --text-hero: var(--text-hero);
+  --text-heading: var(--text-heading);
+  --text-subheading: var(--text-subheading);
+  --text-body: var(--text-body);
+  --text-caption: var(--text-caption);
+  --text-micro: var(--text-micro);
 }
 
 * {
@@ -48,6 +71,7 @@ html {
 }
 
 body {
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   margin: 0;
   background: var(--charcoal);
   color: var(--sand);
@@ -68,4 +92,39 @@ select {
 :where(a, button, input, textarea, select, [role="slider"]):focus-visible {
   outline: 2px solid var(--saffron-sunset);
   outline-offset: 3px;
+}
+
+/* RTL layout support - activated when dir="rtl" is set on <html> */
+[dir="rtl"] {
+  /* Flip the sidebar to the right side */
+  --sidebar-side: right;
+}
+
+[dir="rtl"] .app-sidebar {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .main-content {
+  margin-left: 0;
+  margin-right: var(--app-sidebar-width, 248px);
+}
+
+[dir="rtl"] .bottom-player {
+  left: 0;
+  right: var(--app-sidebar-width, 248px);
+}
+
+/* Balochi diamond lattice - cultural background texture */
+.bg-balochi-pattern {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><path d='M30 2 L58 30 L30 58 L2 30 Z' fill='none' stroke='%23e37a2c' stroke-width='0.6' opacity='0.1'/><path d='M30 18 L42 30 L30 42 L18 30 Z' fill='none' stroke='%23e37a2c' stroke-width='0.6' opacity='0.06'/><circle cx='30' cy='2' r='1.5' fill='%23e37a2c' opacity='0.1'/><circle cx='58' cy='30' r='1.5' fill='%23e37a2c' opacity='0.1'/><circle cx='30' cy='58' r='1.5' fill='%23e37a2c' opacity='0.1'/><circle cx='2' cy='30' r='1.5' fill='%23e37a2c' opacity='0.1'/></svg>");
+  background-size: 60px 60px;
+  background-repeat: repeat;
+}
+
+/* Lighter variant for hero sections */
+.bg-balochi-pattern-faint {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><path d='M30 2 L58 30 L30 58 L2 30 Z' fill='none' stroke='%23e37a2c' stroke-width='0.5' opacity='0.055'/><path d='M30 18 L42 30 L30 42 L18 30 Z' fill='none' stroke='%23e37a2c' stroke-width='0.5' opacity='0.03'/><circle cx='30' cy='2' r='1' fill='%23e37a2c' opacity='0.06'/><circle cx='58' cy='30' r='1' fill='%23e37a2c' opacity='0.06'/><circle cx='30' cy='58' r='1' fill='%23e37a2c' opacity='0.06'/><circle cx='2' cy='30' r='1' fill='%23e37a2c' opacity='0.06'/></svg>");
+  background-size: 60px 60px;
+  background-repeat: repeat;
 }

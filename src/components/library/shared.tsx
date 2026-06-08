@@ -76,7 +76,7 @@ export function ToolbarPill({ children }: { children: React.ReactNode }) {
     return (
         <button
             type="button"
-            className="inline-flex h-12 items-center gap-2 rounded-full bg-white/[0.085] px-4 text-sm font-black text-white transition hover:bg-white/[0.12]"
+            className="inline-flex h-12 items-center gap-2 rounded-full bg-white/[0.085] px-4 text-sm font-semibold text-white transition hover:bg-white/[0.12]"
         >
             {children}
         </button>
@@ -99,7 +99,7 @@ export function IconPill({
             type="button"
             aria-label={label}
             onClick={onClick}
-            className={`inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-black transition ${
+            className={`inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold transition ${
                 active
                     ? "bg-sand text-[#171717]"
                     : "bg-white/[0.055] text-sand/60 hover:bg-white/[0.09] hover:text-white"
@@ -162,7 +162,7 @@ export function SongToolbar({
                 <button
                     key={chip}
                     type="button"
-                    className="h-12 rounded-full border border-white/10 px-4 text-sm font-black text-white transition hover:border-saffron/24"
+                    className="h-12 rounded-full border border-white/10 px-4 text-sm font-semibold text-white transition hover:border-saffron/24"
                 >
                     {chip}
                 </button>
@@ -222,7 +222,7 @@ export function SongRow({
                             />
                         )}
                         <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent,rgba(255,255,255,0.12),transparent)]" />
-                        <span className="absolute bottom-1.5 right-1.5 rounded-md bg-black/68 px-2 py-0.5 text-xs font-black text-white">
+                        <span className="absolute bottom-1.5 right-1.5 rounded-md bg-black/68 px-2 py-0.5 text-xs font-semibold text-white">
                             {song.duration}
                         </span>
                     </div>
@@ -231,16 +231,21 @@ export function SongRow({
                         <div className="flex flex-wrap items-center gap-2">
                             <Link
                                 href={`/song/${song.id}`}
-                                className="truncate text-base font-black text-white transition hover:text-saffron"
+                                className="truncate text-base font-bold text-white transition hover:text-saffron"
                             >
                                 {song.title}
                             </Link>
                             <span className="rounded-md border border-white/10 bg-white/[0.045] px-1.5 py-0.5 text-xs font-semibold text-sand/64">
                                 {song.isPreview ? "v1 Preview" : song.dialect}
                             </span>
+                            {song.genrePreset && (
+                                <span className="rounded-md border border-[#e37a2c]/25 bg-[#e37a2c]/10 px-1.5 py-0.5 text-xs font-semibold text-[#e37a2c]">
+                                    {song.genrePreset}
+                                </span>
+                            )}
                         </div>
 
-                        <p className="mt-1 truncate text-sm font-semibold text-sand/38">
+                        <p className="mt-1 truncate text-sm font-semibold text-sand/60">
                             {song.prompt}
                         </p>
 
@@ -294,7 +299,7 @@ export function SongRow({
                         <button
                             type="button"
                             onClick={() => router.push("/create")}
-                            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-white/[0.055] px-4 text-sm font-black text-white transition hover:bg-white/[0.09] sm:h-12 sm:flex-none sm:px-5"
+                            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-white/[0.055] px-4 text-sm font-semibold text-white transition hover:bg-white/[0.09] sm:h-12 sm:flex-none sm:px-5"
                         >
                             <RefreshCcw className="size-4" aria-hidden={true} />
                             Remix
@@ -304,7 +309,7 @@ export function SongRow({
                         <button
                             type="button"
                             onClick={() => router.push("/pricing")}
-                            className="h-11 flex-1 rounded-full bg-sand px-4 text-sm font-black text-[#161616] transition hover:bg-white sm:flex-none sm:px-5"
+                            className="h-11 flex-1 rounded-full bg-sand px-4 text-sm font-semibold text-[#161616] transition hover:bg-white sm:flex-none sm:px-5"
                         >
                             Upgrade for full song
                         </button>

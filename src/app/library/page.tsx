@@ -23,8 +23,8 @@ const LIBRARY_TABS = [
     "Studio Projects",
     "Voices",
     "Cover Art",
-    "Hooks",
-    "Liked Hooks",
+    "Clips",
+    "Liked Clips",
     "History",
 ] as const
 
@@ -154,7 +154,7 @@ export default function LibraryPage() {
             <main className="min-h-dvh w-full max-w-full min-w-0 px-4 pb-6 pt-6 md:px-6 lg:pb-8 xl:px-8">
                 <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <h1 className="text-4xl font-black leading-none tracking-tight text-white">
-                        Library
+                        My Studio
                     </h1>
                     <div className="flex shrink-0 items-center gap-2">
                         <div ref={audioMenuRef} className="relative">
@@ -231,7 +231,7 @@ export default function LibraryPage() {
                 {/* Tab bar */}
                 <div
                     role="tablist"
-                    aria-label="Library sections"
+                    aria-label="My Studio sections"
                     className="mt-8 flex snap-x gap-5 overflow-x-auto border-b border-white/12 pb-0.5 [scrollbar-color:rgba(237,227,211,0.28)_transparent] [scrollbar-width:thin] sm:gap-7 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sand/20"
                 >
                     {LIBRARY_TABS.map((tab) => (
@@ -285,8 +285,8 @@ export default function LibraryPage() {
                     )}
                     {activeTab === "Voices" && <VoicesTab />}
                     {activeTab === "Cover Art" && <CoverArtTab />}
-                    {activeTab === "Hooks" && <HooksTab />}
-                    {activeTab === "Liked Hooks" && <LikedHooksTab />}
+                    {activeTab === "Clips" && <HooksTab />}
+                    {activeTab === "Liked Clips" && <LikedHooksTab />}
                     {activeTab === "History" && (
                         <HistoryTab
                             songs={songs}

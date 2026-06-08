@@ -28,13 +28,14 @@ export function MobileMoreMenu({ onClose }: { onClose: () => void }) {
     ]
 
     const navItems = [
-        { label: "Hooks", href: "/hooks" },
+        { label: "Studio", href: "/dashboard" },
+        { label: "Clips", href: "/hooks" },
+        { label: "Radio", href: "/radio" },
         { label: "Labs", href: "/labs" },
         { label: "Help", href: "/terms" },
         { label: "About", href: "/" },
-        { label: "Blog", href: "/feed" },
+        { label: "Discover", href: "/feed" },
         { label: "Feedback", href: "/notifications" },
-        { label: "Careers", href: "/studio" },
         { label: "Terms of Service", href: "/terms" },
         { label: "Privacy Policy", href: "/privacy" },
         { label: "Your Privacy Choices", href: "/privacy" },

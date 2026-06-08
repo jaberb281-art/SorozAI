@@ -268,7 +268,7 @@ export default function FeedPage() {
                 {/* ── Page header ── */}
                 <header className="max-w-2xl">
                     <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
-                        Explore
+                        Discover
                     </h1>
                     <p className="mt-2 text-[15px] font-medium leading-6 text-sand/55">
                         Discover Zahirok tracks, Makkuran melodies, folk, wedding, spiritual, and experimental sounds from the community.
@@ -364,7 +364,7 @@ export default function FeedPage() {
                                     rowRef={creatorsRowRef}
                                     onNext={() => scrollRow(creatorsRowRef)}
                                 />
-                                <ExploreHooksSection
+                                <ExploreClipsSection
                                     rowRef={hooksRowRef}
                                     onNext={() => scrollRow(hooksRowRef)}
                                 />
@@ -477,7 +477,7 @@ function SuggestedCreatorsSection({
     )
 }
 
-function ExploreHooksSection({
+function ExploreClipsSection({
     onNext,
     rowRef,
 }: {
@@ -488,7 +488,7 @@ function ExploreHooksSection({
         <section className="mt-10 md:mt-12">
             <div className="flex items-center justify-between gap-4">
                 <h2 className="text-xl font-black text-white sm:text-2xl">
-                    Hooks
+                    Clips
                 </h2>
                 <Link
                     href="/hooks"
@@ -542,7 +542,7 @@ function ExploreHooksSection({
 
                 <button
                     type="button"
-                    aria-label="Scroll hooks"
+                    aria-label="Scroll clips"
                     onClick={onNext}
                     className="absolute right-2 top-1/2 hidden size-14 -translate-y-1/2 items-center justify-center rounded-full bg-[#242428]/90 text-white shadow-[0_18px_42px_rgba(0,0,0,0.34)] transition hover:bg-saffron hover:text-charcoal md:inline-flex"
                 >

@@ -46,7 +46,7 @@ export function VoicesTab() {
             </div>
 
             <p className="mt-32 text-center text-lg font-semibold text-sand/82">
-                You have no Voices in your library. Create some to see them here.
+                You have no voices in My Studio. Create some to see them here.
             </p>
         </>
     )
@@ -133,14 +133,14 @@ export function HooksTab() {
     return (
         <div className="flex min-h-[420px] flex-col items-center justify-start pt-8 text-center">
             <p className="text-lg font-semibold text-sand/78">
-                You have not created any hooks yet. Try it out!
+                You have not created any clips yet. Try it out!
             </p>
             <Link
                 href="/hooks"
                 className="mt-6 inline-flex h-12 items-center gap-3 rounded-full bg-sand px-6 text-lg font-black text-[#151515]"
             >
                 <Plus className="size-5" aria-hidden={true} />
-                Create hook
+                Create clip
             </Link>
         </div>
     )

@@ -274,12 +274,12 @@ export default function HooksPage() {
     return (
         <div
             ref={viewerRef}
-            className="fixed inset-0 z-40 min-h-dvh w-full max-w-full overflow-hidden overflow-x-hidden bg-[#08080a] text-sand lg:left-[var(--app-sidebar-width,228px)] lg:w-auto"
+            className="fixed inset-0 z-40 min-h-dvh w-full max-w-full overflow-hidden overflow-x-hidden bg-[#08080a] text-sand lg:left-[var(--app-sidebar-width,248px)] lg:w-auto"
         >
             <header className="absolute left-0 right-0 top-0 z-[60] flex h-12 items-center justify-between gap-2 bg-[#08080a]/48 px-3 backdrop-blur-sm lg:hidden">
                 <Link
                     href="/dashboard"
-                    aria-label="Zahirok dashboard"
+                    aria-label="Zahirok studio"
                     className="flex min-w-0 items-center gap-1.5"
                 >
                     <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-saffron/25 bg-saffron/10 text-saffron">
@@ -298,7 +298,7 @@ export default function HooksPage() {
                     </Link>
                     <Link
                         href="/feed"
-                        aria-label="Search"
+                        aria-label="Discover"
                         className="inline-flex size-9 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/12 [&_svg]:pointer-events-none"
                     >
                         <Search className="size-4" aria-hidden="true" />
@@ -333,7 +333,7 @@ export default function HooksPage() {
             <div className="absolute left-3 top-[4.5rem] z-50 flex items-center gap-2 sm:left-5 lg:top-4">
                 <Link
                     href="/dashboard"
-                    aria-label="Go back to dashboard"
+                    aria-label="Go back to studio"
                     className="inline-flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white transition hover:bg-white/12 [&_svg]:pointer-events-none sm:size-10"
                 >
                     <ArrowLeft className="size-[18px]" />
@@ -349,11 +349,11 @@ export default function HooksPage() {
             {/* ── TOP RIGHT — create hook ── */}
             <Link
                 href="/create"
-                aria-label="Create hook"
+                aria-label="Create clip"
                 className="absolute right-3 top-[4.5rem] z-50 inline-flex size-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.08] text-white transition hover:bg-white/12 sm:right-5 lg:top-4 lg:h-10 lg:w-auto lg:max-w-[calc(100vw-8rem)] lg:px-4 lg:text-[13px] lg:font-bold"
             >
                 <Plus className="size-4 lg:hidden" aria-hidden="true" />
-                <span className="hidden lg:inline">Create hook</span>
+                <span className="hidden lg:inline">Create clip</span>
             </Link>
 
             {hooksNotice && (
@@ -453,8 +453,8 @@ export default function HooksPage() {
                     isCommentsOpen ? "lg:right-[410px]" : "lg:right-5"
                 }`}
             >
-                <RailAction ariaLabel="Previous hook" onClick={showPreviousHook} icon={<ChevronUp className="size-5" />} />
-                <RailAction ariaLabel="Next hook" onClick={showNextHook} icon={<ChevronDown className="size-5" />} />
+                <RailAction ariaLabel="Previous clip" onClick={showPreviousHook} icon={<ChevronUp className="size-5" />} />
+                <RailAction ariaLabel="Next clip" onClick={showNextHook} icon={<ChevronDown className="size-5" />} />
 
                 <div className="h-1.5" />
 
@@ -684,7 +684,7 @@ function CommentsPanel({
                                         {comment.name}
                                     </Link>
                                     <span className="text-xs font-semibold text-sand/45">{comment.time}</span>
-                                    <span className="text-xs font-black text-[#ff3ca0]">on Song</span>
+                                    <span className="text-xs font-black text-[#e37a2c]">on Song</span>
                                 </div>
                                 <p className="mt-1 text-sm font-semibold leading-6 text-sand/75">{comment.body}</p>
                                 <button type="button" className="mt-1 text-xs font-bold text-sand/45 transition hover:text-white">

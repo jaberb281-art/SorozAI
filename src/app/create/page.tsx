@@ -551,7 +551,7 @@ function CreatePageInner() {
                     <Plus className={`size-4 ${isActive ? "text-saffron" : "text-saffron/70"}`} aria-hidden="true" />
                     <span>{tab}</span>
                     {tab === "Voice" && (
-                      <span className="rounded-full bg-[#ff3ca0] px-1.5 py-0.5 text-[10px] font-black leading-none text-[#171717]">
+                      <span className="rounded-full bg-[#e37a2c] px-1.5 py-0.5 text-[var(--text-micro)] font-black leading-none text-[#171717]">
                         New
                       </span>
                     )}
@@ -747,7 +747,7 @@ function CreatePageInner() {
                         disabled={isGenerating}
                         rows={5}
                         placeholder={"[Verse]\nThis is where you write your rhymes\nor give our Magic Wand a try ↙\nSection [tags] can help instruct your\nsongs to feel more tight and structured"}
-                        className="min-h-28 flex-1 resize-none bg-transparent text-[15px] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32 sm:text-sm"
+                        className="min-h-28 flex-1 resize-none bg-transparent text-[var(--text-body)] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32 sm:text-sm"
                       />
                     )}
 
@@ -758,7 +758,7 @@ function CreatePageInner() {
                         disabled={isGenerating}
                         rows={5}
                         placeholder={"What do you want your lyrics to be about? Suno will write\nnew lyrics every generation. Leave this blank for a random\ntopic."}
-                        className="min-h-28 flex-1 resize-none bg-transparent text-[15px] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32 sm:text-sm"
+                        className="min-h-28 flex-1 resize-none bg-transparent text-[var(--text-body)] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32 sm:text-sm"
                       />
                     )}
 
@@ -832,7 +832,7 @@ function CreatePageInner() {
                       Styles
                     </button>
                     {importedPrompt && (
-                      <span className="ml-auto text-[10px] font-bold uppercase tracking-wide text-saffron/70">
+                      <span className="ml-auto text-[var(--text-micro)] font-bold uppercase tracking-wide text-saffron/70">
                         Prompt imported from Dashboard
                       </span>
                     )}
@@ -845,7 +845,7 @@ function CreatePageInner() {
                       disabled={isGenerating}
                       rows={4}
                       placeholder="Suroz, Benju, Rabab, Duholl, Dambora, Makkuran vocal, coastal folk"
-                      className="min-h-24 flex-1 resize-none bg-transparent text-[15px] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
+                      className="min-h-24 flex-1 resize-none bg-transparent text-[var(--text-body)] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
                     />
 
                     <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -1227,7 +1227,7 @@ function CreatePageInner() {
                               <h2 className="truncate text-base font-black text-sand">
                                 {song.title}
                               </h2>
-                              <span className="rounded-full border border-saffron/20 bg-saffron/8 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-saffron">
+                              <span className="rounded-full border border-saffron/20 bg-saffron/8 px-2 py-0.5 text-[var(--text-micro)] font-black uppercase tracking-[0.12em] text-saffron">
                                 {song.dialect}
                               </span>
                             </div>
@@ -1432,7 +1432,7 @@ function ComposerSlider({
           value={value}
           onChange={(event) => onChange(Number(event.target.value))}
           aria-label={label}
-          className="relative z-10 h-6 w-full cursor-pointer appearance-none bg-transparent accent-[#ff3ca0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+          className="relative z-10 h-6 w-full cursor-pointer appearance-none bg-transparent accent-[#e37a2c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
           style={{
             background: `linear-gradient(to right, transparent 0%, transparent ${value}%, transparent ${value}%, transparent 100%)`,
           }}
@@ -1492,17 +1492,45 @@ function CreateAudioOptionsMenu({
   )
 }
 
+interface GenerationProgressProps {
+  status: StudioStatus
+  progress: number
+  isGenerating: boolean
+  stageIndex: number
+  etaSeconds?: number
+  queuePosition?: number
+}
+
 function GenerationProgress({
   status,
   progress,
   isGenerating,
   stageIndex,
-}: {
-  status: StudioStatus
-  progress: number
-  isGenerating: boolean
-  stageIndex: number
-}) {
+  etaSeconds,
+  queuePosition,
+}: GenerationProgressProps) {
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(
+    etaSeconds ?? null
+  )
+
+  useEffect(() => {
+    if (etaSeconds == null) {
+      setSecondsLeft(null)
+      return
+    }
+    setSecondsLeft(etaSeconds)
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev == null || prev <= 1) {
+          clearInterval(interval)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [etaSeconds])
+
   if (!isGenerating && status !== "done") return null
 
   return (
@@ -1529,12 +1557,23 @@ function GenerationProgress({
           style={{ width: `${progress}%` }}
         />
       </div>
+      {(secondsLeft != null || queuePosition != null) && (
+        <p className="mt-2 text-sm text-sand/60">
+          {queuePosition != null && secondsLeft == null
+            ? `Position ${queuePosition} in queue`
+            : secondsLeft === 0
+              ? "Almost done..."
+              : secondsLeft != null
+                ? `~${secondsLeft}s remaining`
+                : null}
+        </p>
+      )}
       {isGenerating && (
         <div className="mt-2 flex gap-1.5">
           {GENERATION_STAGES.map((stage, index) => (
             <span
               key={stage}
-              className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] ${
+              className={`rounded-full border px-2 py-0.5 text-[var(--text-micro)] font-black uppercase tracking-[0.12em] ${
                 stage === status
                   ? "border-saffron/35 bg-saffron/10 text-saffron"
                   : index < stageIndex

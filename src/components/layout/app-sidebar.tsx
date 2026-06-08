@@ -88,6 +88,10 @@ const SOCIAL_ITEMS = [
     { label: "Discord", text: "DC" },
 ] as const
 
+const sidebarUser: { tier: "free" | "basic" | "pro" | "lifetime" } = {
+    tier: "free",
+}
+
 function isActivePath(pathname: string, href: string) {
     if (href === "/library") return pathname === "/library" || pathname.startsWith("/song/")
     return pathname === href
@@ -202,7 +206,7 @@ export function AppSidebar() {
     return (
         <>
         <aside
-            className={`fixed inset-y-0 left-0 z-[90] hidden h-screen flex-col border-r border-white/[0.11] bg-[#0f0f10] text-sand backdrop-blur-2xl transition-[width] duration-200 lg:flex ${
+            className={`app-sidebar fixed inset-y-0 left-0 z-[90] hidden h-screen flex-col border-e border-white/[0.11] bg-[#0f0f10] text-sand backdrop-blur-md transition-[width] duration-200 lg:flex ${
                 isCollapsed ? "w-[72px] lg:w-[76px]" : "w-[228px]"
             }`}
         >
@@ -258,7 +262,7 @@ export function AppSidebar() {
                             aria-expanded={isProfileMenuOpen}
                             aria-haspopup="menu"
                             onClick={toggleProfileMenu}
-                            className={`group flex h-11 w-full items-center gap-3 rounded-lg text-left transition hover:bg-white/[0.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron ${
+                            className={`group flex h-11 w-full items-center gap-3 rounded-lg text-start transition hover:bg-white/[0.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron ${
                                 isCollapsed ? "justify-center px-0" : "px-0.5"
                             } ${isProfileMenuOpen ? "bg-white/[0.04]" : ""}`}
                         >
@@ -267,9 +271,26 @@ export function AppSidebar() {
                                 <>
                                     <span className="min-w-0">
                                         <span className="block truncate text-[14px] font-bold leading-tight text-white">jaberb281</span>
+                                        {/* Tier badge */}
+                                        {sidebarUser.tier && (
+                                            <span
+                                                className={[
+                                                    "mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                                                    sidebarUser.tier === "pro"
+                                                        ? "bg-[#e37a2c]/20 text-[#e37a2c] ring-1 ring-[#e37a2c]/30"
+                                                        : sidebarUser.tier === "basic"
+                                                            ? "bg-white/10 text-sand/70 ring-1 ring-white/10"
+                                                            : sidebarUser.tier === "lifetime"
+                                                                ? "bg-[#1A3A5C]/60 text-[#e37a2c] ring-1 ring-[#e37a2c]/25"
+                                                                : "bg-white/[0.06] text-sand/50 ring-1 ring-white/[0.08]",
+                                                ].join(" ")}
+                                            >
+                                                {sidebarUser.tier === "free" ? "Free" : sidebarUser.tier === "basic" ? "Basic" : sidebarUser.tier === "lifetime" ? "Lifetime" : "Pro"}
+                                            </span>
+                                        )}
                                         <span className="mt-0.5 block text-[12.5px] font-semibold leading-tight text-sand/48">75 Credits</span>
                                     </span>
-                                    <span className="ml-auto inline-flex size-7 items-center justify-center rounded-full text-sand/38 transition group-hover:bg-white/[0.05] group-hover:text-sand">
+                                    <span className="ms-auto inline-flex size-7 items-center justify-center rounded-full text-sand/38 transition group-hover:bg-white/[0.05] group-hover:text-sand">
                                         <ChevronDown
                                             className={`size-3.5 transition-transform ${isProfileMenuOpen ? "rotate-180" : ""}`}
                                             aria-hidden={true}
@@ -290,7 +311,7 @@ export function AppSidebar() {
                         {sidebarNotice && (
                             <div
                                 role="status"
-                                className={`absolute top-[54px] z-[155] rounded-lg border border-saffron/20 bg-[#242428] px-4 py-3 text-sm font-black text-sand shadow-[0_18px_48px_rgba(0,0,0,0.42)] ${
+                                className={`absolute top-[54px] z-[155] rounded-lg border border-saffron/20 bg-[#242428] px-4 py-3 text-sm font-medium text-sand shadow-[0_18px_48px_rgba(0,0,0,0.42)] ${
                                     isCollapsed ? "left-[68px] w-[220px]" : "left-0 right-0"
                                 }`}
                             >
@@ -302,7 +323,7 @@ export function AppSidebar() {
                     {!isCollapsed && (
                         <Link
                             href="/pricing"
-                            className="mb-3 mt-3 flex h-10 w-full items-center justify-center rounded-full border border-white/12 bg-transparent px-4 text-[14px] font-black text-white transition hover:border-saffron/35 hover:bg-saffron/8"
+                            className="mb-3 mt-3 flex h-10 w-full items-center justify-center rounded-full border border-white/12 bg-transparent px-4 text-[14px] font-semibold text-white transition hover:border-saffron/35 hover:bg-saffron/8"
                         >
                             Upgrade to Pro
                         </Link>
@@ -327,7 +348,7 @@ export function AppSidebar() {
                     <>
                         <nav
                             aria-label="Primary desktop navigation"
-                            className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                            className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain pe-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                         >
                             {MAIN_NAV_ITEMS.map((item) => (
                                 <SidebarLink
@@ -359,7 +380,7 @@ export function AppSidebar() {
                         aria-label={isCollapsed ? "Terms and policies" : undefined}
                         title={isCollapsed ? "Terms & Policies" : undefined}
                         onClick={openPoliciesMenu}
-                        className={`group flex h-9 items-center gap-3 rounded-lg px-2 text-left text-[14px] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron ${
+                        className={`group flex h-9 items-center gap-3 rounded-lg px-2 text-start text-[14px] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron ${
                             isPoliciesActive ? "text-white" : "text-sand/48 hover:bg-white/[0.04] hover:text-sand/78"
                         } ${isCollapsed ? "w-11 justify-center" : "w-full"}`}
                     >
@@ -379,7 +400,7 @@ export function AppSidebar() {
                             setIsPoliciesOpen(false)
                             setIsProfileMenuOpen(false)
                         }}
-                        className={`group flex h-9 items-center gap-3 rounded-lg px-2 text-left text-[14px] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron ${
+                        className={`group flex h-9 items-center gap-3 rounded-lg px-2 text-start text-[14px] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron ${
                             isMoreOpen ? "text-white" : "text-sand/48 hover:bg-white/[0.04] hover:text-sand/78"
                         } ${isCollapsed ? "w-11 justify-center" : "w-full"}`}
                     >
@@ -405,7 +426,7 @@ export function AppSidebar() {
                             href="/terms"
                             role="menuitem"
                             onClick={() => setIsPoliciesOpen(false)}
-                            className="block rounded-md px-4 py-3 text-sm font-black text-sand/88 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-saffron"
+                            className="block rounded-md px-4 py-3 text-sm font-semibold text-sand/88 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-saffron"
                         >
                             Terms of Service
                         </Link>
@@ -413,7 +434,7 @@ export function AppSidebar() {
                             href="/privacy"
                             role="menuitem"
                             onClick={() => setIsPoliciesOpen(false)}
-                            className="block rounded-md px-4 py-3 text-sm font-black text-sand/88 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-saffron"
+                            className="block rounded-md px-4 py-3 text-sm font-semibold text-sand/88 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-saffron"
                         >
                             Privacy Policy
                         </Link>
@@ -424,7 +445,7 @@ export function AppSidebar() {
                                 setIsPoliciesOpen(false)
                                 setIsPrivacyModalOpen(true)
                             }}
-                            className="block w-full rounded-md px-4 py-3 text-left text-sm font-black text-sand/88 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-saffron"
+                            className="block w-full rounded-md px-4 py-3 text-start text-sm font-semibold text-sand/88 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-saffron"
                         >
                             Your Privacy Choices
                         </button>
@@ -446,7 +467,7 @@ export function AppSidebar() {
                                     key={label}
                                     type="button"
                                     role="menuitem"
-                                    className="block h-12 w-full px-4 text-left text-sm font-black text-sand/88 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-saffron"
+                                    className="block h-12 w-full px-4 text-start text-sm font-semibold text-sand/88 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-saffron"
                                 >
                                     {label}
                                 </button>
@@ -461,7 +482,7 @@ export function AppSidebar() {
                                         aria-label={item.label}
                                         className="inline-flex size-7 items-center justify-center rounded-full text-sand/50 transition hover:bg-white/[0.06] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
                                     >
-                                        <span className="text-[10px] font-black" aria-hidden={true}>
+                                        <span className="text-[10px] font-semibold" aria-hidden={true}>
                                             {item.text}
                                         </span>
                                     </button>
@@ -523,7 +544,7 @@ function PrivacyPreferenceModal({
                 onClick={(event) => event.stopPropagation()}
             >
                 <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
-                    <h2 id="privacy-preference-title" className="text-xl font-black text-white">
+                    <h2 id="privacy-preference-title" className="text-xl font-bold text-white">
                         Privacy Preference Center
                     </h2>
                     <button
@@ -545,17 +566,17 @@ function PrivacyPreferenceModal({
                         preferences until real consent management is connected.
                     </p>
 
-                    <h3 className="mt-7 text-base font-black text-white">Manage Consent Preferences</h3>
+                    <h3 className="mt-7 text-base font-bold text-white">Manage Consent Preferences</h3>
 
                     <div className="mt-4 overflow-hidden rounded-xl border border-white/12">
                         <div className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-4">
                             <div>
-                                <p className="font-black text-white">Strictly Necessary Cookies</p>
+                                <p className="font-bold text-white">Strictly Necessary Cookies</p>
                                 <p className="mt-1 text-xs text-sand/50">
                                     Required for security, routing, and core app behavior.
                                 </p>
                             </div>
-                            <span className="shrink-0 text-xs font-black uppercase tracking-[0.08em] text-sand/70">
+                            <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.08em] text-sand/70">
                                 Always Active
                             </span>
                         </div>
@@ -576,14 +597,14 @@ function PrivacyPreferenceModal({
                     <button
                         type="button"
                         onClick={onRejectAll}
-                        className="inline-flex h-12 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] px-6 text-sm font-black text-white transition hover:bg-white/[0.08] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+                        className="inline-flex h-12 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] px-6 text-sm font-semibold text-white transition hover:bg-white/[0.08] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
                     >
                         Reject All
                     </button>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="inline-flex h-12 items-center justify-center rounded-full bg-saffron px-6 text-sm font-black text-charcoal transition hover:bg-saffron/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+                        className="inline-flex h-12 items-center justify-center rounded-full bg-saffron px-6 text-sm font-semibold text-charcoal transition hover:bg-saffron/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
                     >
                         Confirm My Choices
                     </button>
@@ -664,7 +685,7 @@ function ProfileMenuLink({
             href={href}
             role="menuitem"
             onClick={onClick}
-            className="flex h-14 w-full items-center gap-3 px-4 text-left text-[15px] font-black text-sand/90 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-saffron"
+            className="flex h-14 w-full items-center gap-3 px-4 text-start text-[15px] font-semibold text-sand/90 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-saffron"
         >
             <Icon className="size-[18px] shrink-0 text-sand/52" aria-hidden={true} />
             <span className="min-w-0 flex-1 truncate">{label}</span>
@@ -688,7 +709,7 @@ function ProfileMenuButton({
             type="button"
             role="menuitem"
             onClick={onClick}
-            className="flex h-14 w-full items-center gap-3 px-4 text-left text-[15px] font-black text-sand/90 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-saffron"
+            className="flex h-14 w-full items-center gap-3 px-4 text-start text-[15px] font-semibold text-sand/90 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-saffron"
         >
             <Icon className="size-[18px] shrink-0 text-sand/52" aria-hidden={true} />
             <span className="min-w-0 flex-1 truncate">{label}</span>
@@ -713,7 +734,7 @@ function ConsentPreferenceRow({
     return (
         <div className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-4 last:border-b-0">
             <div className="min-w-0">
-                <p className="font-black text-white">{title}</p>
+                <p className="font-bold text-white">{title}</p>
                 <p className="mt-1 text-xs leading-5 text-sand/50">{description}</p>
             </div>
             <button
@@ -747,21 +768,38 @@ function SidebarLink({
     collapsed: boolean
 }) {
     const Icon = item.icon
-    const className = `group flex h-9 items-center gap-3 rounded-lg px-2 text-[14px] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron ${
-        active ? "text-white" : "text-sand/48 hover:bg-white/[0.04] hover:text-sand/78"
-    } ${collapsed ? "w-11 justify-center" : "w-full"}`
+    const linkClassName = [
+        "group relative flex h-9 items-center gap-3 rounded-lg px-2",
+        "text-[14px] font-semibold transition",
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e37a2c]",
+        active
+            ? [
+                "bg-[#e37a2c]/10 text-[#e37a2c]",
+                "before:absolute before:start-0 before:top-1/2",
+                "before:h-5 before:w-[3px] before:-translate-y-1/2",
+                "before:rounded-full before:bg-[#e37a2c]",
+            ].join(" ")
+            : "text-sand/55 hover:bg-white/[0.04] hover:text-sand/85",
+        collapsed ? "w-11 justify-center before:hidden" : "w-full",
+    ]
+        .filter(Boolean)
+        .join(" ")
 
     if (item.isMock) {
         return (
             <a
                 href={item.href}
-                className={className}
+                className={linkClassName}
                 onClick={(event) => event.preventDefault()}
                 aria-label={collapsed ? item.label : undefined}
                 title={collapsed ? item.label : undefined}
             >
                 <Icon
-                    className={`size-[18px] shrink-0 transition ${active ? "text-white" : "text-sand/45 group-hover:text-sand/75"}`}
+                    className={`size-[18px] shrink-0 transition ${
+                        active
+                            ? "text-[#e37a2c]"
+                            : "text-sand/45 group-hover:text-sand/75"
+                    }`}
                     aria-hidden={true}
                 />
                 {!collapsed && <span>{item.label}</span>}
@@ -775,10 +813,14 @@ function SidebarLink({
             aria-current={active ? "page" : undefined}
             aria-label={collapsed ? item.label : undefined}
             title={collapsed ? item.label : undefined}
-            className={className}
+            className={linkClassName}
         >
             <Icon
-                className={`size-[18px] shrink-0 transition ${active ? "text-white" : "text-sand/45 group-hover:text-sand/75"}`}
+                className={`size-[18px] shrink-0 transition ${
+                    active
+                        ? "text-[#e37a2c]"
+                        : "text-sand/45 group-hover:text-sand/75"
+                }`}
                 aria-hidden={true}
             />
             {!collapsed && <span>{item.label}</span>}

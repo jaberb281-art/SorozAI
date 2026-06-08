@@ -24,7 +24,7 @@ export function GeneratedSongPreview({
   const selectedInstruments =
     instruments.length > 0 ? instruments.join(", ") : "Voice texture only"
   const visibilityLabel = isPublic ? "Public" : "Private"
-  const visibilityNote = isPublic ? "Ready for Feed" : "Only in Library"
+  const visibilityNote = isPublic ? "Ready for Discover" : "Only in My Studio"
 
   return (
     <section className="mt-5 rounded-[1.5rem] border border-sand/15 bg-sand/10 p-4 text-sand shadow-2xl shadow-charcoal/30 backdrop-blur-2xl">
@@ -86,11 +86,11 @@ export function GeneratedSongPreview({
         </button>
         <Link
           href="/library"
-          aria-label="Open generated song preview in Library"
+          aria-label="Open generated song preview in My Studio"
           className="inline-flex items-center gap-2 rounded-full border border-sand/15 px-4 py-2 text-sm font-bold text-sand transition hover:bg-sand/10"
         >
           <Library className="size-4" aria-hidden="true" />
-          Open in Library
+          Open in My Studio
         </Link>
         <button
           type="button"
@@ -103,20 +103,20 @@ export function GeneratedSongPreview({
         {isPublic ? (
           <Link
             href="/feed"
-            aria-label="View generated song preview in Feed"
+            aria-label="View generated song preview in Discover"
             className="inline-flex items-center gap-2 rounded-full border border-saffron/30 bg-saffron/10 px-4 py-2 text-sm font-bold text-saffron transition hover:bg-saffron/15"
           >
             <Compass className="size-4" aria-hidden="true" />
-            View in Feed
+            View in Discover
           </Link>
         ) : (
           <button
             type="button"
-            aria-label="Post generated song preview to Feed"
+            aria-label="Post generated song preview to Discover"
             className="inline-flex items-center gap-2 rounded-full border border-saffron/30 bg-saffron/10 px-4 py-2 text-sm font-bold text-saffron transition hover:bg-saffron/15"
           >
             <Megaphone className="size-4" aria-hidden="true" />
-            Post to Feed
+            Post to Discover
           </button>
         )}
       </div>

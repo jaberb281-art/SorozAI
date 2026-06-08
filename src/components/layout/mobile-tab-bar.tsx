@@ -2,13 +2,13 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BookOpen, Compass, Home, User } from "lucide-react"
+import { Compass, Library, Plus, SlidersHorizontal } from "lucide-react"
 
 const MOBILE_NAV = [
-    { href: "/hooks", label: "Home", icon: Home },
-    { href: "/library", label: "Library", icon: BookOpen },
-    { href: "/feed", label: "Explore", icon: Compass },
-    { href: "/profile", label: "Profile", icon: User },
+    { href: "/dashboard", label: "Studio", icon: SlidersHorizontal },
+    { href: "/create", label: "Create Song", icon: Plus },
+    { href: "/feed", label: "Discover", icon: Compass },
+    { href: "/library", label: "My Studio", icon: Library },
 ] as const
 
 export function MobileTabBar() {
@@ -20,8 +20,9 @@ export function MobileTabBar() {
                 const Icon = item.icon
                 const isActive =
                     pathname === item.href ||
+                    (item.href === "/dashboard" && pathname === "/studio") ||
                     (item.href === "/library" && pathname.startsWith("/song/")) ||
-                    (item.href === "/profile" && pathname.startsWith("/profile/"))
+                    (item.href === "/create" && pathname.startsWith("/create"))
 
                 return (
                     <Link

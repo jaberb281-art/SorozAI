@@ -161,7 +161,7 @@ function LandingNavbar() {
           </Link>
           <Link
             href="/auth/sign-up"
-            className="inline-flex h-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ff3ca0,#e37a2c)] px-3 text-sm font-black text-white shadow-[0_14px_36px_rgba(227,122,44,0.28)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-12 sm:px-6"
+            className="inline-flex h-10 items-center justify-center rounded-full [background:var(--gradient-brand)] px-3 text-sm font-black text-white shadow-[0_14px_36px_rgba(227,122,44,0.28)] transition hover:[background:var(--gradient-brand-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-12 sm:px-6"
           >
             <span className="hidden sm:inline">Join Zahirok for free</span>
             <span className="sm:hidden">Join free</span>
@@ -174,7 +174,7 @@ function LandingNavbar() {
 
 function LandingHero() {
   return (
-    <section className="relative isolate flex min-h-[min(760px,86dvh)] items-center overflow-hidden px-4 pb-8 pt-24 text-center sm:px-6 sm:pb-10 sm:pt-28 lg:px-8">
+    <section className="relative isolate flex min-h-[min(760px,86dvh)] items-center overflow-hidden bg-balochi-pattern-faint px-4 pb-8 pt-24 text-center sm:px-6 sm:pb-10 sm:pt-28 lg:px-8">
       <div className="absolute inset-0 -z-30 bg-[#0c0b0b]" />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -359,7 +359,7 @@ function HeroComposer() {
           </button>
           <button
             type="submit"
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-[linear-gradient(135deg,#ff3ca0,#e37a2c)] px-3 text-xs font-black text-white shadow-[0_14px_28px_rgba(227,122,44,0.3)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-10 sm:gap-2 sm:px-4 sm:text-sm"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full [background:var(--gradient-brand)] px-3 text-xs font-black text-white shadow-[0_14px_28px_rgba(227,122,44,0.3)] transition hover:[background:var(--gradient-brand-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-10 sm:gap-2 sm:px-4 sm:text-sm"
           >
             <WandSparkles className="size-4" aria-hidden="true" />
             Create
@@ -407,7 +407,7 @@ function ProofStrip() {
           Built for Balochi creators
         </p>
         {proofLabels.map((label) => (
-          <span key={label} className="text-sm font-black text-white/32 sm:text-base">
+          <span key={label} className="text-sm font-black text-white/55 sm:text-base">
             {label}
           </span>
         ))}
@@ -516,7 +516,7 @@ function FeatureVisual({ type }: { type: string }) {
   if (type === "prompt") {
     return (
       <div className="mt-auto flex items-center justify-center pb-2 pt-8 sm:pt-10">
-        <div className="grid size-32 place-items-center rounded-full bg-[radial-gradient(circle,#ff3ca0_0%,#e37a2c_45%,rgba(227,122,44,0.04)_70%)] shadow-[0_0_0_14px_rgba(227,122,44,0.08),0_0_60px_rgba(255,60,160,0.28)] sm:size-36 sm:shadow-[0_0_0_16px_rgba(227,122,44,0.08),0_0_60px_rgba(255,60,160,0.28)]">
+        <div className="grid size-32 place-items-center rounded-full bg-[radial-gradient(circle,#e37a2c_0%,#b73e1f_45%,rgba(227,122,44,0.04)_70%)] shadow-[0_0_0_14px_rgba(227,122,44,0.08),0_0_60px_rgba(227,122,44,0.24)] sm:size-36 sm:shadow-[0_0_0_16px_rgba(227,122,44,0.08),0_0_60px_rgba(227,122,44,0.24)]">
           <Sparkles className="size-11 text-white" aria-hidden="true" />
         </div>
       </div>
@@ -537,12 +537,12 @@ function FeatureVisual({ type }: { type: string }) {
       <div className="mt-auto space-y-4 pt-8 sm:pt-10">
         {["Vocal color", "Weirdness", "Style influence"].map((label, index) => (
           <div key={label}>
-            <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-[0.14em] text-white/40">
+            <div className="flex items-center justify-between text-[var(--text-micro)] font-black uppercase tracking-[0.14em] text-white/40">
               <span>{label}</span>
               <span>{index === 0 ? "Warm" : "50%"}</span>
             </div>
             <div className="mt-2 h-2 rounded-full bg-white/8">
-              <div className="h-full rounded-full bg-[linear-gradient(90deg,#ff3ca0,#e37a2c)]" style={{ width: `${52 + index * 12}%` }} />
+              <div className="h-full rounded-full [background:var(--gradient-brand)]" style={{ width: `${52 + index * 12}%` }} />
             </div>
           </div>
         ))}
@@ -565,7 +565,7 @@ function FeatureVisual({ type }: { type: string }) {
     return (
       <div className="relative mt-auto h-40 pt-8 sm:h-44 sm:pt-10">
         <div className="absolute bottom-6 left-2 rounded-xl bg-indigo-deep px-5 py-3 text-xl font-black text-white shadow-xl sm:left-3 sm:px-6 sm:py-4 sm:text-2xl">1k</div>
-        <div className="absolute bottom-12 left-20 rounded-xl bg-[linear-gradient(135deg,#e37a2c,#ff3ca0)] px-7 py-5 text-2xl font-black text-white shadow-xl sm:left-24 sm:px-8 sm:py-6 sm:text-3xl">5k</div>
+        <div className="absolute bottom-12 left-20 rounded-xl [background:var(--gradient-brand)] px-7 py-5 text-2xl font-black text-white shadow-xl sm:left-24 sm:px-8 sm:py-6 sm:text-3xl">5k</div>
         <div className="absolute bottom-20 right-2 rounded-xl bg-terracotta px-5 py-3 text-xl font-black text-white shadow-xl sm:right-4 sm:px-6 sm:py-4 sm:text-2xl">13k</div>
       </div>
     )
@@ -636,7 +636,7 @@ function FinalCtaSection() {
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href="/auth/sign-up"
-            className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[linear-gradient(135deg,#ff3ca0,#e37a2c)] px-7 text-sm font-black text-white shadow-[0_18px_42px_rgba(227,122,44,0.28)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:w-auto"
+            className="inline-flex h-12 w-full items-center justify-center rounded-full [background:var(--gradient-brand)] px-7 text-sm font-black text-white shadow-[0_18px_42px_rgba(227,122,44,0.28)] transition hover:[background:var(--gradient-brand-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:w-auto"
           >
             Join Zahirok for free
           </Link>

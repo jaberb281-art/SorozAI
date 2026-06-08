@@ -1,744 +1,688 @@
-"use client"
-
-import { useEffect, useRef, useState } from "react"
+import type { ComponentType } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import {
+    ArrowRight,
     AudioWaveform,
-    ChevronRight,
-    Compass,
-    MoreHorizontal,
-    Mic,
-    Music2,
-    Pause,
+    Clock3,
+    Drum,
+    PenLine,
     Play,
-    Plus,
-    Search,
-    Upload,
-    X,
+    Radio,
+    Repeat2,
+    Sparkles,
 } from "lucide-react"
 
-import { usePlaySong } from "@/hooks/use-play-song"
-import { formatCount, getFeedSongs, toPlayerSong, type MockSong } from "@/lib/mock-songs"
-import type { Song } from "@/lib/types"
+type StudioActionKind = "lyrics" | "instrument" | "radio" | "remix"
 
-// ── Mock data ────────────────────────────────────────────────────────────────
-
-// MOCK: replace with api-client.getHomeFeed() when backend is ready
-const FEED = getFeedSongs()
-
-type CollectionSong = {
-    id: string
+type StudioAction = {
     title: string
-    artist: string
-    genre: string
+    description: string
+    href: string
+    cta: string
+    icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>
+    image: string
+    kind: StudioActionKind
+    waveform: number[]
+}
+
+type CapturedMoment = {
+    stationName: string
     duration: string
-    plays: number
-    color: string
-    coverImage?: string
+    href: string
+    image: string
+    tags: string[]
+    waveform: number[]
 }
 
-function feedToCollectionSong(s: MockSong, color: string): CollectionSong {
-    return { id: s.id, title: s.title, artist: s.creator, genre: s.genrePreset, duration: s.duration, plays: s.plays, color, coverImage: s.coverImage }
+type RecentWorkItem = {
+    title: string
+    type: "Draft" | "Song" | "Capture"
+    metadata: string
+    duration: string
+    href: string
+    action: string
+    image: string
+    waveform: number[]
 }
 
-const COLLECTIONS = [
-    {
-        id: "col-for-you",
-        title: "For You",
-        subtitle: "Picked for your taste",
-        songs: [
-            feedToCollectionSong(FEED[0]!, "bg-saffron/60"),
-            feedToCollectionSong(FEED[4]!, "bg-indigo-deep/80"),
-        ],
-        collage: ["bg-saffron/50", "bg-terracotta/50", "bg-indigo-deep/60", "bg-saffron/30"],
-    },
-    {
-        id: "col-studio",
-        title: "Made with Studio",
-        subtitle: "Created by the community",
-        songs: [
-            feedToCollectionSong(FEED[3]!, "bg-zinc-500/50"),
-            feedToCollectionSong(FEED[1]!, "bg-purple-600/50"),
-        ],
-        collage: ["bg-indigo-deep/70", "bg-purple-600/40", "bg-zinc-500/40", "bg-terracotta/40"],
-    },
-    {
-        id: "col-best",
-        title: "Best of Zahirok",
-        subtitle: "All-time community favorites",
-        songs: [
-            feedToCollectionSong(FEED[2]!, "bg-terracotta/50"),
-            feedToCollectionSong(FEED[5]!, "bg-emerald-700/50"),
-        ],
-        collage: ["bg-terracotta/50", "bg-saffron/40", "bg-emerald-700/40", "bg-indigo-deep/50"],
-    },
-] as const
-
-// MOCK: replace with api-client.getMoodPlaylists() when backend is ready
-const MOOD_CARDS = [
-    {
-        id: "mood-late-night",
-        title: "Late Night Zahirok",
-        gradient:
-            "linear-gradient(135deg,rgba(26,58,92,0.8) 0%,rgba(26,22,18,0.95) 100%)",
-        coverImage: "/covers/turbat-night.png",
-    },
-    {
-        id: "mood-cinematic",
-        title: "Cinematic Balochi",
-        gradient:
-            "linear-gradient(135deg,rgba(91,49,155,0.6) 0%,rgba(26,22,18,0.95) 100%)",
-        coverImage: "/covers/sufi-dambora.png",
-    },
-    {
-        id: "mood-romantic",
-        title: "Romantic",
-        gradient:
-            "linear-gradient(135deg,rgba(183,62,31,0.6) 0%,rgba(227,122,44,0.25) 100%)",
-        coverImage: "/covers/makran-evening.png",
-    },
-    {
-        id: "mood-morning",
-        title: "Morning Drive",
-        gradient:
-            "linear-gradient(135deg,rgba(227,122,44,0.55) 0%,rgba(26,58,92,0.4) 100%)",
-        coverImage: "/covers/coastal-lullaby.png",
-    },
-    {
-        id: "mood-wedding",
-        title: "Wedding Doholl",
-        gradient:
-            "linear-gradient(135deg,rgba(227,122,44,0.7) 0%,rgba(183,62,31,0.5) 100%)",
-        coverImage: "/covers/wedding-doholl.png",
-    },
-] as const
-
-// MOCK: bridge collection song → Song for the global player store
-import { getMockSongById } from "@/lib/mock-songs"
-
-function toSong(s: CollectionSong): Song {
-    // Try to get the full MockSong from the unified source
-    const mock = getMockSongById(s.id)
-    if (mock) return toPlayerSong(mock)
-
-    return {
-        id: s.id,
-        title: s.title,
-        prompt: "",
-        genrePreset: s.genre as Song["genrePreset"],
-        instruments: [],
-        lyrics: "",
-        status: "completed",
-        audioUrl: "/mock/audio-placeholder.mp3",
-        mp3Url: "/mock/audio-placeholder.mp3",
-        wavUrl: "/mock/audio-placeholder.wav",
-        isPublic: true,
-        createdAt: new Date().toISOString(),
-        duration: s.duration,
-        plays: s.plays,
-        likes: 0,
-        remixes: 0,
-    }
+type StartingPoint = {
+    title: string
+    cue: string
+    href: string
+    image: string
+    accent: string
+    waveform: number[]
 }
 
-function formatPlays(n: number): string {
-    return formatCount(n)
+const HERO_IMAGE = "/hero/zahirok-hero-bg.png"
+
+const QUICK_START: StudioAction[] = [
+    {
+        title: "Write Lyrics",
+        description: "Start from a verse, hook, or full song idea.",
+        href: "/create?mode=lyrics",
+        cta: "Write now",
+        icon: PenLine,
+        image: "/covers/makran-evening.png",
+        kind: "lyrics",
+        waveform: [18, 32, 48, 24, 55, 36, 44, 27, 62, 31, 52, 22],
+    },
+    {
+        title: "Start with Instrument",
+        description: "Build around a rhythm, texture, or sound.",
+        href: "/create?mode=instrument",
+        cta: "Choose sound",
+        icon: Drum,
+        image: "/covers/sufi-dambora.png",
+        kind: "instrument",
+        waveform: [42, 64, 36, 58, 74, 48, 68, 33, 52, 71, 44, 59],
+    },
+    {
+        title: "Tune Radio",
+        description: "Find a live stream and capture the best 30 seconds.",
+        href: "/radio",
+        cta: "Open radio",
+        icon: Radio,
+        image: "/covers/desert-pulse.png",
+        kind: "radio",
+        waveform: [26, 44, 68, 31, 72, 55, 78, 36, 65, 42, 74, 51],
+    },
+    {
+        title: "Remix a Song",
+        description: "Turn an existing idea into a new direction.",
+        href: "/create?mode=remix",
+        cta: "Start remix",
+        icon: Repeat2,
+        image: "/cards/explore-public-songs.png",
+        kind: "remix",
+        waveform: [57, 24, 70, 42, 61, 33, 79, 46, 54, 66, 29, 73],
+    },
+]
+
+const LAST_CAPTURED: CapturedMoment = {
+    stationName: "Desert Night Radio",
+    duration: "0:30",
+    href: "/create?prompt=Turn%20Desert%20Night%20Radio%2030s%20capture%20into%20a%20complete%20song",
+    image: "/covers/desert-pulse.png",
+    tags: ["Calm", "Dambora"],
+    waveform: [24, 44, 35, 62, 48, 71, 40, 58, 76, 51, 69, 37, 55, 43, 64, 31, 59, 46],
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+const RECENT_WORK: RecentWorkItem[] = [
+    {
+        title: "Wedding hook idea",
+        type: "Draft",
+        metadata: "Verse sketch",
+        duration: "draft",
+        href: "/create?draft=wedding-hook-idea",
+        action: "Continue",
+        image: "/covers/wedding-doholl.png",
+        waveform: [20, 30, 25, 42, 32, 46, 28, 38, 34, 48],
+    },
+    {
+        title: "Long Road demo",
+        type: "Song",
+        metadata: "Dambora, low voice",
+        duration: "3:42",
+        href: "/library",
+        action: "Open",
+        image: "/covers/coastal-lullaby.png",
+        waveform: [44, 62, 38, 70, 55, 66, 47, 73, 52, 61],
+    },
+    {
+        title: "Desert Night 30s",
+        type: "Capture",
+        metadata: "Calm radio moment",
+        duration: "0:30",
+        href: "/create?prompt=Turn%20Desert%20Night%2030s%20capture%20into%20a%20song",
+        action: "Turn into song",
+        image: "/covers/desert-pulse.png",
+        waveform: [30, 58, 42, 69, 51, 74, 36, 63, 47, 71],
+    },
+]
+
+const STARTING_POINTS: StartingPoint[] = [
+    {
+        title: "Deep Focus",
+        cue: "quiet writing texture",
+        href: "/radio",
+        image: "/covers/sufi-dambora.png",
+        accent: "from-[#24384a]/55 via-[#11100f]/80 to-[#0b0d10]",
+        waveform: [24, 40, 31, 48, 35, 45, 28, 42],
+    },
+    {
+        title: "Long Drive",
+        cue: "late-road rhythm",
+        href: "/radio",
+        image: "/covers/coastal-lullaby.png",
+        accent: "from-[#784016]/52 via-[#15110d]/82 to-[#0d0b09]",
+        waveform: [35, 52, 42, 61, 48, 66, 38, 58],
+    },
+    {
+        title: "Heartbreak",
+        cue: "soft vocal ache",
+        href: "/create?prompt=Heartbreak%20song%20with%20warm%20strings%20and%20a%20low%20voice",
+        image: "/covers/makran-evening.png",
+        accent: "from-[#56293b]/52 via-[#151014]/82 to-[#0c090b]",
+        waveform: [52, 31, 59, 28, 66, 37, 49, 24],
+    },
+    {
+        title: "Cinematic",
+        cue: "scene-ready motif",
+        href: "/create?prompt=Cinematic%20song%20idea%20with%20dambora%20texture%20and%20wide%20space",
+        image: "/covers/turbat-night.png",
+        accent: "from-[#5b5036]/46 via-[#151411]/82 to-[#0d0d0c]",
+        waveform: [28, 58, 44, 72, 39, 62, 53, 68],
+    },
+    {
+        title: "Celebration",
+        cue: "wedding energy",
+        href: "/create?prompt=Celebration%20song%20with%20dohol%20rhythm%20and%20bright%20chorus",
+        image: "/covers/wedding-doholl.png",
+        accent: "from-[#7a451c]/58 via-[#18110b]/84 to-[#0e0a07]",
+        waveform: [62, 46, 74, 58, 81, 51, 70, 64],
+    },
+]
 
 export default function DashboardPage() {
-    const router = useRouter()
-    const [prompt, setPrompt] = useState("")
-    const [isAudioMenuOpen, setIsAudioMenuOpen] = useState(false)
-    const [selectedAudioFile, setSelectedAudioFile] = useState<File | null>(null)
-    const [composerNotice, setComposerNotice] = useState("")
-    const [promptNote, setPromptNote] = useState("")
-    const audioMenuRef = useRef<HTMLDivElement>(null)
-    const audioInputRef = useRef<HTMLInputElement>(null)
-    const { playSong, isCurrentSong, isPlaying } = usePlaySong()
-
-    useEffect(() => {
-        if (!isAudioMenuOpen) {
-            return
-        }
-
-        function handlePointerDown(event: PointerEvent) {
-            if (
-                audioMenuRef.current &&
-                !audioMenuRef.current.contains(event.target as Node)
-            ) {
-                setIsAudioMenuOpen(false)
-            }
-        }
-
-        function handleEscape(event: KeyboardEvent) {
-            if (event.key === "Escape") {
-                setIsAudioMenuOpen(false)
-            }
-        }
-
-        document.addEventListener("pointerdown", handlePointerDown)
-        document.addEventListener("keydown", handleEscape)
-
-        return () => {
-            document.removeEventListener("pointerdown", handlePointerDown)
-            document.removeEventListener("keydown", handleEscape)
-        }
-    }, [isAudioMenuOpen])
-
-    // MOCK: replace with api-client.generateSong({ prompt }) when backend is ready
-    function handleCreate() {
-        const trimmed = prompt.trim()
-        if (!trimmed) {
-            setPromptNote("Describe a song idea first.")
-            return
-        }
-        setPromptNote("")
-        router.push(`/create?prompt=${encodeURIComponent(trimmed)}`)
-    }
-
-    function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault()
-            handleCreate()
-        }
-    }
-
-    function handlePlaySong(s: CollectionSong) {
-        playSong(toSong(s))
-    }
-
-    function handleRecordClick() {
-        setIsAudioMenuOpen(false)
-        setSelectedAudioFile(null)
-        setComposerNotice("Recording feature coming soon.")
-    }
-
-    function handleUploadClick() {
-        setIsAudioMenuOpen(false)
-        setComposerNotice("")
-        audioInputRef.current?.click()
-    }
-
-    function handleAudioFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-        const file = event.target.files?.[0]
-
-        if (file) {
-            setSelectedAudioFile(file)
-            setComposerNotice("")
-        }
-    }
-
-    function handleRemoveAudioFile() {
-        setSelectedAudioFile(null)
-        setComposerNotice("")
-
-        if (audioInputRef.current) {
-            audioInputRef.current.value = ""
-        }
-    }
-
     return (
-        <div className="relative min-h-dvh w-full max-w-full min-w-0 overflow-x-hidden bg-charcoal text-sand">
-            {/* Background */}
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_8%,rgba(227,122,44,0.18),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(26,58,92,0.6),transparent_34%),linear-gradient(135deg,var(--charcoal)_0%,var(--deep-indigo)_46%,var(--charcoal)_100%)]" />
-            <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:linear-gradient(90deg,rgba(237,227,211,0.3)_1px,transparent_1px),linear-gradient(rgba(237,227,211,0.25)_1px,transparent_1px)] [background-size:40px_40px]" />
+        <div className="relative min-h-dvh overflow-x-hidden bg-[#090909] text-sand">
+            <div
+                className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_6%,rgba(227,122,44,0.13),transparent_31%),radial-gradient(circle_at_78%_12%,rgba(42,67,86,0.26),transparent_30%),linear-gradient(180deg,#11100f_0%,#090909_58%,#080808_100%)]"
+                aria-hidden={true}
+            />
+            <div className="pointer-events-none absolute inset-0 bg-balochi-pattern-faint opacity-30" aria-hidden={true} />
 
-            {/* Content */}
-            <div className="relative z-10 mx-auto w-full max-w-5xl min-w-0 px-4 pb-6 pt-4 md:px-6 md:pt-6 lg:pb-8">
+            <main className="relative z-10 mx-auto flex w-full max-w-[1320px] flex-col gap-6 px-4 pb-[calc(var(--app-bottom-safe-area)+1.25rem)] pt-5 sm:px-6 lg:px-8 lg:pb-[calc(var(--app-bottom-player-height)+1.5rem)]">
+                <HeroSection capture={LAST_CAPTURED} />
 
-                <div className="hidden items-center justify-end lg:flex">
-                    <button
-                        type="button"
-                        aria-label="Search"
-                        onClick={() => router.push("/feed")}
-                        className="inline-flex h-9 items-center gap-2 rounded-full border border-sand/10 bg-sand/[0.05] px-4 text-sm font-semibold text-sand/40 transition hover:border-sand/18 hover:text-sand/60"
-                    >
-                        <Search className="size-4" aria-hidden="true" />
-                        Search
-                    </button>
-                </div>
+                <CaptureCard moment={LAST_CAPTURED} />
 
-                {/* ── Hero ── */}
-                <section className="mx-auto mt-9 max-w-2xl text-center lg:mt-10">
-                    <h1 className="text-[2rem] font-black leading-[1.08] tracking-tight text-sand sm:text-[2.6rem] md:text-[3rem]">
-                        <span className="lg:hidden">Let&apos;s make a song</span>
-                        <span className="hidden lg:inline">Bring your sound to life</span>
-                    </h1>
-
-                    {/* Compact prompt composer — single flat card */}
-                    <div className="mx-auto mt-5 max-w-xl rounded-xl border border-sand/10 bg-[#211514]/72 shadow-[0_16px_48px_rgba(0,0,0,0.3)] lg:mt-6 lg:bg-charcoal/60">
-                        <div className="px-4 pt-3">
-                            <textarea
-                                value={prompt}
-                                onChange={(e) => setPrompt(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                placeholder="Describe the Balochi song you want to create…"
-                                aria-label="Song prompt"
-                                rows={1}
-                                className="w-full resize-none bg-transparent text-sm leading-6 text-sand outline-none placeholder:text-sand/35"
-                            />
-                        </div>
-                        <div className="flex items-center justify-between gap-3 px-3 pb-3 pt-1">
-                            <div ref={audioMenuRef} className="relative">
-                                <button
-                                    type="button"
-                                    aria-label="Add audio options"
-                                    aria-expanded={isAudioMenuOpen}
-                                    aria-controls="dashboard-audio-options-menu"
-                                    onClick={() => setIsAudioMenuOpen((v) => !v)}
-                                    className="flex size-9 items-center justify-center rounded-full text-sand/40 transition hover:bg-sand/8 hover:text-sand/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
-                                >
-                                    <Plus className="size-5" aria-hidden="true" />
-                                </button>
-                                {isAudioMenuOpen && (
-                                    <AudioOptionsPopover
-                                        onRecord={handleRecordClick}
-                                        onUpload={handleUploadClick}
-                                    />
-                                )}
-                                <input
-                                    ref={audioInputRef}
-                                    type="file"
-                                    accept="audio/*"
-                                    className="hidden"
-                                    onChange={handleAudioFileChange}
-                                />
-                            </div>
-                            <button
-                                type="button"
-                                onClick={handleCreate}
-                                className="inline-flex h-10 items-center gap-2 rounded-full bg-[linear-gradient(135deg,#ff3ca0,#e37a2c)] px-5 text-sm font-black text-white shadow-[0_12px_32px_rgba(227,122,44,0.25)] transition hover:brightness-110 lg:bg-saffron lg:text-sand lg:hover:bg-terracotta lg:hover:brightness-100"
-                            >
-                                <AudioWaveform className="size-4" aria-hidden="true" />
-                                Create
-                            </button>
-                        </div>
-                        {(selectedAudioFile || composerNotice) && (
-                            <div className="px-3 pb-3 text-left">
-                                {selectedAudioFile ? (
-                                    <div
-                                        role="status"
-                                        className="inline-flex max-w-full items-center gap-2 rounded-full border border-saffron/25 bg-saffron/10 px-3 py-1.5 text-xs font-bold text-sand shadow-[0_10px_28px_rgba(0,0,0,0.18)]"
-                                    >
-                                        <AudioWaveform className="size-3.5 shrink-0 text-saffron" aria-hidden="true" />
-                                        <span className="min-w-0 truncate">{selectedAudioFile.name}</span>
-                                        <span className="shrink-0 text-saffron">Mock upload</span>
-                                        <button
-                                            type="button"
-                                            aria-label={`Remove ${selectedAudioFile.name}`}
-                                            onClick={handleRemoveAudioFile}
-                                            className="-mr-1 flex size-5 shrink-0 items-center justify-center rounded-full text-sand/55 transition hover:bg-sand/10 hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
-                                        >
-                                            <X className="size-3.5" aria-hidden="true" />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <p
-                                        role="status"
-                                        className="inline-flex max-w-full items-center gap-2 rounded-full border border-sand/10 bg-sand/[0.06] px-3 py-1.5 text-xs font-bold text-sand/70"
-                                    >
-                                        <Mic className="size-3.5 shrink-0 text-saffron" aria-hidden="true" />
-                                        {composerNotice}
-                                    </p>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                    {promptNote && (
-                        <p role="status" className="mx-auto mt-3 max-w-xl text-center text-xs font-semibold text-saffron">
-                            {promptNote}
-                        </p>
-                    )}
-                </section>
-
-                {/* ── Featured collections (horizontal cards) ── */}
-                <MobileForYouSection
-                    collection={COLLECTIONS[0]}
-                    onPlaySong={handlePlaySong}
-                    isCurrentSong={isCurrentSong}
-                    isPlaying={isPlaying}
-                />
-
-                <section className="mt-9 hidden lg:block">
-                    <div className="grid gap-4 lg:grid-cols-3">
-                        {COLLECTIONS.map((col) => (
-                            <CollectionCard
-                                key={col.id}
-                                collection={col}
-                                onPlaySong={handlePlaySong}
-                                isCurrentSong={isCurrentSong}
-                                isPlaying={isPlaying}
-                            />
-                        ))}
-                    </div>
-                </section>
-
-                {/* ── For Every Mood ── */}
-                <section className="mt-12 md:mt-16">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-black text-sand sm:text-2xl">
-                            <span className="lg:hidden">Curated Collections</span>
-                            <span className="hidden lg:inline">For Every Mood</span>
-                        </h2>
-                        <Link
-                            href="/feed"
-                            className="inline-flex items-center gap-1 text-sm font-bold text-sand/50 transition hover:text-saffron"
-                        >
-                            See all
-                            <ChevronRight className="size-4" aria-hidden="true" />
-                        </Link>
-                    </div>
-                    <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-                        {MOOD_CARDS.map((mood) => (
-                            <MoodCard key={mood.id} mood={mood} />
-                        ))}
-                    </div>
-                </section>
-
-                {/* ── Explore CTA ── */}
-                <section className="mt-12 md:mt-16">
-                    <Link
-                        href="/feed"
-                        className="group flex items-center justify-between gap-4 rounded-2xl border border-saffron/20 bg-saffron/[0.07] p-5 shadow-[0_16px_48px_rgba(0,0,0,0.2)] transition hover:border-saffron/35 hover:bg-saffron/[0.1] sm:p-6"
-                    >
-                        <div className="flex items-center gap-3">
-                            <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-saffron/30 bg-saffron/15 text-saffron">
-                                <Compass className="size-5" aria-hidden="true" />
-                            </span>
-                            <div>
-                                <p className="text-base font-black text-sand sm:text-lg">
-                                    Explore more songs on Zahirok
-                                </p>
-                                <p className="mt-0.5 text-sm font-semibold text-sand/55">
-                                    Discover what the community is creating.
-                                </p>
-                            </div>
-                        </div>
-                        <ChevronRight
-                            className="size-5 shrink-0 text-saffron/60 transition group-hover:translate-x-1 group-hover:text-saffron"
-                            aria-hidden="true"
+                <section aria-labelledby="quick-start-title" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="sm:col-span-2 xl:col-span-4">
+                        <SectionHeader
+                            eyebrow="Quick Start"
+                            title="Choose your first sound"
+                            description="Start with lyrics, instruments, radio, or a remix."
                         />
-                    </Link>
+                    </div>
+                    {QUICK_START.map((action) => (
+                        <QuickStartCard key={action.title} action={action} />
+                    ))}
                 </section>
-            </div>
+
+                <RecentWorkPanel items={RECENT_WORK} />
+
+                <TryFirstPanel points={STARTING_POINTS} />
+            </main>
         </div>
     )
 }
 
-// ── CollectionCard (horizontal layout) ───────────────────────────────────────
-
-function AudioOptionsPopover({
-    onRecord,
-    onUpload,
-}: {
-    onRecord: () => void
-    onUpload: () => void
-}) {
+function HeroSection({ capture }: { capture: CapturedMoment }) {
     return (
-        <div
-            id="dashboard-audio-options-menu"
-            className="absolute bottom-full left-0 z-30 mb-2 w-40 rounded-xl border border-sand/12 bg-[#111113] p-1.5 text-left text-sm font-bold text-sand shadow-[0_18px_44px_rgba(0,0,0,0.45)]"
+        <section
+            aria-labelledby="studio-home-title"
+            className="relative overflow-hidden rounded-2xl border border-white/[0.09] bg-[#141211]/88 shadow-[0_30px_96px_rgba(0,0,0,0.36)]"
         >
-            <button
-                type="button"
-                onClick={onRecord}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sand/88 transition hover:bg-sand/10 hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
-            >
-                <Mic className="size-4 text-saffron" aria-hidden="true" />
-                Record
-            </button>
-            <button
-                type="button"
-                onClick={onUpload}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sand/88 transition hover:bg-sand/10 hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
-            >
-                <Upload className="size-4 text-saffron" aria-hidden="true" />
-                Upload
-            </button>
-        </div>
-    )
-}
+            <div
+                className="absolute inset-0 bg-cover bg-center opacity-[0.22] mix-blend-screen"
+                style={{ backgroundImage: `url(${HERO_IMAGE})` }}
+                aria-hidden={true}
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,9,9,0.95)_0%,rgba(9,9,9,0.82)_45%,rgba(9,9,9,0.52)_100%)]" aria-hidden={true} />
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-saffron/45 to-transparent" aria-hidden={true} />
 
-function MobileForYouSection({
-    collection,
-    onPlaySong,
-    isCurrentSong,
-    isPlaying,
-}: {
-    collection: (typeof COLLECTIONS)[number]
-    onPlaySong: (s: CollectionSong) => void
-    isCurrentSong: (s: Song) => boolean
-    isPlaying: boolean
-}) {
-    const firstSong = collection.songs[0]
+            <div className="relative z-10 grid gap-6 p-5 sm:p-6 lg:grid-cols-[1.04fr_0.96fr] lg:p-8">
+                <div className="flex min-w-0 flex-col justify-between gap-7">
+                    <div>
+                        <p className="inline-flex items-center gap-2 rounded-full border border-saffron/18 bg-saffron/[0.07] px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-saffron/90">
+                            <Sparkles className="size-3.5" aria-hidden={true} />
+                            Studio Launchpad
+                        </p>
+                        <h1
+                            id="studio-home-title"
+                            className="mt-5 max-w-3xl text-3xl font-black leading-[1.08] tracking-normal text-white sm:text-[2.35rem] lg:text-[2.85rem]"
+                        >
+                            Create songs from lyrics, instruments, and captured moments.
+                        </h1>
+                        <p className="mt-4 max-w-2xl text-sm font-semibold leading-6 text-sand/66 sm:text-base sm:leading-7">
+                            Start with words, tune a live stream, or continue a sound you already found.
+                        </p>
+                    </div>
 
-    return (
-        <section className="mt-7 lg:hidden">
-            <article className="overflow-hidden rounded-2xl border border-sand/10 bg-sand/[0.055] p-4 shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
-                <div className="flex items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={() => {
-                            if (firstSong) onPlaySong(firstSong)
-                        }}
-                        aria-label={`Play ${collection.title}`}
-                        className="relative grid size-[84px] shrink-0 grid-cols-2 grid-rows-2 gap-0.5 overflow-hidden rounded-xl"
-                    >
-                        {collection.collage.map((bg, i) => {
-                            const songImg = collection.songs[i % collection.songs.length]?.coverImage
-                            return (
-                                <span key={i} className={`${bg} relative flex items-center justify-center`}>
-                                    {songImg ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={songImg} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
-                                    ) : (
-                                        <Music2 className="size-4 text-sand/35" aria-hidden="true" />
-                                    )}
-                                </span>
-                            )
-                        })}
-                        <span className="absolute inset-0 flex items-center justify-center bg-black/18">
-                            <span className="flex size-10 items-center justify-center rounded-full bg-white/82 text-charcoal shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
-                                <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
-                            </span>
-                        </span>
-                    </button>
-                    <div className="min-w-0">
-                        <h2 className="text-base font-black text-white">{collection.title}</h2>
-                        <p className="mt-1 text-xs font-semibold text-sand/45">{collection.subtitle}</p>
+                    <div className="flex flex-col gap-2.5 sm:flex-row">
+                        <HeroAction href="/create" icon={AudioWaveform} label="Create Song" primary />
+                        <HeroAction href="/radio" icon={Radio} label="Open Radio" />
+                        <HeroAction href="/create?draft=wedding-hook-idea" icon={Clock3} label="Continue Draft" quiet />
                     </div>
                 </div>
 
-                <div className="mt-4 grid gap-2">
-                    {collection.songs.map((song) => {
-                        const songObj = toSong(song)
-                        const isCurrent = isCurrentSong(songObj)
-                        const isThisPlaying = isCurrent && isPlaying
-
-                        return (
-                            <div key={song.id} className={`flex items-center gap-2.5 rounded-xl p-1.5 ${isCurrent ? "bg-saffron/10" : ""}`}>
-                                <div className={`relative size-11 shrink-0 overflow-hidden rounded-lg ${song.color}`}>
-                                    {song.coverImage ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={song.coverImage} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
-                                    ) : (
-                                        <Music2 className="absolute left-1/2 top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 text-sand/40" aria-hidden="true" />
-                                    )}
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => onPlaySong(song)}
-                                    aria-label={`${isThisPlaying ? "Pause" : "Play"} ${song.title}`}
-                                    className={`flex size-8 shrink-0 items-center justify-center rounded-full transition ${isThisPlaying ? "bg-saffron text-charcoal" : "bg-white/[0.08] text-white hover:bg-saffron hover:text-charcoal"}`}
-                                >
-                                    {isThisPlaying ? (
-                                        <Pause className="size-3.5 fill-current" aria-hidden="true" />
-                                    ) : (
-                                        <Play className="ml-px size-3.5 fill-current" aria-hidden="true" />
-                                    )}
-                                </button>
-                                <div className="min-w-0 flex-1">
-                                    <p className={`truncate text-sm font-black leading-tight ${isCurrent ? "text-saffron" : "text-white"}`}>
-                                        {song.title}
-                                    </p>
-                                    <p className="mt-0.5 truncate text-[11px] font-semibold text-sand/45">
-                                        {formatPlays(song.plays)} · {song.genre}
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    aria-label={`More options for ${song.title}`}
-                                    className="flex size-8 shrink-0 items-center justify-center rounded-full text-sand/45 transition hover:bg-white/[0.08] hover:text-white"
-                                >
-                                    <MoreHorizontal className="size-4" aria-hidden="true" />
-                                </button>
-                            </div>
-                        )
-                    })}
-                </div>
-
-                <Link
-                    href="/feed"
-                    className="mt-4 flex h-10 w-full items-center justify-center rounded-full border border-sand/10 text-sm font-black text-white transition hover:border-saffron/35 hover:bg-saffron/10"
-                >
-                    See more
-                </Link>
-            </article>
+                <LastCapturePreview capture={capture} />
+            </div>
         </section>
     )
 }
 
-function CollectionCard({
-    collection,
-    onPlaySong,
-    isCurrentSong,
-    isPlaying,
-}: {
-    collection: (typeof COLLECTIONS)[number]
-    onPlaySong: (s: CollectionSong) => void
-    isCurrentSong: (s: Song) => boolean
-    isPlaying: boolean
-}) {
+function LastCapturePreview({ capture }: { capture: CapturedMoment }) {
     return (
-        <article className="group overflow-hidden rounded-2xl border border-sand/10 bg-sand/[0.06] shadow-[0_16px_48px_rgba(0,0,0,0.25)] transition hover:border-saffron/25">
-            {/* Top: collage + play button + title */}
-            <div className="flex items-center gap-3 p-3 pb-0">
-                {/* 2x2 album art collage */}
-                <div className="relative grid size-20 shrink-0 grid-cols-2 grid-rows-2 gap-0.5 overflow-hidden rounded-lg">
-                    {collection.collage.map((bg, i) => {
-                        const songImg = collection.songs[i % collection.songs.length]?.coverImage
-                        return (
-                            <div key={i} className={`${bg} relative flex items-center justify-center`}>
-                                {songImg ? (
-                                    /* eslint-disable-next-line @next/next/no-img-element */
-                                    <img src={songImg} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
-                                ) : (
-                                    <Music2 className="size-3 text-sand/30" aria-hidden="true" />
-                                )}
-                            </div>
-                        )
-                    })}
-                    {/* Play overlay */}
-                    <button
-                        type="button"
-                        onClick={() => {
-                            if (collection.songs[0]) onPlaySong(collection.songs[0])
-                        }}
-                        aria-label={`Play ${collection.title}`}
-                        className="absolute inset-0 flex items-center justify-center bg-charcoal/20 opacity-0 transition group-hover:opacity-100"
-                    >
-                        <span className="flex size-9 items-center justify-center rounded-full bg-saffron text-sand shadow-[0_6px_18px_rgba(227,122,44,0.4)]">
-                            <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
-                        </span>
-                    </button>
-                </div>
-                <div className="min-w-0">
-                    <h3 className="text-base font-black text-sand">{collection.title}</h3>
-                    <p className="mt-0.5 text-xs font-semibold text-sand/40">
-                        {collection.subtitle}
-                    </p>
-                </div>
+        <article className="relative min-h-[300px] overflow-hidden rounded-xl border border-white/[0.1] bg-[#0e0d0d]/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.045)]">
+            <div
+                className="absolute inset-0 bg-cover bg-center opacity-75"
+                style={{ backgroundImage: `url(${capture.image})` }}
+                aria-hidden={true}
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.2)_0%,rgba(8,8,8,0.35)_40%,rgba(8,8,8,0.9)_100%)]" aria-hidden={true} />
+            <div className="absolute inset-x-4 top-4 flex items-center justify-between">
+                <span className="rounded-full border border-white/12 bg-black/34 px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white/80 backdrop-blur-sm">
+                    Last Capture Preview
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-saffron/24 bg-saffron/12 px-2.5 py-1 text-[11px] font-black text-saffron backdrop-blur-sm">
+                    <span className="size-1.5 rounded-full bg-saffron shadow-[0_0_14px_rgba(227,122,44,0.8)]" />
+                    captured
+                </span>
             </div>
 
-            {/* Song rows */}
-            <div className="mt-2 grid gap-0.5 px-3 pb-1">
-                {collection.songs.map((song) => {
-                    const songObj = toSong(song)
-                    const isCurrent = isCurrentSong(songObj)
-                    const isThisPlaying = isCurrent && isPlaying
-
-                    return (
-                        <div
-                            key={song.id}
-                            className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition ${isCurrent
-                                ? "bg-saffron/10"
-                                : "hover:bg-sand/[0.06]"
-                                }`}
+            <div className="absolute inset-x-4 bottom-4">
+                <div className="rounded-xl border border-white/[0.1] bg-black/48 p-3 backdrop-blur-md">
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            aria-label={`Play ${capture.stationName}`}
+                            className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-saffron text-[#171210] shadow-[0_14px_32px_rgba(227,122,44,0.25)] transition hover:bg-[#f0a23b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
                         >
-                            {/* Mini thumbnail */}
-                            <div className={`relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md ${song.color}`}>
-                                {song.coverImage ? (
-                                    /* eslint-disable-next-line @next/next/no-img-element */
-                                    <img src={song.coverImage} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
-                                ) : (
-                                    <Music2 className="size-3.5 text-sand/40" aria-hidden="true" />
-                                )}
-                            </div>
-                            {/* Play button */}
-                            <button
-                                type="button"
-                                onClick={() => onPlaySong(song)}
-                                aria-label={`${isThisPlaying ? "Pause" : "Play"} ${song.title}`}
-                                className={`flex size-7 shrink-0 items-center justify-center rounded-full transition ${isThisPlaying
-                                    ? "bg-saffron text-sand"
-                                    : "bg-sand/8 text-sand/40 hover:bg-saffron hover:text-sand"
-                                    }`}
-                            >
-                                {isThisPlaying ? (
-                                    <Pause className="size-3 fill-current" aria-hidden="true" />
-                                ) : (
-                                    <Play className="ml-px size-3 fill-current" aria-hidden="true" />
-                                )}
-                            </button>
-                            {/* Title + artist */}
-                            <div className="min-w-0 flex-1">
-                                <p className={`truncate text-sm font-bold leading-tight ${isCurrent ? "text-saffron" : "text-sand"}`}>
-                                    {song.title}
-                                </p>
-                                <p className="truncate text-[11px] font-semibold leading-tight text-sand/35">
-                                    {song.artist}
-                                </p>
-                            </div>
-                            {/* Plays + genre badge */}
-                            <div className="hidden shrink-0 items-center gap-2 sm:flex">
-                                <span className="text-[11px] font-semibold tabular-nums text-sand/30">
-                                    <Play className="mr-0.5 inline size-2.5 fill-current align-[-1px]" aria-hidden="true" />
-                                    {formatPlays(song.plays)}
-                                </span>
-                                <span className="rounded-full border border-sand/10 bg-sand/[0.06] px-2 py-0.5 text-[10px] font-bold text-sand/40">
-                                    {song.genre}
-                                </span>
-                            </div>
+                            <Play className="ml-0.5 size-4 fill-current" aria-hidden={true} />
+                        </button>
+                        <div className="min-w-0 flex-1">
+                            <h2 className="truncate text-lg font-black text-white">{capture.stationName}</h2>
+                            <p className="mt-0.5 text-sm font-bold text-sand/62">30s captured</p>
                         </div>
-                    )
-                })}
-            </div>
-
-            {/* See more */}
-            <div className="border-t border-sand/8 px-3 py-2.5">
-                <Link
-                    href="/feed"
-                    className="flex w-full items-center justify-center gap-1 text-xs font-bold text-sand/40 transition hover:text-saffron"
-                >
-                    See more
-                    <ChevronRight className="size-3.5" aria-hidden="true" />
-                </Link>
+                    </div>
+                    <div className="mt-3">
+                        <WaveformStrip bars={capture.waveform} tone="warm" />
+                    </div>
+                    <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-wrap gap-1.5">
+                            {capture.tags.map((tag) => (
+                                <span key={tag} className="rounded-full border border-white/12 bg-white/[0.06] px-2 py-0.5 text-[11px] font-black text-sand/76">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                        <Link
+                            href={capture.href}
+                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-saffron/28 bg-saffron/[0.1] px-3 text-xs font-black text-saffron transition hover:bg-saffron/[0.15] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+                        >
+                            Turn into song
+                            <ArrowRight className="size-3.5" aria-hidden={true} />
+                        </Link>
+                    </div>
+                </div>
             </div>
         </article>
     )
 }
 
-// ── MoodCard (landscape, title below) ────────────────────────────────────────
-
-function MoodCard({ mood }: { mood: (typeof MOOD_CARDS)[number] }) {
+function SectionHeader({
+    description,
+    eyebrow,
+    title,
+}: {
+    description: string
+    eyebrow: string
+    title: string
+}) {
     return (
-        <Link href="/feed" className="group">
-            {/* Landscape card */}
-            <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-sand/10 shadow-[0_12px_36px_rgba(0,0,0,0.2)] transition group-hover:-translate-y-1 group-hover:border-saffron/30">
-                <div
-                    className="absolute inset-0"
-                    style={{ background: mood.gradient }}
-                    aria-hidden="true"
-                />
-                {mood.coverImage && (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
-                        src={mood.coverImage}
-                        alt=""
-                        aria-hidden="true"
-                        className="absolute inset-0 h-full w-full object-cover opacity-40 transition group-hover:opacity-55"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }}
-                    />
-                )}
-                {!mood.coverImage && (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-[0.08]" aria-hidden="true">
-                        <Music2 className="size-14" />
-                    </div>
-                )}
-                {/* Hover play button */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100">
-                    <span className="flex size-10 items-center justify-center rounded-full bg-saffron/90 text-sand shadow-[0_8px_20px_rgba(227,122,44,0.35)]">
-                        <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
-                    </span>
-                </div>
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <p id="quick-start-title" className="text-xs font-black uppercase tracking-[0.16em] text-saffron/78">
+                    {eyebrow}
+                </p>
+                <h2 className="mt-1 text-xl font-black tracking-normal text-white sm:text-2xl">{title}</h2>
             </div>
-            {/* Title below */}
-            <p className="mt-2 text-sm font-bold leading-tight text-sand/70 transition group-hover:text-sand">
-                {mood.title}
-            </p>
+            <p className="max-w-md text-sm font-semibold leading-6 text-sand/48">{description}</p>
+        </div>
+    )
+}
+
+function QuickStartCard({ action }: { action: StudioAction }) {
+    const Icon = action.icon
+
+    return (
+        <Link
+            href={action.href}
+            className={`group relative min-h-[210px] overflow-hidden rounded-xl border border-white/[0.08] bg-[#141211]/78 shadow-[0_14px_44px_rgba(0,0,0,0.2)] transition hover:-translate-y-0.5 hover:border-saffron/28 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron ${quickStartChrome(action.kind)}`}
+        >
+            <div className="relative h-24 overflow-hidden">
+                <div
+                    className="absolute inset-0 bg-cover bg-center opacity-70 transition duration-300 group-hover:scale-[1.03] group-hover:opacity-[0.82]"
+                    style={{ backgroundImage: `url(${action.image})` }}
+                    aria-hidden={true}
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/12 via-black/22 to-[#141211]" aria-hidden={true} />
+                <QuickStartVisual kind={action.kind} waveform={action.waveform} />
+            </div>
+            <div className="relative z-10 p-3.5 pt-0">
+                <div className="flex items-start gap-3">
+                    <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.05] text-saffron">
+                        <Icon className="size-[18px]" aria-hidden={true} />
+                    </span>
+                    <div className="min-w-0">
+                        <h3 className="text-base font-black leading-tight text-white">{action.title}</h3>
+                        <p className="mt-1.5 text-sm font-semibold leading-5 text-sand/56">{action.description}</p>
+                    </div>
+                </div>
+                <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-black text-saffron/86 transition group-hover:text-saffron">
+                    {action.cta}
+                    <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden={true} />
+                </span>
+            </div>
         </Link>
     )
+}
+
+function CaptureCard({ moment }: { moment: CapturedMoment }) {
+    return (
+        <section
+            aria-labelledby="capture-card-title"
+            className="relative overflow-hidden rounded-2xl border border-saffron/20 bg-[#17120f]/92 shadow-[0_24px_82px_rgba(0,0,0,0.34)]"
+        >
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-saffron/60 to-transparent" aria-hidden={true} />
+            <div className="grid min-h-[340px] lg:grid-cols-[0.88fr_1.12fr]">
+                <div className="relative min-h-[220px] overflow-hidden lg:min-h-0">
+                    <div
+                        className="absolute inset-0 bg-cover bg-center"
+                        style={{ backgroundImage: `url(${moment.image})` }}
+                        aria-hidden={true}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#17120f] via-black/12 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-black/12 lg:to-[#17120f]" aria-hidden={true} />
+                    <button
+                        type="button"
+                        aria-label={`Play ${moment.stationName}`}
+                        className="absolute bottom-4 left-4 inline-flex size-14 items-center justify-center rounded-full bg-saffron text-[#171210] shadow-[0_18px_42px_rgba(0,0,0,0.42)] transition hover:bg-[#f0a23b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron"
+                    >
+                        <Play className="ml-0.5 size-6 fill-current" aria-hidden={true} />
+                    </button>
+                </div>
+
+                <div className="relative z-10 flex flex-col justify-center p-5 sm:p-6">
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-saffron/84">Continue from capture</p>
+                    <h2 id="capture-card-title" className="mt-2 text-2xl font-black text-white sm:text-3xl">Desert Night Radio</h2>
+                    <p className="mt-2 text-sm font-bold text-sand/62">30s captured from the live stream</p>
+
+                    <div className="mt-6">
+                        <WaveformStrip bars={moment.waveform} tone="warm" />
+                        <div className="mt-2 flex items-center justify-between text-[11px] font-black uppercase tracking-[0.12em] text-sand/38">
+                            <span>0:00</span>
+                            <span>{moment.duration}</span>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        {moment.tags.map((tag) => (
+                            <span key={tag} className="rounded-full border border-saffron/20 bg-saffron/[0.09] px-2.5 py-1 text-xs font-black text-saffron/90">
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+
+                    <Link
+                        href={moment.href}
+                        className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-saffron px-3 text-sm font-black text-[#171210] transition hover:bg-[#f0a23b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron sm:w-fit sm:px-5"
+                    >
+                        Turn into song
+                        <ArrowRight className="size-4" aria-hidden={true} />
+                    </Link>
+                </div>
+            </div>
+        </section>
+    )
+}
+
+function RecentWorkPanel({ items }: { items: RecentWorkItem[] }) {
+    return (
+        <section
+            aria-labelledby="recent-work-title"
+            className="rounded-xl border border-white/[0.08] bg-[#131211]/76 p-4 shadow-[0_14px_44px_rgba(0,0,0,0.18)]"
+        >
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <h2 id="recent-work-title" className="text-xl font-black text-white">Recent work</h2>
+                    <p className="mt-1 text-sm font-semibold text-sand/48">Songs, captures, and drafts in motion.</p>
+                </div>
+                <Link
+                    href="/library"
+                    className="hidden h-9 items-center gap-1.5 rounded-lg border border-white/10 px-3 text-xs font-black text-sand/62 transition hover:border-saffron/24 hover:text-saffron focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron sm:inline-flex"
+                >
+                    My Studio
+                    <ArrowRight className="size-3.5" aria-hidden={true} />
+                </Link>
+            </div>
+
+            <div className="mt-4 grid gap-2">
+                {items.map((item) => (
+                    <RecentWorkTrack key={`${item.type}-${item.title}`} item={item} />
+                ))}
+            </div>
+        </section>
+    )
+}
+
+function TryFirstPanel({ points }: { points: StartingPoint[] }) {
+    return (
+        <section aria-labelledby="try-first-title">
+            <div className="mb-3 flex items-end justify-between gap-3">
+                <div>
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-saffron/72">Try first</p>
+                    <h2 id="try-first-title" className="mt-1 text-lg font-black text-white">Mood starts</h2>
+                </div>
+                <p className="hidden max-w-sm text-sm font-semibold text-sand/42 sm:block">
+                    Quick sound worlds with their own color and motion.
+                </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+                {points.map((point) => (
+                    <MoodTile key={point.title} point={point} />
+                ))}
+            </div>
+        </section>
+    )
+}
+
+function HeroAction({
+    href,
+    icon,
+    label,
+    primary = false,
+    quiet = false,
+}: {
+    href: string
+    icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>
+    label: string
+    primary?: boolean
+    quiet?: boolean
+}) {
+    const Icon = icon
+    const className = primary
+        ? "bg-saffron text-[#171210] shadow-[0_14px_34px_rgba(227,122,44,0.22)] hover:bg-[#f0a23b]"
+        : quiet
+            ? "border border-white/10 bg-white/[0.045] text-sand/82 hover:border-white/18 hover:bg-white/[0.07] hover:text-white"
+            : "border border-saffron/22 bg-saffron/[0.08] text-white hover:border-saffron/38 hover:bg-saffron/[0.12]"
+
+    return (
+        <Link
+            href={href}
+            className={`inline-flex h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-black transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron ${className}`}
+        >
+            <Icon className={`size-4 ${primary ? "" : "text-saffron"}`} aria-hidden={true} />
+            {label}
+        </Link>
+    )
+}
+
+function QuickStartVisual({ kind, waveform }: { kind: StudioActionKind; waveform: number[] }) {
+    if (kind === "lyrics") {
+        return (
+            <div className="absolute inset-x-4 bottom-4 space-y-1.5" aria-hidden={true}>
+                {[72, 48, 86, 58].map((width, index) => (
+                    <span key={index} className="block h-1 rounded-full bg-white/36" style={{ width: `${width}%` }} />
+                ))}
+            </div>
+        )
+    }
+
+    if (kind === "radio") {
+        return (
+            <div className="absolute inset-x-4 bottom-4 rounded-full border border-saffron/20 bg-black/24 px-3 py-2 backdrop-blur-sm" aria-hidden={true}>
+                <WaveformStrip bars={waveform} tone="warm" compact />
+            </div>
+        )
+    }
+
+    if (kind === "remix") {
+        return (
+            <div className="absolute inset-x-4 bottom-4 space-y-1.5" aria-hidden={true}>
+                <LayeredWaveform bars={waveform} />
+            </div>
+        )
+    }
+
+    return (
+        <div className="absolute bottom-4 left-4 right-4 flex items-end gap-1.5" aria-hidden={true}>
+            {waveform.slice(0, 10).map((height, index) => (
+                <span key={index} className="flex-1 rounded-full bg-saffron/55" style={{ height: `${Math.max(12, height * 0.45)}px` }} />
+            ))}
+        </div>
+    )
+}
+
+function RecentWorkTrack({ item }: { item: RecentWorkItem }) {
+    return (
+        <Link
+            href={item.href}
+            className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.028] p-2.5 transition hover:border-saffron/22 hover:bg-white/[0.045] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron sm:grid-cols-[auto_minmax(0,1fr)_150px_auto]"
+        >
+            <CoverThumb image={item.image} label={item.title} />
+            <span className="min-w-0">
+                <span className="flex items-center gap-2">
+                    <span className="truncate text-sm font-black text-white">{item.title}</span>
+                    <span className="shrink-0 rounded-full border border-white/[0.08] bg-black/22 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-sand/48">
+                        {item.type}
+                    </span>
+                </span>
+                <span className="mt-0.5 block truncate text-xs font-semibold text-sand/45">{item.metadata}</span>
+            </span>
+            <span className="hidden min-w-0 items-center gap-2 sm:flex">
+                <MiniWaveform bars={item.waveform} />
+                <span className="shrink-0 text-xs font-black tabular-nums text-sand/45">{item.duration}</span>
+            </span>
+            <span className="hidden shrink-0 items-center gap-1.5 text-xs font-black text-saffron/76 transition group-hover:text-saffron sm:inline-flex">
+                {item.action}
+                <ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" aria-hidden={true} />
+            </span>
+            <span className="shrink-0 text-xs font-black tabular-nums text-sand/45 sm:hidden">{item.duration}</span>
+        </Link>
+    )
+}
+
+function MoodTile({ point }: { point: StartingPoint }) {
+    return (
+        <Link
+            href={point.href}
+            className={`group relative min-h-[118px] overflow-hidden rounded-xl border border-white/[0.07] bg-gradient-to-br ${point.accent} p-3 transition hover:-translate-y-0.5 hover:border-saffron/22 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron`}
+        >
+            <div
+                className="absolute inset-y-0 right-0 w-[58%] bg-cover bg-center opacity-[0.22] transition group-hover:opacity-[0.28]"
+                style={{ backgroundImage: `url(${point.image})` }}
+                aria-hidden={true}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/16 via-transparent to-black/34" aria-hidden={true} />
+            <div className="relative z-10 flex min-h-[94px] flex-col justify-between">
+                <span>
+                    <span className="block text-sm font-black text-white">{point.title}</span>
+                    <span className="mt-0.5 block text-xs font-semibold text-sand/54">{point.cue}</span>
+                </span>
+                <MiniWaveform bars={point.waveform} />
+            </div>
+        </Link>
+    )
+}
+
+function CoverThumb({ image, label }: { image: string; label: string }) {
+    return (
+        <span
+            aria-label={label}
+            role="img"
+            className="relative size-12 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_10px_24px_rgba(0,0,0,0.22)]"
+        >
+            <span
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${image})` }}
+                aria-hidden={true}
+            />
+            <span className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-white/[0.04]" aria-hidden={true} />
+        </span>
+    )
+}
+
+function WaveformStrip({
+    bars,
+    compact = false,
+    tone = "neutral",
+}: {
+    bars: number[]
+    compact?: boolean
+    tone?: "neutral" | "warm"
+}) {
+    const color = tone === "warm" ? "from-saffron/28 to-saffron/86" : "from-sand/20 to-sand/68"
+
+    return (
+        <div className={`flex items-center gap-1 ${compact ? "h-8" : "h-14"}`} aria-hidden={true}>
+            {bars.map((height, index) => (
+                <span
+                    key={`${height}-${index}`}
+                    className={`flex-1 rounded-full bg-gradient-to-t ${color}`}
+                    style={{ height: `${Math.max(16, height)}%` }}
+                />
+            ))}
+        </div>
+    )
+}
+
+function MiniWaveform({ bars }: { bars: number[] }) {
+    return (
+        <span className="flex h-6 min-w-0 flex-1 items-center gap-0.5" aria-hidden={true}>
+            {bars.map((height, index) => (
+                <span
+                    key={`${height}-${index}`}
+                    className="w-1 flex-1 rounded-full bg-sand/28 transition group-hover:bg-saffron/48"
+                    style={{ height: `${Math.max(18, height)}%` }}
+                />
+            ))}
+        </span>
+    )
+}
+
+function LayeredWaveform({ bars }: { bars: number[] }) {
+    return (
+        <div className="space-y-1.5">
+            <div className="flex h-5 items-center gap-1">
+                {bars.slice(0, 8).map((height, index) => (
+                    <span key={`top-${index}`} className="flex-1 rounded-full bg-saffron/52" style={{ height: `${Math.max(18, height)}%` }} />
+                ))}
+            </div>
+            <div className="ml-6 flex h-5 items-center gap-1">
+                {bars.slice(4, 12).map((height, index) => (
+                    <span key={`bottom-${index}`} className="flex-1 rounded-full bg-[#8ea0b5]/42" style={{ height: `${Math.max(18, 86 - height)}%` }} />
+                ))}
+            </div>
+        </div>
+    )
+}
+
+function quickStartChrome(kind: StudioActionKind): string {
+    if (kind === "lyrics") return "hover:shadow-[0_18px_54px_rgba(128,74,46,0.16)]"
+    if (kind === "instrument") return "hover:shadow-[0_18px_54px_rgba(227,122,44,0.14)]"
+    if (kind === "radio") return "hover:shadow-[0_18px_54px_rgba(55,77,95,0.18)]"
+    return "hover:shadow-[0_18px_54px_rgba(88,72,108,0.16)]"
 }

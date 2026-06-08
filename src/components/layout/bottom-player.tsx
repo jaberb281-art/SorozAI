@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 import { usePlayerStore } from "@/stores/player-store"
+import { AudioWaveform } from "@/components/ui/audio-waveform"
 import type { GenrePreset } from "@/lib/types"
 
 // Genre to gradient for the cover art placeholder
@@ -45,6 +46,20 @@ function GenreCover({ genre, size = "sm" }: { genre: GenrePreset; size?: "sm" | 
     )
 }
 
+function parseDurationSeconds(duration?: string): number | null {
+    if (!duration) return null
+
+    const [minutes, seconds] = duration.split(":").map(Number)
+
+    if (!Number.isFinite(minutes) || !Number.isFinite(seconds)) {
+        return null
+    }
+
+    const totalSeconds = minutes * 60 + seconds
+
+    return totalSeconds > 0 ? totalSeconds : null
+}
+
 export function BottomPlayer() {
     const {
         currentSong,
@@ -62,13 +77,21 @@ export function BottomPlayer() {
         playPrev,
     } = usePlayerStore()
 
+    const totalSeconds = parseDurationSeconds(currentSong?.duration)
+    const hasTimedDuration = totalSeconds !== null
+
     // Simulate progress tick when playing (mock; real audio will drive this)
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
     useEffect(() => {
-        if (isPlaying) {
+        if (isPlaying && currentSong) {
             intervalRef.current = setInterval(() => {
                 const current = usePlayerStore.getState().progress
+
+                if (!hasTimedDuration) {
+                    setProgress(current >= 100 ? 0 : current + 0.2)
+                    return
+                }
 
                 if (current >= 100) {
                     clearInterval(intervalRef.current!)
@@ -85,18 +108,7 @@ export function BottomPlayer() {
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current)
         }
-    }, [isPlaying, setProgress])
-
-    const handleProgressClick = useCallback(
-        (event: React.MouseEvent<HTMLDivElement>) => {
-            const rect = event.currentTarget.getBoundingClientRect()
-            const x = event.clientX - rect.left
-            const percentage = (x / rect.width) * 100
-
-            setProgress(percentage)
-        },
-        [setProgress],
-    )
+    }, [currentSong, hasTimedDuration, isPlaying, setProgress])
 
     const handleVolumeClick = useCallback(
         (event: React.MouseEvent<HTMLDivElement>) => {
@@ -109,21 +121,29 @@ export function BottomPlayer() {
         [setVolume],
     )
 
-    if (!currentSong) return null
-
-    // Duration parsing to display elapsed time
-    const durationParts = currentSong.duration.split(":").map(Number)
-    const totalSeconds = (durationParts[0] ?? 0) * 60 + (durationParts[1] ?? 0)
-    const elapsedSeconds = Math.floor((progress / 100) * totalSeconds)
+    const safeProgress = Number.isFinite(progress) ? progress : 0
+    const elapsedSeconds = hasTimedDuration ? Math.floor((safeProgress / 100) * totalSeconds) : 0
     const elapsedMin = Math.floor(elapsedSeconds / 60)
     const elapsedSec = elapsedSeconds % 60
 
+    const handleWaveformSeek = useCallback(
+        (time: number) => {
+            if (!hasTimedDuration) return
+            setProgress((time / totalSeconds) * 100)
+        },
+        [hasTimedDuration, setProgress, totalSeconds],
+    )
+
     const formatTime = (min: number, sec: number) =>
         `${min}:${String(sec).padStart(2, "0")}`
-    const songPath = `/song/${currentSong.id}`
+    const elapsedLabel = hasTimedDuration ? formatTime(elapsedMin, elapsedSec) : "Live"
+    const durationLabel = hasTimedDuration ? currentSong?.duration ?? "Live" : "Live"
+    const songPath = currentSong?.id.startsWith("station-") ? "/radio" : currentSong ? `/song/${currentSong.id}` : "#"
+
+    if (!currentSong) return null
 
     return (
-        <div className="fixed bottom-[var(--app-bottom-player-offset)] left-0 right-0 z-[85] border-t border-sand/10 bg-charcoal/96 backdrop-blur-2xl transition-[bottom,left] duration-200 lg:bottom-0 lg:left-[var(--app-sidebar-width,210px)]">
+        <div className="bottom-player fixed bottom-[var(--app-bottom-player-offset)] left-0 right-0 z-[85] border-t border-sand/10 bg-charcoal/96 backdrop-blur-sm transition-[bottom,left] duration-200 lg:bottom-0 lg:left-[var(--app-sidebar-width,248px)]">
             <div className="mx-auto flex min-h-[var(--app-bottom-player-height)] max-w-7xl items-center gap-3 px-3 py-2 lg:gap-5 lg:px-6 lg:py-3">
 
                 {/* Song info */}
@@ -213,35 +233,17 @@ export function BottomPlayer() {
                     {/* Progress bar + times */}
                     <div className="hidden w-full max-w-[480px] items-center gap-2 lg:flex">
                         <span className="w-10 text-right text-[11px] font-semibold tabular-nums text-sand/40">
-                            {formatTime(elapsedMin, elapsedSec)}
+                            {elapsedLabel}
                         </span>
-                        <div
-                            role="slider"
-                            aria-label="Playback progress"
-                            aria-valuenow={Math.round(progress)}
-                            aria-valuetext={`${Math.round(progress)}% played`}
-                            aria-valuemin={0}
-                            aria-valuemax={100}
-                            aria-orientation="horizontal"
-                            tabIndex={0}
-                            className="group relative h-1 flex-1 cursor-pointer overflow-hidden rounded-full bg-sand/12 transition-all hover:h-2"
-                            onClick={handleProgressClick}
-                            onKeyDown={(event) => {
-                                if (event.key === "ArrowRight") setProgress(Math.min(100, progress + 2))
-                                if (event.key === "ArrowLeft") setProgress(Math.max(0, progress - 2))
-                            }}
-                        >
-                            <div
-                                className="absolute inset-y-0 left-0 rounded-full bg-saffron shadow-[0_0_8px_rgba(227,122,44,0.5)] transition-all duration-100"
-                                style={{ width: `${progress}%` }}
-                            />
-                            <div
-                                className="absolute top-1/2 -translate-y-1/2 size-3 rounded-full bg-sand opacity-0 shadow transition group-hover:opacity-100"
-                                style={{ left: `calc(${progress}% - 6px)` }}
-                            />
-                        </div>
+                        <AudioWaveform
+                            audioUrl={hasTimedDuration ? currentSong?.audioUrl ?? null : null}
+                            isPlaying={isPlaying}
+                            height={48}
+                            onSeek={handleWaveformSeek}
+                            className="min-w-0 flex-1"
+                        />
                         <span className="w-10 text-[11px] font-semibold tabular-nums text-sand/40">
-                            {currentSong.duration}
+                            {durationLabel}
                         </span>
                     </div>
                 </div>

@@ -134,21 +134,21 @@ export function SongSocialPanel({ song }: SongSocialPanelProps) {
           {song.isPublic ? (
             <Link
               href="/feed"
-              aria-label={`View ${song.title} in Feed`}
+              aria-label={`View ${song.title} in Discover`}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-saffron/30 bg-saffron/10 px-3 py-2.5 text-sm font-bold text-saffron transition hover:bg-saffron/15"
             >
               <Globe2 className="size-4" aria-hidden="true" />
-              View in Feed
+              View in Discover
             </Link>
           ) : (
             <button
               type="button"
               onClick={() => showPlaceholder("Publishing will be connected later.")}
-              aria-label={`Post ${song.title} to Feed`}
+              aria-label={`Post ${song.title} to Discover`}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-saffron/30 bg-saffron/10 px-3 py-2.5 text-sm font-bold text-saffron transition hover:bg-saffron/15"
             >
               <Sparkles className="size-4" aria-hidden="true" />
-              Post to Feed
+              Post to Discover
             </button>
           )}
         </div>

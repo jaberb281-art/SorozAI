@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 
 import { usePlaySong } from "@/hooks/use-play-song"
+import { AudioWaveform } from "@/components/ui/audio-waveform"
 import {
     formatCount,
     getFeedSongs,
@@ -133,7 +134,7 @@ export default function SongDetailPage() {
                     className="inline-flex items-center gap-2 rounded-full border border-sand/12 bg-sand/[0.06] px-4 py-2 text-sm font-bold text-sand/80 transition hover:border-saffron/35 hover:bg-saffron/10 hover:text-saffron"
                 >
                     <ArrowLeft className="size-4" aria-hidden="true" />
-                    Back to Explore
+                    Back to Discover
                 </Link>
 
                 <section className="mt-5 grid min-w-0 gap-6 lg:grid-cols-[minmax(280px,420px)_minmax(0,1fr)] lg:items-center">
@@ -234,6 +235,16 @@ export default function SongDetailPage() {
                                 <RefreshCcw className="size-4" aria-hidden="true" />
                                 Remix
                             </Link>
+                        </div>
+
+                        {/* Waveform - shown when song has audio */}
+                        <div className="mt-6 w-full">
+                            <AudioWaveform
+                                audioUrl={song.audioUrl ?? null}
+                                isPlaying={false}
+                                height={80}
+                                className="rounded-xl"
+                            />
                         </div>
 
                         {message ? (
@@ -338,7 +349,7 @@ function SongNotFound() {
                         href="/feed"
                         className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-saffron px-5 text-sm font-black text-sand transition hover:bg-terracotta"
                     >
-                        Back to Explore
+                        Back to Discover
                     </Link>
                 </div>
             </section>
@@ -473,7 +484,7 @@ function CommentsPanel() {
                             key={reaction}
                             type="button"
                             aria-label={`React with ${reaction}`}
-                            className="flex size-10 items-center justify-center rounded-full border border-sand/10 bg-sand/[0.07] text-xl transition hover:border-saffron/35 hover:bg-saffron/10"
+                            className="flex size-11 items-center justify-center rounded-full border border-sand/10 bg-sand/[0.07] text-xl transition hover:border-saffron/35 hover:bg-saffron/10"
                         >
                             {reaction}
                         </button>
@@ -528,7 +539,7 @@ function RelatedSongCard({ song, queue }: { song: MockSong; queue: ReturnType<ty
                 type="button"
                 onClick={() => playSong(playerSong, queue)}
                 aria-label={`${isThisPlaying ? "Pause" : "Play"} ${song.title}`}
-                className="flex size-10 items-center justify-center rounded-full bg-sand/10 text-sand transition hover:bg-saffron hover:text-sand"
+                className="flex size-11 items-center justify-center rounded-full bg-sand/10 text-sand transition hover:bg-saffron hover:text-sand"
             >
                 {isThisPlaying ? (
                     <Pause className="size-4 fill-current" aria-hidden="true" />
