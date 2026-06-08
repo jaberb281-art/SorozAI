@@ -48,6 +48,7 @@ type SuggestionTarget = "description" | "styles"
 type ModePlaceholder = "voice" | "track"
 type DurationOption = "30s" | "1min" | "2min" | "4min"
 type VariationCount = 1 | 2 | 4
+type TrackInputTab = "upload" | "workspace"
 type MusicKey =
   | "Auto"
   | "C major"
@@ -96,6 +97,12 @@ const DURATION_CREDIT_COST: Record<DurationOption, number> = {
 }
 
 const VARIATION_OPTIONS: VariationCount[] = [1, 2, 4]
+const TRACK_INPUT_ACCEPT = ".mp3,.wav,.flac,.m4a"
+const TRACK_INPUT_ALLOWED_EXTENSIONS = new Set(["mp3", "wav", "flac", "m4a"])
+const TRACK_INPUT_MAX_SIZE_BYTES = 50 * 1024 * 1024
+const TRACK_INPUT_MAX_SIZE_LABEL = "50MB"
+const TRACK_INPUT_MAX_DURATION_LABEL = "8 minutes"
+const TRACK_INPUT_PLACEHOLDER_DURATION = "~3:20"
 const BPM_QUICK_PICKS = [
   { label: "Slow", value: 70 },
   { label: "Mid", value: 100 },
@@ -384,6 +391,11 @@ function formatSongDate(createdAt: string): string {
   }).format(new Date(createdAt))
 }
 
+function formatFileSize(bytes: number): string {
+  const megabytes = bytes / (1024 * 1024)
+  return `${megabytes.toFixed(megabytes >= 10 ? 0 : 1)}MB`
+}
+
 function makeGeneratedSong({
   bpm,
   creditsUsed,
@@ -531,6 +543,10 @@ function CreatePageInner() {
   const totalCreditCost = durationCreditCost * variationCount
   const isBpmProminent = hasProminentControl(currentModeConfig.prominentControls, "bpm")
   const isKeyProminent = hasProminentControl(currentModeConfig.prominentControls, "key")
+  const descriptionFieldLabel =
+    currentModeConfig.topPlaceholder === "track"
+      ? "Remix transformation prompt"
+      : "Song Description"
 
   // Prefill song description from dashboard ?prompt= query param (once only)
   useEffect(() => {
@@ -1065,9 +1081,14 @@ function CreatePageInner() {
               </div>
             )}
 
-            {currentModeConfig.topPlaceholder && (
+            {currentModeConfig.topPlaceholder === "track" ? (
+              <TrackInput
+                generatedTracks={generatedSongs}
+                isGenerating={isGenerating}
+              />
+            ) : currentModeConfig.topPlaceholder ? (
               <ModePlaceholderPanel type={currentModeConfig.topPlaceholder} />
-            )}
+            ) : null}
 
             <LanguageSelector
               value={selectedLanguage}
@@ -1078,6 +1099,7 @@ function CreatePageInner() {
             {effectiveCreateMode === "Simple" && effectiveInputTab === "Audio" ? (
               <SongDescriptionPanel
                 id="song-description"
+                label={descriptionFieldLabel}
                 value={songDescription}
                 importedPrompt={importedPrompt}
                 isGenerating={isGenerating}
@@ -1131,6 +1153,7 @@ function CreatePageInner() {
                 {currentModeConfig.sectionOrder[0] === "description" && (
                   <SongDescriptionPanel
                     id="song-description"
+                    label={descriptionFieldLabel}
                     value={songDescription}
                     importedPrompt={importedPrompt}
                     isGenerating={isGenerating}
@@ -1290,6 +1313,7 @@ function CreatePageInner() {
                   currentModeConfig.sectionOrder[0] !== "description" && (
                   <SongDescriptionPanel
                     id="song-description"
+                    label={descriptionFieldLabel}
                     value={songDescription}
                     importedPrompt={importedPrompt}
                     isGenerating={isGenerating}
@@ -2031,6 +2055,277 @@ function CreateAudioOptionsMenu({
   )
 }
 
+function TrackInput({
+  generatedTracks,
+  isGenerating,
+}: {
+  generatedTracks: GeneratedSong[]
+  isGenerating: boolean
+}) {
+  const [activeTab, setActiveTab] = useState<TrackInputTab>("upload")
+  const [selectedUpload, setSelectedUpload] = useState<File | null>(null)
+  const [selectedWorkspaceTrackId, setSelectedWorkspaceTrackId] = useState<string | null>(null)
+  const [playingReferenceId, setPlayingReferenceId] = useState<string | null>(null)
+  const [fileError, setFileError] = useState("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const selectedWorkspaceTrack =
+    generatedTracks.find((track) => track.id === selectedWorkspaceTrackId) ?? null
+  const selectedReference = selectedUpload
+    ? {
+        detail: `Upload | ${formatFileSize(selectedUpload.size)}`,
+        duration: TRACK_INPUT_PLACEHOLDER_DURATION,
+        id: "uploaded-reference",
+        removable: true,
+        sourceLabel: "Uploaded track",
+        title: selectedUpload.name,
+      }
+    : selectedWorkspaceTrack
+      ? {
+          detail: `Workspace | ${formatSongDate(selectedWorkspaceTrack.createdAt)}`,
+          duration: selectedWorkspaceTrack.duration,
+          id: `workspace-${selectedWorkspaceTrack.id}`,
+          removable: false,
+          sourceLabel: "Workspace track",
+          title: selectedWorkspaceTrack.title,
+        }
+      : null
+
+  function togglePlaying(referenceId: string) {
+    setPlayingReferenceId((current) =>
+      current === referenceId ? null : referenceId,
+    )
+  }
+
+  function clearFileInput() {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  function handleUploadChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? ""
+
+    if (!TRACK_INPUT_ALLOWED_EXTENSIONS.has(extension)) {
+      setFileError("Use an MP3, WAV, FLAC, or M4A file.")
+      setSelectedUpload(null)
+      clearFileInput()
+      return
+    }
+
+    if (file.size > TRACK_INPUT_MAX_SIZE_BYTES) {
+      setFileError(
+        `Choose a file under ${TRACK_INPUT_MAX_SIZE_LABEL}. This file is ${formatFileSize(file.size)}.`,
+      )
+      setSelectedUpload(null)
+      clearFileInput()
+      return
+    }
+
+    setFileError("")
+    setSelectedUpload(file)
+    setSelectedWorkspaceTrackId(null)
+    setPlayingReferenceId(null)
+  }
+
+  function handleRemoveUpload() {
+    setSelectedUpload(null)
+    setPlayingReferenceId(null)
+    setFileError("")
+    clearFileInput()
+  }
+
+  function handleSelectWorkspaceTrack(trackId: string) {
+    setSelectedWorkspaceTrackId(trackId)
+    setSelectedUpload(null)
+    setFileError("")
+    setPlayingReferenceId(null)
+    clearFileInput()
+  }
+
+  return (
+    <div className="mt-4 rounded-[1.35rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-5 sm:p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <Upload className="size-4 shrink-0 text-saffron" aria-hidden="true" />
+          <span className="text-sm font-black text-sand/82">Track reference</span>
+        </div>
+        <span className="ml-auto text-[var(--text-micro)] font-black uppercase tracking-[0.12em] text-sand/42">
+          Max {TRACK_INPUT_MAX_SIZE_LABEL} | Max {TRACK_INPUT_MAX_DURATION_LABEL}
+        </span>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 rounded-full border border-sand/8 bg-black/18 p-1">
+        {(["upload", "workspace"] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            aria-pressed={activeTab === tab}
+            className={`h-9 rounded-full text-sm font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron ${
+              activeTab === tab
+                ? "bg-sand/12 text-sand"
+                : "text-sand/50 hover:text-sand/75"
+            }`}
+          >
+            {tab === "upload" ? "Upload" : "From workspace"}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "upload" ? (
+        <div className="mt-3">
+          <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-sand/14 bg-black/18 px-4 py-5 text-center transition hover:border-saffron/35 hover:bg-saffron/[0.045]">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={TRACK_INPUT_ACCEPT}
+              disabled={isGenerating}
+              className="sr-only"
+              onChange={handleUploadChange}
+            />
+            <span className="inline-flex size-11 items-center justify-center rounded-full bg-saffron/12 text-saffron">
+              <Upload className="size-5" aria-hidden="true" />
+            </span>
+            <span className="mt-3 text-sm font-black text-sand">
+              Upload reference track
+            </span>
+            <span className="mt-1 text-xs font-semibold text-sand/45">
+              MP3, WAV, FLAC, or M4A
+            </span>
+          </label>
+          {fileError && (
+            <p role="alert" className="mt-2 rounded-lg border border-saffron/25 bg-saffron/10 px-3 py-1.5 text-xs font-semibold text-saffron">
+              {fileError}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="mt-3 grid gap-2">
+          {generatedTracks.length === 0 ? (
+            <div className="rounded-2xl border border-sand/8 bg-black/18 px-4 py-6 text-center text-sm font-semibold text-sand/48">
+              Generate your first track to remix it later.
+            </div>
+          ) : (
+            generatedTracks.map((track) => {
+              const isSelected = selectedWorkspaceTrackId === track.id
+              const playId = `workspace-row-${track.id}`
+              const isPlaying = playingReferenceId === playId
+
+              return (
+                <div
+                  key={track.id}
+                  className={`flex items-center gap-3 rounded-2xl border p-2 transition ${
+                    isSelected
+                      ? "border-saffron/35 bg-saffron/[0.08]"
+                      : "border-sand/8 bg-black/18 hover:border-saffron/20"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => togglePlaying(playId)}
+                    disabled={isGenerating}
+                    aria-label={`${isPlaying ? "Pause" : "Play"} ${track.title}`}
+                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-sand/[0.08] text-sand/70 transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40"
+                  >
+                    {isPlaying ? (
+                      <Pause className="size-4 fill-current" aria-hidden="true" />
+                    ) : (
+                      <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectWorkspaceTrack(track.id)}
+                    disabled={isGenerating}
+                    aria-pressed={isSelected}
+                    className="min-w-0 flex-1 rounded-xl px-1.5 py-1 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron disabled:opacity-45"
+                  >
+                    <span className="block truncate text-sm font-black text-sand">
+                      {track.title}
+                    </span>
+                    <span className="mt-0.5 block truncate text-xs font-semibold text-sand/45">
+                      {formatSongDate(track.createdAt)} | {track.duration}
+                    </span>
+                  </button>
+                </div>
+              )
+            })
+          )}
+        </div>
+      )}
+
+      {selectedReference && (
+        <div className="mt-3 rounded-2xl border border-saffron/24 bg-saffron/[0.065] p-3">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => togglePlaying(selectedReference.id)}
+              disabled={isGenerating}
+              aria-label={`${playingReferenceId === selectedReference.id ? "Pause" : "Play"} ${selectedReference.title}`}
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-saffron text-[#171717] transition hover:bg-[#f09a4f] disabled:opacity-45"
+            >
+              {playingReferenceId === selectedReference.id ? (
+                <Pause className="size-4 fill-current" aria-hidden="true" />
+              ) : (
+                <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
+              )}
+            </button>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-saffron/24 bg-black/16 px-2 py-0.5 text-[var(--text-micro)] font-black uppercase tracking-[0.12em] text-saffron">
+                  {selectedReference.sourceLabel}
+                </span>
+                <span className="text-xs font-bold text-sand/48">
+                  {selectedReference.duration}
+                </span>
+              </div>
+              <p className="mt-1 truncate text-sm font-black text-sand">
+                {selectedReference.title}
+              </p>
+              <p className="mt-0.5 truncate text-xs font-semibold text-sand/45">
+                {selectedReference.detail}
+              </p>
+            </div>
+
+            {selectedReference.removable && (
+              <button
+                type="button"
+                onClick={handleRemoveUpload}
+                disabled={isGenerating}
+                aria-label={`Remove ${selectedReference.title}`}
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-sand/55 transition hover:bg-sand/10 hover:text-sand disabled:opacity-40"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            )}
+          </div>
+          <TrackInputWaveform />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TrackInputWaveform() {
+  return (
+    <div className="mt-3 flex h-10 items-end gap-px" aria-hidden="true">
+      {Array.from({ length: 40 }, (_, index) => (
+        <span
+          key={index}
+          className={`w-full rounded-full ${
+            index < 16 ? "bg-saffron/72" : "bg-sand/18"
+          }`}
+          style={{ height: `${7 + ((index * 11 + 5) % 27)}px` }}
+        />
+      ))}
+    </div>
+  )
+}
+
 function ModePlaceholderPanel({ type }: { type: ModePlaceholder }) {
   const Icon = type === "voice" ? Mic2 : Upload
   const title = type === "voice" ? "Voice style" : "Track reference"
@@ -2089,6 +2384,7 @@ function SongDescriptionPanel({
   importedPrompt,
   isGenerating,
   isWarning,
+  label = "Song Description",
   onChange,
   onRandom,
   onSuggestionClick,
@@ -2100,6 +2396,7 @@ function SongDescriptionPanel({
   importedPrompt: boolean
   isGenerating: boolean
   isWarning: boolean
+  label?: string
   onChange: (value: string) => void
   onRandom: () => void
   onSuggestionClick: (suggestion: string) => void
@@ -2112,7 +2409,7 @@ function SongDescriptionPanel({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <label htmlFor={id} className="text-sm font-black text-sand/82">
-              Song Description
+              {label}
             </label>
             {importedPrompt && (
               <span className="text-[var(--text-micro)] font-bold uppercase tracking-wide text-saffron/70">
