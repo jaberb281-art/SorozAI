@@ -9,17 +9,15 @@ import {
     Clock3,
     Compass,
     CreditCard,
-    Drum,
-    Mic2,
+    Home,
     Music2,
-    PenLine,
     Plus,
     Radio,
-    Repeat2,
     SlidersHorizontal,
     Sparkles,
     SquarePlay,
     UserRound,
+    Wand2,
 } from "lucide-react"
 
 type RailItem = {
@@ -30,38 +28,25 @@ type RailItem = {
 }
 
 type ActiveContext = {
-    mode: string | null
     pathname: string
     space: string | null
     view: string | null
 }
 
-const CREATE_ITEMS: RailItem[] = [
-    {
-        href: "/create?mode=lyrics",
-        label: "Lyrics to Song",
-        icon: PenLine,
-        activeWhen: ({ mode, pathname }) => pathname === "/create" && mode === "lyrics",
-    },
-    {
-        href: "/create?mode=instrument",
-        label: "Instrument First",
-        icon: Drum,
-        activeWhen: ({ mode, pathname }) => pathname === "/create" && mode === "instrument",
-    },
-    {
-        href: "/create?mode=voice",
-        label: "Voice Style",
-        icon: Mic2,
-        activeWhen: ({ mode, pathname }) => pathname === "/create" && mode === "voice",
-    },
-    {
-        href: "/create?mode=remix",
-        label: "Remix",
-        icon: Repeat2,
-        activeWhen: ({ mode, pathname }) => pathname === "/create" && mode === "remix",
-    },
-] as const
+const HOME_ITEM: RailItem = {
+    href: "/dashboard",
+    label: "Home",
+    icon: Home,
+    activeWhen: ({ pathname }) => pathname === "/dashboard",
+}
+
+const CREATE_ITEM: RailItem = {
+    href: "/create",
+    label: "Create",
+    icon: Wand2,
+    activeWhen: ({ pathname }) =>
+        pathname === "/create" || pathname.startsWith("/create/"),
+}
 
 const DISCOVER_ITEMS: RailItem[] = [
     {
@@ -117,7 +102,6 @@ export function StudioRail() {
     const searchParams = useSearchParams()
     const activeContext = useMemo<ActiveContext>(
         () => ({
-            mode: searchParams.get("mode"),
             pathname,
             space: searchParams.get("space"),
             view: searchParams.get("view"),
@@ -125,7 +109,8 @@ export function StudioRail() {
         [pathname, searchParams],
     )
 
-    const createSongActive = pathname === "/create" && !searchParams.get("mode")
+    const createSongActive =
+        pathname === "/create" || pathname.startsWith("/create/")
 
     useEffect(() => {
         document.documentElement.style.setProperty("--app-sidebar-width", "248px")
@@ -172,7 +157,10 @@ export function StudioRail() {
                     aria-label="Studio navigation"
                     className="mt-5 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
-                    <RailSection title="Create" items={CREATE_ITEMS} activeContext={activeContext} />
+                    <div className="grid gap-1">
+                        <RailLink item={HOME_ITEM} active={HOME_ITEM.activeWhen(activeContext)} />
+                        <RailLink item={CREATE_ITEM} active={CREATE_ITEM.activeWhen(activeContext)} />
+                    </div>
                     <RailSection title="Discover" items={DISCOVER_ITEMS} activeContext={activeContext} />
                     <RailSection title="My Space" items={MY_SPACE_ITEMS} activeContext={activeContext} />
                 </nav>

@@ -25,6 +25,7 @@ import {
   Search,
   SlidersHorizontal,
   Sparkles,
+  Square,
   Trash2,
   Upload,
   Wand2,
@@ -42,13 +43,10 @@ type LyricsMode = "write" | "prompt" | "instrumental"
 type CreateMode = "Simple" | "Advanced"
 type InputTab = "Audio" | "Voice" | "Inspo"
 type VocalGender = "male" | "female"
-type CreatePageMode = "create" | "lyrics" | "instrument" | "voice" | "remix"
-type ModeSection = "description" | "lyrics" | "styles" | "moreOptions" | "title"
-type SuggestionTarget = "description" | "styles"
-type ModePlaceholder = "voice" | "track"
 type DurationOption = "30s" | "1min" | "2min" | "4min"
 type VariationCount = 1 | 2 | 4
 type TrackInputTab = "upload" | "workspace"
+type VoiceInputTab = "upload" | "record" | "library"
 type TrackDownloadFormat = "MP3" | "WAV"
 type MusicKey =
   | "Auto"
@@ -60,13 +58,19 @@ type MusicKey =
   | "D minor"
   | "F major"
   | "Bb major"
-type MusicControl = "bpm" | "key"
 
 const SONG_DESCRIPTION_MAX_LENGTH = 200
 const SONG_DESCRIPTION_WARNING_LENGTH = 180
 const USER_CREDITS = 75
 const LANGUAGE_OPTIONS = ["Balochi", "Urdu", "English", "Arabic", "Brahui"] as const
 type SongLanguage = (typeof LANGUAGE_OPTIONS)[number]
+const LANGUAGE_LABELS: Record<SongLanguage, string> = {
+  Balochi: "Balochi (بلوچی)",
+  Urdu: "Urdu (اردو)",
+  English: "English",
+  Arabic: "Arabic (عربي)",
+  Brahui: "Brahui (براہوئی)",
+}
 
 const RTL_LYRICS_LANGUAGES = new Set<SongLanguage>(["Balochi", "Urdu", "Arabic"])
 const LYRICS_STRUCTURE_TAGS = [
@@ -105,6 +109,18 @@ const TRACK_INPUT_MAX_SIZE_LABEL = "50MB"
 const TRACK_INPUT_MAX_DURATION_LABEL = "8 minutes"
 const TRACK_INPUT_PLACEHOLDER_DURATION = "~3:20"
 const TRACK_ACTIONS_COMING_SOON = ["Extend", "Cover", "Stems", "Make Persona"] as const
+const VOICE_INPUT_ACCEPT = ".mp3,.wav,.m4a,.ogg"
+const VOICE_INPUT_ALLOWED_EXTENSIONS = new Set(["mp3", "wav", "m4a", "ogg"])
+const VOICE_INPUT_MAX_SIZE_BYTES = 10 * 1024 * 1024
+const VOICE_INPUT_MAX_SIZE_LABEL = "10MB"
+const VOICE_INPUT_MAX_DURATION_LABEL = "60s"
+const VOICE_INPUT_MIN_RECORD_SECONDS = 15
+const VOICE_INPUT_MAX_RECORD_SECONDS = 60
+// MOCK: stand-in for the AI lyrics endpoint (Task 6b) until the backend ships.
+const MOCK_AI_LYRICS = [
+  "[Verse]\nNight folds soft over the Makran shore\nA Damboora hums what the heart kept before\nThe tide remembers every name we gave\nEvery footprint the morning will save\n\n[Chorus]\nSing me home, O coastal wind\nCarry the song where the hills begin\nSing me home through the Suroz cry\nUnder a wide Balochi sky\n\n[Bridge]\nMiles of dust, a caravan light\nThe Duholl keeps the pulse of the night\n\n[Outro]\nSing me home, sing me home",
+  "[Intro]\nQuiet strings, a single breath\n\n[Verse]\nFrom Turbat roads to Gwadar's bay\nThe old songs find a brand new day\nRabab and rain in the same refrain\nLove like the sea returns again\n\n[Chorus]\nHold the line, hold the flame\nWhisper soft my given name\nHold the line through dusk and dawn\nThe melody carries on",
+] as const
 const BPM_QUICK_PICKS = [
   { label: "Slow", value: 70 },
   { label: "Mid", value: 100 },
@@ -178,7 +194,15 @@ const MOCK_TITLES = [
   "Kech Valley Song",
 ] as const
 
-const STYLE_SUGGESTIONS = ["sombrio", "sweet vocal", "trap/rap", "sound design", "atmospheric guitars"]
+const STYLE_SUGGESTIONS = [
+  "sombrio",
+  "sweet vocal",
+  "trap/rap",
+  "sound design",
+  "atmospheric guitars",
+  "Makkuran folk",
+  "coastal groove",
+] as const
 
 type StyleChipIconKind = "suroz" | "benju" | "rabab" | "duholl" | "dambora" | "vocal" | "coastal"
 
@@ -192,150 +216,139 @@ const ADVANCED_STYLE_CHIPS: { label: string; icon: StyleChipIconKind }[] = [
   { label: "Coastal folk", icon: "coastal" },
 ]
 
-const SIMPLE_PROMPT_IDEAS = [
-  "Jazzy pop song about being invisible",
-  "Sombrio Zahirok melody with sweet vocals and atmospheric guitars",
-  "Trap/rap rhythm with Damboora textures and a cinematic hook",
-  "Dreamy coastal song about missing someone at sunrise",
-  "Soft folk-pop track with layered harmonies and warm percussion",
-] as const
+const SURPRISE_PROMPTS = {
+  default: [
+    "A slow Balochi folk song about the sea at night",
+    "Upbeat wedding celebration with Duholl drums",
+    "Coastal Makkuran groove, Suroz leading, sunset energy",
+    "Melancholy Dambora ballad about leaving home",
+    "Modern Balochi pop with electronic textures",
+    "Dawn prayer call reimagined as ambient music",
+    "Festival drums building from silence to full energy",
+    "Rabab melody over a lo-fi hip-hop beat",
+    "Caravan road song, steady rhythm, open desert",
+    "Rain on a tin roof in Gwadar, soft piano underneath",
+  ],
+  instrumental: [
+    "Dambora and hand drum rhythm, desert caravan energy",
+    "Suroz solo over a drone, coastal morning",
+    "Cinematic strings building to a Duholl climax",
+    "Lo-fi Rabab loops with rain ambience",
+    "Benju-driven celebration rhythm, no vocals",
+  ],
+  inspo: [
+    "Turn this into a lo-fi bedroom version",
+    "Make it acoustic with just voice and guitar",
+    "Speed it up and add electronic production",
+    "Strip to vocals and rebuild as ambient",
+    "Flip the genre to cinematic orchestral",
+  ],
+} as const
 
-const modeConfig = {
-  create: {
-    label: "Create Song",
-    createMode: "Simple",
-    inputTab: "Audio",
-    lockCreateMode: false,
-    defaultLyricsMode: "write",
-    topPlaceholder: null,
-    sectionOrder: ["lyrics", "styles", "moreOptions", "title"],
-    suggestionTarget: "description",
-    suggestionTags: STYLE_SUGGESTIONS,
-    prominentControls: [],
-    surpriseTarget: "description",
-    surprisePrompts: SIMPLE_PROMPT_IDEAS,
-  },
-  lyrics: {
-    label: "Lyrics to Song",
-    createMode: "Advanced",
-    inputTab: "Audio",
-    lockCreateMode: true,
-    defaultLyricsMode: "write",
-    topPlaceholder: null,
-    sectionOrder: ["lyrics", "description", "styles", "moreOptions", "title"],
-    suggestionTarget: "description",
-    suggestionTags: [
-      "Zahirok chorus",
-      "coastal longing",
-      "wedding hook",
-      "call and response",
-      "poetic bridge",
-    ],
-    prominentControls: [],
-    surpriseTarget: "description",
-    surprisePrompts: [
-      "Poetic Balochi lyrics about a voice crossing the Makran coast",
-      "A heartfelt chorus about returning home after years away",
-      "Wedding lyrics with call-and-response energy and a bright hook",
-      "A longing verse and memorable chorus about desert rain",
-      "A modern folk lyric about identity, family, and the sea",
-    ],
-  },
-  instrument: {
-    label: "Instrument First",
-    createMode: "Advanced",
-    inputTab: "Audio",
-    lockCreateMode: true,
-    defaultLyricsMode: "instrumental",
-    topPlaceholder: null,
-    sectionOrder: ["styles", "moreOptions", "title"],
-    suggestionTarget: "styles",
-    suggestionTags: [
-      "Suroz lead",
-      "Dambora pulse",
-      "Duholl groove",
-      "Benju texture",
-      "ambient intro",
-    ],
-    prominentControls: ["bpm", "key"],
-    surpriseTarget: "styles",
-    surprisePrompts: [
-      "Suroz lead, Dambora pulse, Duholl groove, coastal folk build",
-      "Benju texture, Rabab counter melody, warm percussion, cinematic intro",
-      "Dambora ostinato, deep Duholl rhythm, atmospheric guitars, no vocals",
-      "Fast coastal dance rhythm with Suroz flourishes and bright Benju",
-      "Slow instrumental Zahirok with Rabab, Suroz, and spacious ambience",
-    ],
-  },
-  voice: {
-    label: "Voice Style",
-    createMode: "Advanced",
-    inputTab: "Voice",
-    lockCreateMode: true,
-    defaultLyricsMode: "write",
-    topPlaceholder: "voice",
-    sectionOrder: ["description", "lyrics", "styles", "moreOptions", "title"],
-    suggestionTarget: "description",
-    suggestionTags: [
-      "warm male vocal",
-      "soft female vocal",
-      "Makkuran phrasing",
-      "low harmony",
-      "spoken intro",
-    ],
-    prominentControls: [],
-    surpriseTarget: "description",
-    surprisePrompts: [
-      "Warm Makkuran vocal style with a low intimate lead and soft harmonies",
-      "Expressive female vocal over a gentle Zahirok folk-pop arrangement",
-      "Spoken Balochi intro that opens into a melodic coastal chorus",
-      "Layered harmonies around a tender hook about missing home",
-      "Raw emotional vocal take with Damboora textures and soft percussion",
-    ],
-  },
-  remix: {
-    label: "Remix",
-    createMode: "Advanced",
-    inputTab: "Audio",
-    lockCreateMode: true,
-    defaultLyricsMode: "write",
-    topPlaceholder: "track",
-    sectionOrder: ["description", "lyrics", "styles", "moreOptions", "title"],
-    suggestionTarget: "description",
-    suggestionTags: [
-      "keep original hook",
-      "faster tempo",
-      "folk to trap",
-      "club percussion",
-      "cinematic drop",
-    ],
-    prominentControls: ["key"],
-    surpriseTarget: "description",
-    surprisePrompts: [
-      "Keep the original hook, add brighter percussion, and lift the chorus",
-      "Turn the reference into a faster folk-trap remix with a cinematic drop",
-      "Preserve the vocal mood while adding Duholl rhythm and Benju sparkle",
-      "Make a spacious night-drive remix with deep bass and Suroz accents",
-      "Rebuild the track as a celebratory coastal dance version",
-    ],
-  },
-} satisfies Record<
-  CreatePageMode,
-  {
-    label: string
-    createMode: CreateMode
-    inputTab: InputTab
-    lockCreateMode: boolean
-    defaultLyricsMode: LyricsMode
-    topPlaceholder: ModePlaceholder | null
-    sectionOrder: readonly ModeSection[]
-    suggestionTarget: SuggestionTarget
-    suggestionTags: readonly string[]
-    prominentControls: readonly MusicControl[]
-    surpriseTarget: SuggestionTarget
-    surprisePrompts: readonly string[]
+interface FormState {
+  inputSource: InputTab
+  instrumental: boolean
+  lyrics: string
+}
+
+function getSuggestions(formState: FormState): string[] {
+  if (formState.instrumental) {
+    return [
+      "percussive",
+      "ambient",
+      "driving rhythm",
+      "atmospheric",
+      "cinematic",
+      "lo-fi",
+      "Dambora groove",
+      "Suroz melody",
+    ]
   }
->
+
+  if (formState.lyrics.length > 0) {
+    return [
+      "ballad",
+      "anthem",
+      "storytelling",
+      "emotional",
+      "love song",
+      "protest",
+      "lullaby",
+      "spoken word",
+    ]
+  }
+
+  if (formState.inputSource === "Inspo") {
+    return [
+      "acoustic version",
+      "slowed + reverb",
+      "genre flip",
+      "strip to vocals",
+      "add bass",
+      "lo-fi remix",
+      "orchestral",
+    ]
+  }
+
+  if (formState.inputSource === "Voice") {
+    return [
+      "raspy",
+      "smooth",
+      "powerful",
+      "whisper",
+      "falsetto",
+      "deep",
+      "young",
+      "weathered",
+    ]
+  }
+
+  return [...STYLE_SUGGESTIONS]
+}
+
+function getRandomPrompt(
+  formState: FormState,
+  lastPrompt: string | null,
+): string {
+  const pool =
+    formState.instrumental
+      ? SURPRISE_PROMPTS.instrumental
+      : formState.inputSource === "Inspo"
+        ? SURPRISE_PROMPTS.inspo
+        : SURPRISE_PROMPTS.default
+
+  if (pool.length <= 1) {
+    return pool[0]
+  }
+
+  let prompt: string = pool[0]
+  do {
+    prompt = pool[Math.floor(Math.random() * pool.length)]
+  } while (prompt === lastPrompt)
+
+  return prompt
+}
+
+const MOCK_REFERENCE_TRACKS: Record<
+  string,
+  { title: string; duration: string; createdAt: string }
+> = {
+  "song-long-road-demo": {
+    title: "Long Road demo",
+    duration: "3:42",
+    createdAt: "2026-06-07T22:00:00.000Z",
+  },
+  "capture-desert-night": {
+    title: "Desert Night Radio",
+    duration: "0:30",
+    createdAt: "2026-05-28T00:00:00.000Z",
+  },
+  "capture-desert-night-30s": {
+    title: "Desert Night 30s",
+    duration: "0:30",
+    createdAt: "2026-05-28T00:00:00.000Z",
+  },
+}
 
 // MOCK: Makkuran/Balochi-inspired lyric fragments for the Wand button
 const MOCK_LYRIC_IDEAS = [
@@ -354,32 +367,6 @@ function getRandomLyricIdea(): string {
   return MOCK_LYRIC_IDEAS[Math.floor(Math.random() * MOCK_LYRIC_IDEAS.length)]
 }
 
-function resolveCreatePageMode(mode: string | null): CreatePageMode {
-  if (mode === "default" || mode === "create" || mode == null) {
-    return "create"
-  }
-
-  if (mode in modeConfig) {
-    return mode as CreatePageMode
-  }
-
-  return "create"
-}
-
-function hasModeSection(
-  sections: readonly ModeSection[],
-  section: ModeSection,
-): boolean {
-  return sections.includes(section)
-}
-
-function hasProminentControl(
-  controls: readonly MusicControl[],
-  control: MusicControl,
-): boolean {
-  return controls.includes(control)
-}
-
 function formatElapsedTime(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
@@ -396,6 +383,108 @@ function formatSongDate(createdAt: string): string {
 function formatFileSize(bytes: number): string {
   const megabytes = bytes / (1024 * 1024)
   return `${megabytes.toFixed(megabytes >= 10 ? 0 : 1)}MB`
+}
+
+// Task 9b: deterministic gradient placeholder cover art derived from a seed
+// (track id), so each generated track gets a stable, distinct thumbnail.
+function coverGradient(seed: string): string {
+  let hash = 0
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) % 360
+  }
+  const hue = hash
+  const hue2 = (hash + 42) % 360
+  return `linear-gradient(135deg, hsl(${hue} 64% 42%) 0%, hsl(${hue2} 58% 26%) 58%, #141312 100%)`
+}
+
+// Quick win: persist the in-progress composer to localStorage so a refresh or
+// mode switch never loses typed input.
+const CREATE_DRAFT_KEY = "zahirok:create-draft:v1"
+
+interface CreateDraft {
+  lyrics: string
+  lyricsPrompt: string
+  stylePrompt: string
+  songTitle: string
+  songDescription: string
+  selectedLanguage: SongLanguage
+  selectedDuration: DurationOption
+  variationCount: VariationCount
+  bpm: number
+  musicKey: MusicKey
+  vocalGender: VocalGender
+  weirdness: number
+  styleInfluence: number
+}
+
+function clampPercent(value: number): number {
+  return Math.min(100, Math.max(0, Math.round(value)))
+}
+
+function readCreateDraft(): Partial<CreateDraft> {
+  if (typeof window === "undefined") return {}
+  try {
+    const raw = window.localStorage.getItem(CREATE_DRAFT_KEY)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw) as Record<string, unknown>
+    const draft: Partial<CreateDraft> = {}
+
+    if (typeof parsed.lyrics === "string") draft.lyrics = parsed.lyrics
+    if (typeof parsed.lyricsPrompt === "string") draft.lyricsPrompt = parsed.lyricsPrompt
+    if (typeof parsed.stylePrompt === "string") draft.stylePrompt = parsed.stylePrompt
+    if (typeof parsed.songTitle === "string") draft.songTitle = parsed.songTitle
+    if (typeof parsed.songDescription === "string") {
+      draft.songDescription = parsed.songDescription.slice(0, SONG_DESCRIPTION_MAX_LENGTH)
+    }
+    if (LANGUAGE_OPTIONS.includes(parsed.selectedLanguage as SongLanguage)) {
+      draft.selectedLanguage = parsed.selectedLanguage as SongLanguage
+    }
+    if (DURATION_OPTIONS.some((option) => option.value === parsed.selectedDuration)) {
+      draft.selectedDuration = parsed.selectedDuration as DurationOption
+    }
+    if (VARIATION_OPTIONS.includes(parsed.variationCount as VariationCount)) {
+      draft.variationCount = parsed.variationCount as VariationCount
+    }
+    if (typeof parsed.bpm === "number" && Number.isFinite(parsed.bpm)) {
+      draft.bpm = Math.min(200, Math.max(60, Math.round(parsed.bpm)))
+    }
+    if (KEY_OPTIONS.includes(parsed.musicKey as MusicKey)) {
+      draft.musicKey = parsed.musicKey as MusicKey
+    }
+    if (parsed.vocalGender === "male" || parsed.vocalGender === "female") {
+      draft.vocalGender = parsed.vocalGender
+    }
+    if (typeof parsed.weirdness === "number") draft.weirdness = clampPercent(parsed.weirdness)
+    if (typeof parsed.styleInfluence === "number") {
+      draft.styleInfluence = clampPercent(parsed.styleInfluence)
+    }
+
+    return draft
+  } catch {
+    return {}
+  }
+}
+
+// Quick win: map a detected track length (seconds) to the nearest duration
+// preset so Remix can auto-fill the duration selector from the reference track.
+function durationOptionFromSeconds(seconds: number): DurationOption {
+  const targets: { value: DurationOption; seconds: number }[] = [
+    { value: "30s", seconds: 30 },
+    { value: "1min", seconds: 60 },
+    { value: "2min", seconds: 120 },
+    { value: "4min", seconds: 240 },
+  ]
+  return targets.reduce((closest, option) =>
+    Math.abs(option.seconds - seconds) < Math.abs(closest.seconds - seconds)
+      ? option
+      : closest,
+  ).value
+}
+
+function parseClockToSeconds(value: string): number | null {
+  const match = /^(\d+):([0-5]?\d)$/.exec(value.trim())
+  if (!match) return null
+  return Number(match[1]) * 60 + Number(match[2])
 }
 
 function makeGeneratedSong({
@@ -479,22 +568,34 @@ function CreatePageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialPrompt = searchParams.get("prompt")?.slice(0, SONG_DESCRIPTION_MAX_LENGTH) ?? ""
+  // Lazily read any persisted draft once, then seed the composer fields from it.
+  const [draft] = useState<Partial<CreateDraft>>(readCreateDraft)
   const [createMode, setCreateMode] = useState<CreateMode>("Simple")
   const [inputTab, setInputTab] = useState<InputTab>("Audio")
   const [lyricsMode, setLyricsMode] = useState<LyricsMode>("write")
-  const [lyrics, setLyrics] = useState("")
-  const [lyricsPrompt, setLyricsPrompt] = useState("")
-  const [songDescription, setSongDescription] = useState(initialPrompt)
-  const [stylePrompt, setStylePrompt] = useState("")
-  const [songTitle, setSongTitle] = useState("")
-  const [selectedLanguage, setSelectedLanguage] = useState<SongLanguage>("Balochi")
-  const [selectedDuration, setSelectedDuration] = useState<DurationOption>("2min")
-  const [variationCount, setVariationCount] = useState<VariationCount>(2)
-  const [bpm, setBpm] = useState(100)
-  const [musicKey, setMusicKey] = useState<MusicKey>("Auto")
-  const [vocalGender, setVocalGender] = useState<VocalGender>("male")
-  const [weirdness, setWeirdness] = useState(50)
-  const [styleInfluence, setStyleInfluence] = useState(50)
+  const [lyrics, setLyrics] = useState(() => draft.lyrics ?? "")
+  const [lyricsPrompt, setLyricsPrompt] = useState(() => draft.lyricsPrompt ?? "")
+  const [songDescription, setSongDescription] = useState(
+    () => initialPrompt || (draft.songDescription ?? ""),
+  )
+  const [stylePrompt, setStylePrompt] = useState(() => draft.stylePrompt ?? "")
+  const [songTitle, setSongTitle] = useState(() => draft.songTitle ?? "")
+  const [selectedLanguage, setSelectedLanguage] = useState<SongLanguage>(
+    () => draft.selectedLanguage ?? "Balochi",
+  )
+  const [selectedDuration, setSelectedDuration] = useState<DurationOption>(
+    () => draft.selectedDuration ?? "2min",
+  )
+  const [variationCount, setVariationCount] = useState<VariationCount>(
+    () => draft.variationCount ?? 2,
+  )
+  const [bpm, setBpm] = useState(() => draft.bpm ?? 100)
+  const [musicKey, setMusicKey] = useState<MusicKey>(() => draft.musicKey ?? "Auto")
+  const [vocalGender, setVocalGender] = useState<VocalGender>(
+    () => draft.vocalGender ?? "male",
+  )
+  const [weirdness, setWeirdness] = useState(() => draft.weirdness ?? 50)
+  const [styleInfluence, setStyleInfluence] = useState(() => draft.styleInfluence ?? 50)
   const [status, setStatus] = useState<StudioStatus>("idle")
   const [progress, setProgress] = useState(0)
   const [generatedSongs, setGeneratedSongs] = useState<GeneratedSong[]>([])
@@ -504,13 +605,15 @@ function CreatePageInner() {
   const [isAudioMenuOpen, setIsAudioMenuOpen] = useState(false)
   const [selectedAudioFile, setSelectedAudioFile] = useState<File | null>(null)
   const [composerNotice, setComposerNotice] = useState("")
-  const [isLyricsOpen, setIsLyricsOpen] = useState(true)
+  const [isLyricsOpen, setIsLyricsOpen] = useState(false)
   const [isLyricsExpanded, setIsLyricsExpanded] = useState(false)
-  const [isStylesOpen, setIsStylesOpen] = useState(true)
-  const [isMoreOptionsOpen, setIsMoreOptionsOpen] = useState(true)
+  const [isWritingLyrics, setIsWritingLyrics] = useState(false)
+  const [isStylesOpen, setIsStylesOpen] = useState(false)
+  const [isMoreOptionsOpen, setIsMoreOptionsOpen] = useState(false)
+  const [referenceUsagePrompt, setReferenceUsagePrompt] = useState("")
+  const [initialReferenceTrackId, setInitialReferenceTrackId] = useState<string | null>(null)
   const [sortLabel, setSortLabel] = useState<"Newest" | "Oldest">("Newest")
   const [toolbarNote, setToolbarNote] = useState("")
-  const [remixTrackId, setRemixTrackId] = useState<string | null>(null)
   const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null)
   const [generationElapsedSeconds, setGenerationElapsedSeconds] = useState(0)
   const [activeGeneration, setActiveGeneration] = useState<PendingGeneration | null>(null)
@@ -529,28 +632,31 @@ function CreatePageInner() {
   const audioMenuRef = useRef<HTMLDivElement>(null)
   const audioInputRef = useRef<HTMLInputElement>(null)
   const lyricsTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const autoWriteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const handleCreateRef = useRef<() => void>(() => {})
   const { playSong, isCurrentSong, isPlaying } = usePlaySong()
   const prefilled = useRef(Boolean(initialPrompt))
   const lastSurprisePromptRef = useRef<string | null>(null)
-  const activeMode = resolveCreatePageMode(searchParams.get("mode"))
-  const currentModeConfig = modeConfig[activeMode]
-  const effectiveCreateMode = currentModeConfig.lockCreateMode
-    ? currentModeConfig.createMode
-    : createMode
-  const effectiveInputTab = currentModeConfig.lockCreateMode
-    ? currentModeConfig.inputTab
-    : inputTab
-  const lyricsDir = RTL_LYRICS_LANGUAGES.has(selectedLanguage) ? "rtl" : "ltr"
+  const refTrackId = searchParams.get("ref")
+  const captureId = searchParams.get("capture")
+  const startParam = searchParams.get("start")
+  const textDir = RTL_LYRICS_LANGUAGES.has(selectedLanguage) ? "rtl" : "ltr"
+  const lyricsDir = textDir
+  const lyricsCharCount = lyrics.length
+  const lyricsWordCount = lyrics.trim() ? lyrics.trim().split(/\s+/).length : 0
   const isSongDescriptionWarning =
     songDescription.length >= SONG_DESCRIPTION_WARNING_LENGTH
   const durationCreditCost = DURATION_CREDIT_COST[selectedDuration]
   const totalCreditCost = durationCreditCost * variationCount
-  const isBpmProminent = hasProminentControl(currentModeConfig.prominentControls, "bpm")
-  const isKeyProminent = hasProminentControl(currentModeConfig.prominentControls, "key")
-  const descriptionFieldLabel =
-    currentModeConfig.topPlaceholder === "track"
-      ? "Remix transformation prompt"
-      : "Song Description"
+  const formState = useMemo<FormState>(
+    () => ({
+      inputSource: inputTab,
+      instrumental: lyricsMode === "instrumental",
+      lyrics,
+    }),
+    [inputTab, lyrics, lyricsMode],
+  )
+  const suggestionTags = useMemo(() => getSuggestions(formState), [formState])
 
   // Prefill song description from dashboard ?prompt= query param (once only)
   useEffect(() => {
@@ -570,18 +676,105 @@ function CreatePageInner() {
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      setCreateMode(currentModeConfig.createMode)
-      setInputTab(currentModeConfig.inputTab)
-      setLyricsMode(currentModeConfig.defaultLyricsMode)
-      setIsLyricsOpen(hasModeSection(currentModeConfig.sectionOrder, "lyrics"))
-      setIsStylesOpen(hasModeSection(currentModeConfig.sectionOrder, "styles"))
-      setIsAudioMenuOpen(false)
-      setComposerNotice("")
-      setPanelNote("")
+      if (refTrackId || captureId) {
+        setCreateMode("Advanced")
+        setInputTab("Inspo")
+        setInitialReferenceTrackId(refTrackId ?? captureId)
+        const reference = MOCK_REFERENCE_TRACKS[refTrackId ?? captureId ?? ""]
+        if (reference) {
+          setToolbarNote(`${reference.title} loaded as reference.`)
+        }
+      }
+
+      if (startParam) {
+        setCreateMode("Advanced")
+
+        switch (startParam) {
+          case "lyrics":
+            setIsLyricsOpen(true)
+            break
+          case "instrument":
+            setIsStylesOpen(true)
+            setLyricsMode("instrumental")
+            break
+          case "inspo":
+            setInputTab("Inspo")
+            break
+          case "voice":
+            setInputTab("Voice")
+            break
+          default:
+            break
+        }
+      }
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
-  }, [currentModeConfig])
+  }, [captureId, refTrackId, startParam])
+
+  useEffect(
+    () => () => {
+      if (autoWriteTimeoutRef.current) {
+        clearTimeout(autoWriteTimeoutRef.current)
+      }
+    },
+    [],
+  )
+
+  // Quick win: persist the composer draft to localStorage whenever it changes.
+  useEffect(() => {
+    const payload: CreateDraft = {
+      lyrics,
+      lyricsPrompt,
+      stylePrompt,
+      songTitle,
+      songDescription,
+      selectedLanguage,
+      selectedDuration,
+      variationCount,
+      bpm,
+      musicKey,
+      vocalGender,
+      weirdness,
+      styleInfluence,
+    }
+    try {
+      window.localStorage.setItem(CREATE_DRAFT_KEY, JSON.stringify(payload))
+    } catch {
+      // Ignore storage failures (private mode, quota, disabled storage).
+    }
+  }, [
+    lyrics,
+    lyricsPrompt,
+    stylePrompt,
+    songTitle,
+    songDescription,
+    selectedLanguage,
+    selectedDuration,
+    variationCount,
+    bpm,
+    musicKey,
+    vocalGender,
+    weirdness,
+    styleInfluence,
+  ])
+
+  // Keep the keyboard shortcut pointed at the latest generate handler.
+  useEffect(() => {
+    handleCreateRef.current = handleCreate
+  })
+
+  // Quick win: ⌘/Ctrl + Enter triggers Generate from anywhere on the page.
+  useEffect(() => {
+    function handleShortcut(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        event.preventDefault()
+        handleCreateRef.current()
+      }
+    }
+    window.addEventListener("keydown", handleShortcut)
+    return () => window.removeEventListener("keydown", handleShortcut)
+  }, [])
 
   useEffect(() => {
     if (!isAudioMenuOpen) return
@@ -740,7 +933,7 @@ function CreatePageInner() {
       musicKey,
       creditsUsed: totalCreditCost,
       variationCount,
-      modeLabel: currentModeConfig.label,
+      modeLabel: createMode === "Simple" ? "Create Song" : "Advanced",
     }
     pendingGenerationRef.current = pendingGeneration
 
@@ -788,14 +981,16 @@ function CreatePageInner() {
       next.delete(songId)
       return next
     })
-    setRemixTrackId((current) => (current === songId ? null : current))
     setToolbarNote(track ? `${track.title} deleted.` : "Track deleted.")
   }
 
   function handleRemixTrack(song: GeneratedSong) {
-    setRemixTrackId(song.id)
+    const seconds = parseClockToSeconds(song.duration)
+    if (seconds != null) {
+      setSelectedDuration(durationOptionFromSeconds(seconds))
+    }
     setToolbarNote(`${song.title} loaded as a remix reference.`)
-    router.push("/create?mode=remix")
+    router.push(`/create?ref=${song.id}`)
   }
 
   function handleTrackDownload(format: TrackDownloadFormat) {
@@ -843,22 +1038,38 @@ function CreatePageInner() {
     setLyrics((prev) => prev + getRandomLyricIdea())
   }
 
-  function handleSurpriseMe() {
-    const prompts = currentModeConfig.surprisePrompts
-    const candidates =
-      prompts.length > 1
-        ? prompts.filter((prompt) => prompt !== lastSurprisePromptRef.current)
-        : prompts
-    const idea = candidates[Math.floor(Math.random() * candidates.length)]
+  // Task 6b: AI lyrics generation. MOCK — simulates an async write then inserts
+  // generated lyrics into the editor. Wire to a real endpoint when available.
+  function handleAutoWriteLyrics() {
+    if (isGenerating || isWritingLyrics) return
 
-    lastSurprisePromptRef.current = idea
-
-    if (currentModeConfig.surpriseTarget === "styles") {
-      setStylePrompt(idea)
-    } else {
-      setSongDescription(idea.slice(0, SONG_DESCRIPTION_MAX_LENGTH))
-      setImportedPrompt(false)
+    if (lyricsMode === "instrumental") {
+      setPanelNote("Switch out of Instrumental to generate lyrics.")
+      return
     }
+
+    setLyricsMode("write")
+    setPanelNote("")
+    setIsWritingLyrics(true)
+
+    if (autoWriteTimeoutRef.current) {
+      clearTimeout(autoWriteTimeoutRef.current)
+    }
+
+    autoWriteTimeoutRef.current = setTimeout(() => {
+      const draft = MOCK_AI_LYRICS[Math.floor(Math.random() * MOCK_AI_LYRICS.length)]
+      setLyrics((prev) => (prev.trim() ? `${prev.trimEnd()}\n\n${draft}` : draft))
+      setIsWritingLyrics(false)
+      setPanelNote("Lyrics generation is a preview — connect the backend to go live.")
+      autoWriteTimeoutRef.current = null
+    }, 1300)
+  }
+
+  function handleSurpriseMe() {
+    const idea = getRandomPrompt(formState, lastSurprisePromptRef.current)
+    lastSurprisePromptRef.current = idea
+    setSongDescription(idea.slice(0, SONG_DESCRIPTION_MAX_LENGTH))
+    setImportedPrompt(false)
   }
 
   function handleSongDescriptionChange(value: string) {
@@ -867,17 +1078,19 @@ function CreatePageInner() {
   }
 
   function appendSuggestionTag(suggestion: string) {
-    if (currentModeConfig.suggestionTarget === "styles") {
-      setStylePrompt((value) => (value ? `${value}, ${suggestion}` : suggestion))
-      setImportedPrompt(false)
-      return
-    }
-
     setSongDescription((value) => {
       const next = value ? `${value}, ${suggestion}` : suggestion
       return next.slice(0, SONG_DESCRIPTION_MAX_LENGTH)
     })
     setImportedPrompt(false)
+  }
+
+  function handleVoiceSampleAccepted() {
+    setComposerNotice("Voice will influence generation when this feature launches.")
+  }
+
+  function handleReferenceAccepted() {
+    setComposerNotice("Reference track saved — it will guide generation when this feature launches.")
   }
 
   function insertLyricsStructureTag(tag: (typeof LYRICS_STRUCTURE_TAGS)[number]) {
@@ -895,10 +1108,11 @@ function CreatePageInner() {
       const before = value.slice(0, start)
       const after = value.slice(end)
       const prefix = before && !before.endsWith("\n") ? "\n" : ""
+      const insertion = `${tag}\n`
       const suffix = after && !after.startsWith("\n") ? "\n" : ""
 
-      nextCursorPosition = before.length + prefix.length + tag.length
-      return `${before}${prefix}${tag}${suffix}${after}`
+      nextCursorPosition = before.length + prefix.length + insertion.length
+      return `${before}${prefix}${insertion}${suffix}${after}`
     })
 
     window.requestAnimationFrame(() => {
@@ -929,23 +1143,14 @@ function CreatePageInner() {
   function handleTopTabClick(tab: InputTab) {
     setInputTab(tab)
     setIsAudioMenuOpen(false)
-
-    if (tab === "Voice") {
-      setSelectedAudioFile(null)
-      setComposerNotice("Voice feature coming soon.")
-    } else if (tab === "Inspo") {
-      setSelectedAudioFile(null)
-      setComposerNotice("Inspiration feature coming soon.")
-    } else {
-      setComposerNotice("")
-    }
+    setComposerNotice("")
   }
 
   function handleBrowseAudio() {
     setInputTab("Audio")
     setIsAudioMenuOpen(false)
     setSelectedAudioFile(null)
-    setComposerNotice("Audio browser coming soon.")
+    setComposerNotice("")
   }
 
   function handleUploadAudioClick() {
@@ -959,7 +1164,7 @@ function CreatePageInner() {
     setInputTab("Audio")
     setIsAudioMenuOpen(false)
     setSelectedAudioFile(null)
-    setComposerNotice("Recording feature coming soon.")
+    setComposerNotice("")
   }
 
   function handleAudioFileChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -1006,14 +1211,10 @@ function CreatePageInner() {
                   <button
                     key={mode}
                     type="button"
-                    onClick={() => {
-                      if (!currentModeConfig.lockCreateMode) {
-                        setCreateMode(mode)
-                      }
-                    }}
-                    aria-pressed={effectiveCreateMode === mode}
+                    onClick={() => setCreateMode(mode)}
+                    aria-pressed={createMode === mode}
                     className={`rounded-full px-3.5 text-sm font-black transition ${
-                      effectiveCreateMode === mode
+                      createMode === mode
                         ? "bg-sand/12 text-sand"
                         : "text-sand/50 hover:text-sand/75"
                     }`}
@@ -1024,10 +1225,11 @@ function CreatePageInner() {
               </div>
             </div>
 
-            {/* Input tabs */}
+            {/* Input tabs — Advanced only */}
+            {createMode === "Advanced" && (
             <div className="relative z-30 mt-4 grid grid-cols-3 overflow-visible rounded-[1.25rem] border border-sand/8 bg-black/18 sm:mt-5 sm:rounded-[1.45rem]">
               {(["Audio", "Voice", "Inspo"] as const).map((tab) => {
-                const isActive = effectiveInputTab === tab
+                const isActive = inputTab === tab
 
                 if (tab === "Audio") {
                   const isAudioActive = isActive || isAudioMenuOpen
@@ -1108,8 +1310,44 @@ function CreatePageInner() {
                 )
               })}
             </div>
+            )}
 
-            {(selectedAudioFile || composerNotice) && (
+            {createMode === "Advanced" && inputTab === "Voice" && (
+              <VoiceInput
+                isGenerating={isGenerating}
+                vocalGender={vocalGender}
+                onSampleAccepted={handleVoiceSampleAccepted}
+                onVocalGenderChange={setVocalGender}
+              />
+            )}
+
+            {createMode === "Advanced" && inputTab === "Inspo" && (
+              <>
+                <TrackInput
+                  generatedTracks={generatedSongs}
+                  initialSelectedTrackId={initialReferenceTrackId}
+                  isGenerating={isGenerating}
+                  onDurationDetected={setSelectedDuration}
+                  onReferenceAccepted={handleReferenceAccepted}
+                />
+                <div className="mt-3 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:rounded-[1.35rem] sm:p-4">
+                  <label htmlFor="reference-usage-prompt" className="text-sm font-black text-sand/82">
+                    How should the AI use this reference?
+                  </label>
+                  <textarea
+                    id="reference-usage-prompt"
+                    value={referenceUsagePrompt}
+                    onChange={(event) => setReferenceUsagePrompt(event.target.value)}
+                    disabled={isGenerating}
+                    rows={2}
+                    placeholder="Use the mood and rhythm, but change the genre to..."
+                    className="mt-3 min-h-16 w-full resize-none bg-transparent text-sm font-semibold leading-6 text-sand outline-none placeholder:text-sand/40 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+              </>
+            )}
+
+            {(selectedAudioFile || composerNotice) && createMode === "Advanced" && inputTab === "Audio" && (
               <div className="mt-3">
                 {selectedAudioFile ? (
                   <div
@@ -1140,16 +1378,17 @@ function CreatePageInner() {
               </div>
             )}
 
-            {currentModeConfig.topPlaceholder === "track" ? (
-              <TrackInput
-                key={remixTrackId ?? "track-input"}
-                generatedTracks={generatedSongs}
-                initialSelectedTrackId={remixTrackId}
-                isGenerating={isGenerating}
-              />
-            ) : currentModeConfig.topPlaceholder ? (
-              <ModePlaceholderPanel type={currentModeConfig.topPlaceholder} />
-            ) : null}
+            {composerNotice && (createMode !== "Advanced" || inputTab !== "Audio" || !selectedAudioFile) && (
+              <div className="mt-3">
+                <p
+                  role="status"
+                  className="inline-flex max-w-full items-center gap-2 rounded-full border border-sand/10 bg-sand/[0.06] px-3 py-1.5 text-xs font-bold text-sand/70"
+                >
+                  <Music2 className="size-3.5 shrink-0 text-saffron" aria-hidden="true" />
+                  {composerNotice}
+                </p>
+              </div>
+            )}
 
             <LanguageSelector
               value={selectedLanguage}
@@ -1157,15 +1396,17 @@ function CreatePageInner() {
             />
 
             {/* Tab content */}
-            {effectiveCreateMode === "Simple" && effectiveInputTab === "Audio" ? (
+            {createMode === "Simple" ? (
               <SongDescriptionPanel
                 id="song-description"
-                label={descriptionFieldLabel}
+                label="Song Description"
                 value={songDescription}
                 importedPrompt={importedPrompt}
                 isGenerating={isGenerating}
                 isWarning={isSongDescriptionWarning}
-                suggestionTags={currentModeConfig.suggestionTags}
+                placeholder="Celebration song with Duholl rhythm and bright chorus..."
+                suggestionTags={suggestionTags}
+                textDir={textDir}
                 onChange={handleSongDescriptionChange}
                 onRandom={handleSurpriseMe}
                 onSuggestionClick={appendSuggestionTag}
@@ -1209,24 +1450,23 @@ function CreatePageInner() {
                   </div>
                 }
               />
-            ) : effectiveInputTab === "Audio" || currentModeConfig.lockCreateMode ? (
+            ) : (
               <>
-                {currentModeConfig.sectionOrder[0] === "description" && (
-                  <SongDescriptionPanel
-                    id="song-description"
-                    label={descriptionFieldLabel}
-                    value={songDescription}
-                    importedPrompt={importedPrompt}
-                    isGenerating={isGenerating}
-                    isWarning={isSongDescriptionWarning}
-                    suggestionTags={currentModeConfig.suggestionTags}
-                    onChange={handleSongDescriptionChange}
-                    onRandom={handleSurpriseMe}
-                    onSuggestionClick={appendSuggestionTag}
-                  />
-                )}
+                <SongDescriptionPanel
+                  id="song-description"
+                  label="Song Description"
+                  value={songDescription}
+                  importedPrompt={importedPrompt}
+                  isGenerating={isGenerating}
+                  isWarning={isSongDescriptionWarning}
+                  placeholder="Celebration song with Duholl rhythm and bright chorus..."
+                  suggestionTags={[]}
+                  textDir={textDir}
+                  onChange={handleSongDescriptionChange}
+                  onRandom={handleSurpriseMe}
+                  onSuggestionClick={appendSuggestionTag}
+                />
 
-                {hasModeSection(currentModeConfig.sectionOrder, "lyrics") && (
                 <div className="mt-4 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-5 sm:rounded-[1.35rem] sm:p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <button
@@ -1274,31 +1514,72 @@ function CreatePageInner() {
                       >
                     {lyricsMode === "write" && (
                       <>
-                        <div className="mb-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                          {LYRICS_STRUCTURE_TAGS.map((tag) => (
-                            <button
-                              key={tag}
-                              type="button"
-                              onClick={() => insertLyricsStructureTag(tag)}
-                              disabled={isGenerating}
-                              className="shrink-0 rounded-full bg-sand/[0.08] px-3 py-1.5 text-xs font-black text-sand/72 transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40"
-                            >
-                              {tag}
-                            </button>
-                          ))}
+                        <div className="mb-3 flex items-center gap-2">
+                          <div className="flex flex-1 gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                            {LYRICS_STRUCTURE_TAGS.map((tag) => (
+                              <button
+                                key={tag}
+                                type="button"
+                                onClick={() => insertLyricsStructureTag(tag)}
+                                disabled={isGenerating}
+                                dir="ltr"
+                                className="shrink-0 rounded-full bg-sand/[0.08] px-3 py-1.5 text-xs font-black text-sand/72 transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40"
+                              >
+                                {tag}
+                              </button>
+                            ))}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleAutoWriteLyrics}
+                            disabled={isGenerating || isWritingLyrics}
+                            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-saffron/30 bg-saffron/10 px-3 py-1.5 text-xs font-black text-saffron transition hover:bg-saffron/16 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                          >
+                            {isWritingLyrics ? (
+                              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                            ) : (
+                              <Sparkles className="size-3.5" aria-hidden="true" />
+                            )}
+                            <span className="hidden sm:inline">
+                              {isWritingLyrics ? "Writing…" : "Write lyrics for me"}
+                            </span>
+                            <span className="sm:hidden">
+                              {isWritingLyrics ? "Writing…" : "Write"}
+                            </span>
+                          </button>
                         </div>
-                        <textarea
-                        ref={lyricsTextareaRef}
-                        value={lyrics}
-                        onChange={(e) => setLyrics(e.target.value)}
-                        dir={lyricsDir}
-                        disabled={isGenerating}
-                        rows={5}
-                        placeholder={"[Verse]\nThis is where you write your rhymes\nor give our Magic Wand a try ↙\nSection [tags] can help instruct your\nsongs to feel more tight and structured"}
-                        className={`min-h-28 flex-1 resize-none bg-transparent text-[var(--text-body)] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32 sm:text-sm ${
-                          lyricsDir === "rtl" ? "text-right" : ""
-                        }`}
-                      />
+                        <div className="relative flex flex-1 flex-col">
+                          <textarea
+                            ref={lyricsTextareaRef}
+                            value={lyrics}
+                            onChange={(e) => setLyrics(e.target.value)}
+                            dir={lyricsDir}
+                            disabled={isGenerating || isWritingLyrics}
+                            rows={5}
+                            placeholder={"[Verse]\nThis is where you write your rhymes\nor give our Magic Wand a try ↙\nSection [tags] can help instruct your\nsongs to feel more tight and structured"}
+                            className={`min-h-28 flex-1 resize-none bg-transparent text-[var(--text-body)] leading-6 text-sand outline-none placeholder:text-sand/45 disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-32 sm:text-sm ${
+                              lyricsDir === "rtl" ? "text-right" : ""
+                            }`}
+                          />
+                          {isWritingLyrics && (
+                            <div
+                              role="status"
+                              className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-black/35 backdrop-blur-[1px]"
+                            >
+                              <span className="inline-flex items-center gap-2 rounded-full border border-saffron/30 bg-[#1a1a1c] px-3 py-1.5 text-xs font-black text-saffron">
+                                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                                Writing lyrics…
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <p
+                          dir="ltr"
+                          className="mt-1.5 text-right text-[11px] font-semibold tabular-nums text-sand/38"
+                        >
+                          {lyricsWordCount} {lyricsWordCount === 1 ? "word" : "words"} ·{" "}
+                          {lyricsCharCount} {lyricsCharCount === 1 ? "character" : "characters"}
+                        </p>
                       </>
                     )}
 
@@ -1326,7 +1607,7 @@ function CreatePageInner() {
                       <div className="flex gap-2">
                         <button
                           type="button"
-                          onClick={() => setPanelNote("Lyrics library controls are coming soon.")}
+                          onClick={() => setPanelNote("Use the Write, Prompt, or Instrumental tabs to shape lyrics.")}
                           className="inline-flex size-10 items-center justify-center rounded-full bg-sand/[0.07] text-sand/58 transition hover:bg-sand/[0.12] hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
                           aria-label="Lyrics settings"
                         >
@@ -1368,26 +1649,8 @@ function CreatePageInner() {
                     </div>
                   )}
                 </div>
-                )}
-
-                {hasModeSection(currentModeConfig.sectionOrder, "description") &&
-                  currentModeConfig.sectionOrder[0] !== "description" && (
-                  <SongDescriptionPanel
-                    id="song-description"
-                    label={descriptionFieldLabel}
-                    value={songDescription}
-                    importedPrompt={importedPrompt}
-                    isGenerating={isGenerating}
-                    isWarning={isSongDescriptionWarning}
-                    suggestionTags={currentModeConfig.suggestionTags}
-                    onChange={handleSongDescriptionChange}
-                    onRandom={handleSurpriseMe}
-                    onSuggestionClick={appendSuggestionTag}
-                  />
-                )}
 
                 {/* Styles section */}
-                {hasModeSection(currentModeConfig.sectionOrder, "styles") && (
                 <div className="mt-3 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-4 sm:rounded-[1.35rem] sm:p-4">
                   <div className="flex items-center gap-2">
                     <button
@@ -1401,7 +1664,7 @@ function CreatePageInner() {
                         className={`size-4 text-sand/70 transition-transform ${isStylesOpen ? "" : "-rotate-90"}`}
                         aria-hidden="true"
                       />
-                      Styles
+                      Styles / instruments
                     </button>
                     {importedPrompt && (
                       <span className="ml-auto text-[var(--text-micro)] font-bold uppercase tracking-wide text-saffron/70">
@@ -1423,7 +1686,7 @@ function CreatePageInner() {
                     <div className="mt-4 flex flex-wrap items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setPanelNote("Style library controls are coming soon.")}
+                        onClick={() => setPanelNote("Use style chips or type your target styles.")}
                         className="inline-flex size-10 items-center justify-center rounded-full bg-sand/[0.07] text-sand/58 transition hover:bg-sand/[0.12] hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
                         aria-label="Style library"
                       >
@@ -1431,29 +1694,16 @@ function CreatePageInner() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          if (currentModeConfig.surpriseTarget === "styles") {
-                            handleSurpriseMe()
-                            return
-                          }
-
+                        onClick={() =>
                           setStylePrompt((value) =>
                             value ? `${value}, Suroz` : "Suroz",
                           )
-                        }}
+                        }
                         disabled={isGenerating}
                         className="inline-flex size-10 items-center justify-center rounded-full bg-saffron text-[#171717] transition hover:bg-[#f09a4f] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
-                        aria-label={
-                          currentModeConfig.surpriseTarget === "styles"
-                            ? "Surprise me"
-                            : "Generate style idea"
-                        }
+                        aria-label="Generate style idea"
                       >
-                        {currentModeConfig.surpriseTarget === "styles" ? (
-                          <Dices className="size-4" aria-hidden="true" />
-                        ) : (
-                          <Wand2 className="size-4" aria-hidden="true" />
-                        )}
+                        <Wand2 className="size-4" aria-hidden="true" />
                       </button>
                       <button
                         type="button"
@@ -1490,20 +1740,11 @@ function CreatePageInner() {
                         )
                       })}
                     </div>
-                    {currentModeConfig.suggestionTarget === "styles" && (
-                      <SuggestionTags
-                        tags={currentModeConfig.suggestionTags}
-                        isGenerating={isGenerating}
-                        onClick={appendSuggestionTag}
-                      />
-                    )}
                     </div>
                   )}
                 </div>
-                )}
 
                 {/* More Options section */}
-                {hasModeSection(currentModeConfig.sectionOrder, "moreOptions") && (
                 <div className="mt-3 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-4 sm:rounded-[1.35rem] sm:p-4">
                   <button
                     type="button"
@@ -1516,52 +1757,88 @@ function CreatePageInner() {
                       className={`size-4 text-sand/70 transition-transform ${isMoreOptionsOpen ? "" : "-rotate-90"}`}
                       aria-hidden="true"
                     />
-                    More Options
+                    More options
                   </button>
 
                   {isMoreOptionsOpen && (
                     <div id="create-more-options-section" className="mt-4 grid gap-2 rounded-2xl bg-black/18 p-2">
-                    <div className="flex min-h-12 items-center gap-3 rounded-xl bg-black/30 px-3">
-                      <div className="flex min-w-0 items-center gap-1.5 text-xs font-black text-sand">
-                        Vocal Gender
-                        <Info className="size-3 text-sand/45" aria-hidden="true" />
-                      </div>
-                      <div className="ml-auto inline-flex rounded-full bg-sand/[0.04] p-1">
-                        {(["male", "female"] as const).map((gender) => (
-                          <button
-                            key={gender}
-                            type="button"
-                            onClick={() => setVocalGender(gender)}
-                            aria-pressed={vocalGender === gender}
-                            className={`rounded-full px-3 py-1.5 text-xs font-black capitalize transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron ${
-                              vocalGender === gender
-                                ? "bg-sand/14 text-sand"
-                                : "text-sand/42 hover:text-sand/72"
-                            }`}
-                          >
-                            {gender}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <ComposerSlider
-                      label="Weirdness"
-                      value={weirdness}
-                      onChange={setWeirdness}
-                    />
-                    <ComposerSlider
-                      label="Style Influence"
-                      value={styleInfluence}
-                      onChange={setStyleInfluence}
-                    />
+                      <VocalGenderControl
+                        value={vocalGender}
+                        disabled={isGenerating}
+                        onChange={setVocalGender}
+                      />
+                      <ComposerSlider
+                        label="Weirdness"
+                        value={weirdness}
+                        onChange={setWeirdness}
+                      />
+                      <ComposerSlider
+                        label="Style Influence"
+                        value={styleInfluence}
+                        onChange={setStyleInfluence}
+                      />
+                      <GenerationSettingsPanel
+                        bpm={bpm}
+                        duration={selectedDuration}
+                        embedded
+                        isGenerating={isGenerating}
+                        musicKey={musicKey}
+                        totalCreditCost={totalCreditCost}
+                        variationCount={variationCount}
+                        onBpmChange={setBpm}
+                        onDurationChange={setSelectedDuration}
+                        onKeyChange={setMusicKey}
+                        onVariationChange={setVariationCount}
+                      />
                     </div>
                   )}
                 </div>
-                )}
 
-                {/* Title and workspace section */}
-                {hasModeSection(currentModeConfig.sectionOrder, "title") && (
+                <div className="mt-4 flex items-center justify-between gap-3 border-b border-sand/8 pb-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLyricsOpen(true)
+                      setLyricsMode("write")
+                    }}
+                    className="inline-flex h-10 items-center gap-2 rounded-full bg-sand/[0.08] px-4 text-sm font-black text-sand transition hover:bg-sand/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+                  >
+                    <Plus className="size-4" aria-hidden="true" />
+                    Lyrics
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLyricsMode((mode) => (mode === "instrumental" ? "write" : "instrumental"))
+                    }
+                    aria-pressed={lyricsMode === "instrumental"}
+                    className={`inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron ${
+                      lyricsMode === "instrumental"
+                        ? "border-saffron/35 bg-saffron/12 text-saffron"
+                        : "border-sand/10 bg-black/10 text-sand/60 hover:text-sand"
+                    }`}
+                  >
+                    <span
+                      className={`size-4 rounded-full border ${
+                        lyricsMode === "instrumental"
+                          ? "border-saffron bg-saffron shadow-[inset_0_0_0_3px_#171717]"
+                          : "border-sand/18 bg-sand/[0.05]"
+                      }`}
+                      aria-hidden="true"
+                    />
+                    Instrumental
+                  </button>
+                </div>
+
+                <div className="mt-3 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-4 sm:rounded-[1.35rem] sm:p-4">
+                  <SuggestionTags
+                    tags={suggestionTags}
+                    isGenerating={isGenerating}
+                    onClick={appendSuggestionTag}
+                  />
+                </div>
+
                 <div className="mt-3 overflow-hidden rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] sm:mt-4 sm:rounded-[1.35rem]">
                   <label className="flex h-14 items-center gap-3 px-4">
                     <Music2 className="size-4 shrink-0 text-sand/72" aria-hidden="true" />
@@ -1581,37 +1858,18 @@ function CreatePageInner() {
                     <span className="text-sm font-black text-sand">Save to...</span>
                     <button
                       type="button"
-                      onClick={() => setComposerNotice("Workspace selection coming soon.")}
+                      onClick={() => setComposerNotice("Tracks will save to My Workspace.")}
                       className="ml-auto rounded-full bg-sand/[0.08] px-4 py-2 text-xs font-black text-sand transition hover:bg-sand/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
                     >
                       My Workspace
                     </button>
                   </div>
                 </div>
-                )}
               </>
-            ) : (
-              <ModePlaceholderPanel type={effectiveInputTab === "Voice" ? "voice" : "track"} />
             )}
 
-            <GenerationSettingsPanel
-              key={activeMode}
-              bpm={bpm}
-              duration={selectedDuration}
-              isBpmProminent={isBpmProminent}
-              isGenerating={isGenerating}
-              isKeyProminent={isKeyProminent}
-              musicKey={musicKey}
-              totalCreditCost={totalCreditCost}
-              variationCount={variationCount}
-              onBpmChange={setBpm}
-              onDurationChange={setSelectedDuration}
-              onKeyChange={setMusicKey}
-              onVariationChange={setVariationCount}
-            />
-
             {/* Bottom: progress + create */}
-            <div className="fixed bottom-[calc(var(--app-mobile-tab-bar-height)+0.75rem)] left-3 right-3 z-50 rounded-2xl border border-sand/10 bg-[#181818]/96 p-2 shadow-[0_18px_48px_rgba(0,0,0,0.38)] backdrop-blur-xl lg:static lg:mx-0 lg:mt-auto lg:border-0 lg:bg-transparent lg:p-0 lg:pt-5 lg:shadow-none lg:backdrop-blur-none">
+            <div className="sticky bottom-[calc(var(--app-mobile-tab-bar-height)+0.75rem)] z-40 rounded-2xl border border-sand/10 bg-[#181818]/96 p-2 shadow-[0_18px_48px_rgba(0,0,0,0.38)] backdrop-blur-xl lg:bottom-0 lg:mx-0 lg:mt-auto lg:border-0 lg:bg-transparent lg:p-0 lg:pt-5 lg:shadow-none lg:backdrop-blur-none">
               <GenerationProgress
                 status={status}
                 progress={progress}
@@ -1624,7 +1882,7 @@ function CreatePageInner() {
               </p>
 
               <div className="mt-2 flex items-center gap-2 sm:gap-3">
-                {effectiveCreateMode === "Advanced" && (
+                {createMode === "Advanced" && (
                   <button
                     type="button"
                     onClick={() => {
@@ -1644,7 +1902,6 @@ function CreatePageInner() {
                       setImportedPrompt(false)
                       setComposerNotice("")
                       setSelectedAudioFile(null)
-                      setRemixTrackId(null)
                       if (audioInputRef.current) {
                         audioInputRef.current.value = ""
                       }
@@ -1699,7 +1956,7 @@ function CreatePageInner() {
 
               <button
                 type="button"
-                onClick={() => setToolbarNote("Filters coming soon.")}
+                onClick={() => setToolbarNote("Filters are inactive for local mock tracks.")}
                 className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-sand/[0.08] px-4 text-sm font-black text-sand transition hover:bg-sand/[0.12] sm:h-12 sm:flex-none"
               >
                 <Filter className="size-4" aria-hidden="true" />
@@ -1720,7 +1977,7 @@ function CreatePageInner() {
                 <button
                   key={chip}
                   type="button"
-                  onClick={() => setToolbarNote(`${chip} filter coming soon.`)}
+                  onClick={() => setToolbarNote(`${chip} filter is inactive for local mock tracks.`)}
                   className="h-11 flex-1 rounded-full border border-sand/10 px-3 text-sm font-black text-sand transition hover:border-saffron/28 sm:h-12 sm:flex-none sm:px-4"
                 >
                   {chip}
@@ -1926,18 +2183,27 @@ function GeneratedTrackCard({
   return (
     <article className="group rounded-2xl border border-sand/8 bg-sand/[0.045] p-3 transition hover:border-saffron/20 hover:bg-sand/[0.065]">
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onPlay}
-          aria-label={`${playing ? "Pause" : "Play"} ${song.title}`}
-          className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-saffron text-[#151515] shadow-[0_10px_24px_rgba(227,122,44,0.18)] transition hover:bg-[#f09a4f]"
+        <span
+          className="relative size-12 shrink-0 overflow-hidden rounded-xl shadow-[0_10px_24px_rgba(0,0,0,0.25)]"
+          style={{ backgroundImage: coverGradient(song.id) }}
         >
-          {playing ? (
-            <Pause className="size-5 fill-current" aria-hidden="true" />
-          ) : (
-            <Play className="ml-0.5 size-5 fill-current" aria-hidden="true" />
-          )}
-        </button>
+          <span
+            className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent"
+            aria-hidden="true"
+          />
+          <button
+            type="button"
+            onClick={onPlay}
+            aria-label={`${playing ? "Pause" : "Play"} ${song.title}`}
+            className="absolute inset-0 flex items-center justify-center text-white transition hover:bg-black/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron"
+          >
+            {playing ? (
+              <Pause className="size-5 fill-current" aria-hidden="true" />
+            ) : (
+              <Play className="ml-0.5 size-5 fill-current" aria-hidden="true" />
+            )}
+          </button>
+        </span>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -2323,6 +2589,43 @@ function ComposerSlider({
   )
 }
 
+function VocalGenderControl({
+  disabled = false,
+  onChange,
+  value,
+}: {
+  disabled?: boolean
+  onChange: (gender: VocalGender) => void
+  value: VocalGender
+}) {
+  return (
+    <div className="flex min-h-12 items-center gap-3 rounded-xl bg-black/30 px-3">
+      <div className="flex min-w-0 items-center gap-1.5 text-xs font-black text-sand">
+        Vocal Gender
+        <Info className="size-3 text-sand/45" aria-hidden="true" />
+      </div>
+      <div className="ml-auto inline-flex rounded-full bg-sand/[0.04] p-1">
+        {(["male", "female"] as const).map((gender) => (
+          <button
+            key={gender}
+            type="button"
+            onClick={() => onChange(gender)}
+            disabled={disabled}
+            aria-pressed={value === gender}
+            className={`rounded-full px-3 py-1.5 text-xs font-black capitalize transition disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron ${
+              value === gender
+                ? "bg-sand/14 text-sand"
+                : "text-sand/42 hover:text-sand/72"
+            }`}
+          >
+            {gender}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function CreateAudioOptionsMenu({
   onBrowse,
   onUpload,
@@ -2374,10 +2677,14 @@ function TrackInput({
   generatedTracks,
   initialSelectedTrackId,
   isGenerating,
+  onDurationDetected,
+  onReferenceAccepted,
 }: {
   generatedTracks: GeneratedSong[]
   initialSelectedTrackId: string | null
   isGenerating: boolean
+  onDurationDetected?: (option: DurationOption) => void
+  onReferenceAccepted?: () => void
 }) {
   const [activeTab, setActiveTab] = useState<TrackInputTab>(
     initialSelectedTrackId ? "workspace" : "upload",
@@ -2385,9 +2692,19 @@ function TrackInput({
   const [selectedUpload, setSelectedUpload] = useState<File | null>(null)
   const [selectedWorkspaceTrackId, setSelectedWorkspaceTrackId] =
     useState<string | null>(initialSelectedTrackId)
+  const [externalReferenceId, setExternalReferenceId] = useState<string | null>(
+    initialSelectedTrackId &&
+      !generatedTracks.some((track) => track.id === initialSelectedTrackId) &&
+      MOCK_REFERENCE_TRACKS[initialSelectedTrackId]
+      ? initialSelectedTrackId
+      : null,
+  )
   const [playingReferenceId, setPlayingReferenceId] = useState<string | null>(null)
   const [fileError, setFileError] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const externalReference = externalReferenceId
+    ? MOCK_REFERENCE_TRACKS[externalReferenceId]
+    : null
   const selectedWorkspaceTrack =
     generatedTracks.find((track) => track.id === selectedWorkspaceTrackId) ?? null
   const selectedReference = selectedUpload
@@ -2408,7 +2725,16 @@ function TrackInput({
           sourceLabel: "Workspace track",
           title: selectedWorkspaceTrack.title,
         }
-      : null
+      : externalReference
+        ? {
+            detail: "Reference | Loaded from link",
+            duration: externalReference.duration,
+            id: `external-${externalReferenceId}`,
+            removable: false,
+            sourceLabel: "Reference track",
+            title: externalReference.title,
+          }
+        : null
 
   function togglePlaying(referenceId: string) {
     setPlayingReferenceId((current) =>
@@ -2447,7 +2773,25 @@ function TrackInput({
     setFileError("")
     setSelectedUpload(file)
     setSelectedWorkspaceTrackId(null)
+    setExternalReferenceId(null)
     setPlayingReferenceId(null)
+    onReferenceAccepted?.()
+
+    // Quick win: probe the uploaded file's length and auto-fill the duration
+    // selector with the nearest preset (the user can still override it).
+    if (onDurationDetected) {
+      const probeUrl = URL.createObjectURL(file)
+      const probe = new Audio()
+      probe.preload = "metadata"
+      probe.onloadedmetadata = () => {
+        if (Number.isFinite(probe.duration) && probe.duration > 0) {
+          onDurationDetected(durationOptionFromSeconds(probe.duration))
+        }
+        URL.revokeObjectURL(probeUrl)
+      }
+      probe.onerror = () => URL.revokeObjectURL(probeUrl)
+      probe.src = probeUrl
+    }
   }
 
   function handleRemoveUpload() {
@@ -2460,9 +2804,18 @@ function TrackInput({
   function handleSelectWorkspaceTrack(trackId: string) {
     setSelectedWorkspaceTrackId(trackId)
     setSelectedUpload(null)
+    setExternalReferenceId(null)
     setFileError("")
     setPlayingReferenceId(null)
     clearFileInput()
+    onReferenceAccepted?.()
+
+    // Quick win: auto-fill the duration selector from the chosen track length.
+    const track = generatedTracks.find((item) => item.id === trackId)
+    const seconds = track ? parseClockToSeconds(track.duration) : null
+    if (seconds != null) {
+      onDurationDetected?.(durationOptionFromSeconds(seconds))
+    }
   }
 
   return (
@@ -2490,7 +2843,7 @@ function TrackInput({
                 : "text-sand/50 hover:text-sand/75"
             }`}
           >
-            {tab === "upload" ? "Upload" : "From workspace"}
+            {tab === "upload" ? "Upload" : "My Studio"}
           </button>
         ))}
       </div>
@@ -2646,21 +2999,409 @@ function TrackInputWaveform() {
   )
 }
 
-function ModePlaceholderPanel({ type }: { type: ModePlaceholder }) {
-  const Icon = type === "voice" ? Mic2 : Upload
-  const title = type === "voice" ? "Voice style" : "Track reference"
-  const description =
-    type === "voice"
-      ? "Voice controls are coming soon."
-      : "Track controls are coming soon."
+function formatClock(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`
+}
+
+// Task 4: Voice Style input. Upload / Record (MediaRecorder) / Library tabs.
+// Self-contained UI; the captured audio lives in component state for V1 and can
+// be wired into the generation request when the backend is ready.
+function VoiceInput({
+  isGenerating,
+  onSampleAccepted,
+  vocalGender,
+  onVocalGenderChange,
+}: {
+  isGenerating: boolean
+  onSampleAccepted?: () => void
+  vocalGender: VocalGender
+  onVocalGenderChange: (gender: VocalGender) => void
+}) {
+  const [activeTab, setActiveTab] = useState<VoiceInputTab>("upload")
+  const [selectedUpload, setSelectedUpload] = useState<File | null>(null)
+  const [uploadUrl, setUploadUrl] = useState<string | null>(null)
+  const [fileError, setFileError] = useState("")
+  const [recordState, setRecordState] = useState<"idle" | "recording" | "recorded">("idle")
+  const [recordSeconds, setRecordSeconds] = useState(0)
+  const [recordedUrl, setRecordedUrl] = useState<string | null>(null)
+  const [recordError, setRecordError] = useState("")
+  const [isPreviewPlaying, setIsPreviewPlaying] = useState(false)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const uploadUrlRef = useRef<string | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const mediaStreamRef = useRef<MediaStream | null>(null)
+  const chunksRef = useRef<Blob[]>([])
+  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const recordSecondsRef = useRef(0)
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null)
+
+  const source: "upload" | "record" | null = selectedUpload
+    ? "upload"
+    : recordState === "recorded"
+      ? "record"
+      : null
+  const previewUrl = source === "upload" ? uploadUrl : recordedUrl
+  const sourceLabel = source === "upload" ? "Uploaded voice" : "Recorded voice"
+  const sourceDetail =
+    source === "upload" && selectedUpload
+      ? formatFileSize(selectedUpload.size)
+      : `${formatClock(recordSeconds)} captured`
+  const sourceTitle =
+    source === "upload" && selectedUpload ? selectedUpload.name : "Voice take"
+
+  // Revoke the recorded blob URL when it changes or the component unmounts.
+  useEffect(() => {
+    if (!recordedUrl) return
+    return () => URL.revokeObjectURL(recordedUrl)
+  }, [recordedUrl])
+
+  // Stop any in-flight recording / mic stream / timer and revoke the upload URL
+  // on unmount.
+  useEffect(
+    () => () => {
+      if (recordTimerRef.current) clearInterval(recordTimerRef.current)
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop())
+      const recorder = mediaRecorderRef.current
+      if (recorder && recorder.state !== "inactive") recorder.stop()
+      if (uploadUrlRef.current) URL.revokeObjectURL(uploadUrlRef.current)
+    },
+    [],
+  )
+
+  function clearFileInput() {
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
+  function clearUploadUrl() {
+    if (uploadUrlRef.current) {
+      URL.revokeObjectURL(uploadUrlRef.current)
+      uploadUrlRef.current = null
+    }
+    setUploadUrl(null)
+  }
+
+  function stopRecording() {
+    if (recordTimerRef.current) {
+      clearInterval(recordTimerRef.current)
+      recordTimerRef.current = null
+    }
+    const recorder = mediaRecorderRef.current
+    if (recorder && recorder.state !== "inactive") recorder.stop()
+    mediaRecorderRef.current = null
+  }
+
+  async function startRecording() {
+    setRecordError("")
+
+    if (
+      typeof navigator === "undefined" ||
+      !navigator.mediaDevices?.getUserMedia ||
+      typeof MediaRecorder === "undefined"
+    ) {
+      setRecordError("Recording isn't supported in this browser.")
+      return
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      mediaStreamRef.current = stream
+      const recorder = new MediaRecorder(stream)
+      chunksRef.current = []
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunksRef.current.push(event.data)
+      }
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, {
+          type: recorder.mimeType || "audio/webm",
+        })
+        setRecordedUrl(URL.createObjectURL(blob))
+        setRecordState("recorded")
+        setIsPreviewPlaying(false)
+        onSampleAccepted?.()
+        stream.getTracks().forEach((track) => track.stop())
+        mediaStreamRef.current = null
+      }
+
+      mediaRecorderRef.current = recorder
+      setSelectedUpload(null)
+      clearUploadUrl()
+      clearFileInput()
+      recorder.start()
+      setRecordState("recording")
+      recordSecondsRef.current = 0
+      setRecordSeconds(0)
+      recordTimerRef.current = setInterval(() => {
+        recordSecondsRef.current += 1
+        setRecordSeconds(recordSecondsRef.current)
+        if (recordSecondsRef.current >= VOICE_INPUT_MAX_RECORD_SECONDS) {
+          stopRecording()
+        }
+      }, 1000)
+    } catch {
+      setRecordError("Microphone access was blocked. Allow mic permissions to record.")
+    }
+  }
+
+  function handleUploadChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? ""
+
+    if (!VOICE_INPUT_ALLOWED_EXTENSIONS.has(extension)) {
+      setFileError("Use an MP3, WAV, M4A, or OGG file.")
+      setSelectedUpload(null)
+      clearUploadUrl()
+      clearFileInput()
+      return
+    }
+    if (file.size > VOICE_INPUT_MAX_SIZE_BYTES) {
+      setFileError(
+        `Choose a file under ${VOICE_INPUT_MAX_SIZE_LABEL}. This file is ${formatFileSize(file.size)}.`,
+      )
+      setSelectedUpload(null)
+      clearUploadUrl()
+      clearFileInput()
+      return
+    }
+
+    clearUploadUrl()
+    const url = URL.createObjectURL(file)
+    uploadUrlRef.current = url
+    setUploadUrl(url)
+    setFileError("")
+    setSelectedUpload(file)
+    setRecordState("idle")
+    setRecordedUrl(null)
+    setIsPreviewPlaying(false)
+    onSampleAccepted?.()
+  }
+
+  function handleChangeVoice() {
+    setSelectedUpload(null)
+    clearUploadUrl()
+    setRecordState("idle")
+    setRecordedUrl(null)
+    recordSecondsRef.current = 0
+    setRecordSeconds(0)
+    setFileError("")
+    setIsPreviewPlaying(false)
+    clearFileInput()
+  }
+
+  function togglePreview() {
+    const audio = previewAudioRef.current
+    if (!audio) return
+    if (audio.paused) {
+      void audio.play().catch(() => setIsPreviewPlaying(false))
+      setIsPreviewPlaying(true)
+    } else {
+      audio.pause()
+      setIsPreviewPlaying(false)
+    }
+  }
+
+  const isRecording = recordState === "recording"
+  const tooShort = recordSeconds > 0 && recordSeconds < VOICE_INPUT_MIN_RECORD_SECONDS
 
   return (
-    <div className="mt-4 flex min-h-[140px] items-center justify-center rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-5 text-center sm:mt-5 sm:rounded-[1.35rem] sm:p-6">
-      <div>
-        <Icon className="mx-auto size-10 text-saffron/50" aria-hidden="true" />
-        <p className="mt-4 text-sm font-black text-sand/72">{title}</p>
-        <p className="mt-2 text-sm font-semibold text-sand/55">{description}</p>
+    <div className="mt-4 rounded-[1.35rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-5 sm:p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <Mic2 className="size-4 shrink-0 text-saffron" aria-hidden="true" />
+          <span className="text-sm font-black text-sand/82">Voice style</span>
+        </div>
+        <span className="ml-auto text-[var(--text-micro)] font-black uppercase tracking-[0.12em] text-sand/42">
+          Max {VOICE_INPUT_MAX_SIZE_LABEL} | {VOICE_INPUT_MIN_RECORD_SECONDS}–{VOICE_INPUT_MAX_DURATION_LABEL}
+        </span>
       </div>
+
+      <div className="mt-4 grid grid-cols-3 rounded-full border border-sand/8 bg-black/18 p-1">
+        {(["upload", "record", "library"] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            aria-pressed={activeTab === tab}
+            className={`h-9 rounded-full text-sm font-black capitalize transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron ${
+              activeTab === tab
+                ? "bg-sand/12 text-sand"
+                : "text-sand/50 hover:text-sand/75"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "upload" && (
+        <div className="mt-3">
+          <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-sand/14 bg-black/18 px-4 py-5 text-center transition hover:border-saffron/35 hover:bg-saffron/[0.045]">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={VOICE_INPUT_ACCEPT}
+              disabled={isGenerating}
+              className="sr-only"
+              onChange={handleUploadChange}
+            />
+            <span className="inline-flex size-11 items-center justify-center rounded-full bg-saffron/12 text-saffron">
+              <Upload className="size-5" aria-hidden="true" />
+            </span>
+            <span className="mt-3 text-sm font-black text-sand">Upload voice sample</span>
+            <span className="mt-1 text-xs font-semibold text-sand/45">
+              MP3, WAV, M4A, or OGG · up to 60s
+            </span>
+          </label>
+          {fileError && (
+            <p role="alert" className="mt-2 rounded-lg border border-saffron/25 bg-saffron/10 px-3 py-1.5 text-xs font-semibold text-saffron">
+              {fileError}
+            </p>
+          )}
+        </div>
+      )}
+
+      {activeTab === "record" && (
+        <div className="mt-3 rounded-2xl border border-sand/8 bg-black/18 px-4 py-5 text-center">
+          <button
+            type="button"
+            onClick={isRecording ? stopRecording : startRecording}
+            disabled={isGenerating}
+            aria-pressed={isRecording}
+            className={`inline-flex size-14 items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron disabled:opacity-40 ${
+              isRecording
+                ? "bg-saffron text-[#171717] shadow-[0_0_0_6px_rgba(227,122,44,0.18)] animate-pulse"
+                : "bg-saffron/12 text-saffron hover:bg-saffron hover:text-[#171717]"
+            }`}
+          >
+            {isRecording ? (
+              <Square className="size-5 fill-current" aria-hidden="true" />
+            ) : (
+              <Mic2 className="size-6" aria-hidden="true" />
+            )}
+          </button>
+          <p className="mt-3 text-sm font-black text-sand">
+            {isRecording ? "Recording… tap to stop" : "Click to start recording"}
+          </p>
+          <p className="mt-1 text-xs font-bold tabular-nums text-sand/55">
+            {formatClock(recordSeconds)} / {formatClock(VOICE_INPUT_MAX_RECORD_SECONDS)}
+          </p>
+          {isRecording && (
+            <div className="mt-3 flex h-8 items-end justify-center gap-1" aria-hidden="true">
+              {Array.from({ length: 22 }, (_, index) => (
+                <span
+                  key={index}
+                  className="w-1 rounded-full bg-saffron/70 animate-pulse"
+                  style={{
+                    height: `${8 + ((index * 7 + recordSeconds * 5) % 24)}px`,
+                    animationDelay: `${index * 60}ms`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          {tooShort && recordState === "recorded" && (
+            <p className="mt-2 text-xs font-semibold text-saffron">
+              Aim for at least {VOICE_INPUT_MIN_RECORD_SECONDS}s for a usable voice sample.
+            </p>
+          )}
+          {recordError && (
+            <p role="alert" className="mt-2 rounded-lg border border-saffron/25 bg-saffron/10 px-3 py-1.5 text-xs font-semibold text-saffron">
+              {recordError}
+            </p>
+          )}
+        </div>
+      )}
+
+      {activeTab === "library" && (
+        <div className="mt-3 rounded-2xl border border-sand/8 bg-black/18 px-4 py-8 text-center">
+          <Mic2 className="mx-auto size-8 text-saffron/45" aria-hidden="true" />
+          <p className="mt-3 text-sm font-black text-sand/72">No voices saved yet</p>
+          <p className="mt-1 text-xs font-semibold text-sand/45">
+            Saved voice personas will appear here.
+          </p>
+        </div>
+      )}
+
+      {source && previewUrl && (
+        <div className="mt-3 rounded-2xl border border-saffron/24 bg-saffron/[0.065] p-3">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={togglePreview}
+              disabled={isGenerating}
+              aria-label={`${isPreviewPlaying ? "Pause" : "Play"} ${sourceTitle}`}
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-saffron text-[#171717] transition hover:bg-[#f09a4f] disabled:opacity-45"
+            >
+              {isPreviewPlaying ? (
+                <Pause className="size-4 fill-current" aria-hidden="true" />
+              ) : (
+                <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
+              )}
+            </button>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-saffron/24 bg-black/16 px-2 py-0.5 text-[var(--text-micro)] font-black uppercase tracking-[0.12em] text-saffron">
+                  {sourceLabel}
+                </span>
+                <span className="text-xs font-bold text-sand/48">{sourceDetail}</span>
+              </div>
+              <p className="mt-1 truncate text-sm font-black text-sand">{sourceTitle}</p>
+              <p className="mt-0.5 text-xs font-semibold text-emerald-300/80">
+                Voice style applied
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleChangeVoice}
+              disabled={isGenerating}
+              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-sand/[0.08] px-3 text-xs font-black text-sand/70 transition hover:bg-sand/[0.14] hover:text-sand disabled:opacity-40"
+            >
+              <RefreshCw className="size-3.5" aria-hidden="true" />
+              Change
+            </button>
+          </div>
+          <TrackInputWaveform />
+
+          <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-saffron/15 pt-3">
+            <span className="text-xs font-black text-sand/72">Voice type</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-sand/35">
+              auto-detect preview · override
+            </span>
+            <div className="ml-auto inline-flex rounded-full bg-black/24 p-1">
+              {(["male", "female"] as const).map((gender) => (
+                <button
+                  key={gender}
+                  type="button"
+                  onClick={() => onVocalGenderChange(gender)}
+                  disabled={isGenerating}
+                  aria-pressed={vocalGender === gender}
+                  className={`rounded-full px-3 py-1 text-xs font-black capitalize transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron disabled:opacity-40 ${
+                    vocalGender === gender
+                      ? "bg-saffron text-[#171717]"
+                      : "text-sand/55 hover:text-sand"
+                  }`}
+                >
+                  {gender}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <audio
+            ref={previewAudioRef}
+            src={previewUrl}
+            onEnded={() => setIsPreviewPlaying(false)}
+            className="hidden"
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -2689,7 +3430,7 @@ function LanguageSelector({
                   : "bg-black/10 text-sand/50 hover:text-sand/75"
               }`}
             >
-              {language}
+              {LANGUAGE_LABELS[language]}
             </button>
           ))}
         </div>
@@ -2708,7 +3449,9 @@ function SongDescriptionPanel({
   onChange,
   onRandom,
   onSuggestionClick,
+  placeholder,
   suggestionTags,
+  textDir = "ltr",
   value,
 }: {
   actions?: ReactNode
@@ -2720,7 +3463,9 @@ function SongDescriptionPanel({
   onChange: (value: string) => void
   onRandom: () => void
   onSuggestionClick: (suggestion: string) => void
+  placeholder: string
   suggestionTags: readonly string[]
+  textDir?: "ltr" | "rtl"
   value: string
 }) {
   return (
@@ -2745,13 +3490,20 @@ function SongDescriptionPanel({
             rows={3}
             maxLength={SONG_DESCRIPTION_MAX_LENGTH}
             aria-describedby={`${id}-counter`}
-            placeholder="Jazzy pop song about being invisible"
-            className="mt-3 min-h-16 w-full resize-none bg-transparent text-base font-semibold leading-6 text-sand outline-none placeholder:text-sand/40 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-20"
+            dir={textDir}
+            placeholder={placeholder}
+            className={`mt-3 min-h-16 w-full resize-none bg-transparent text-base font-semibold leading-6 text-sand outline-none placeholder:text-sand/40 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-20 ${
+              textDir === "rtl" ? "text-right" : ""
+            }`}
           />
           <p
             id={`${id}-counter`}
             className={`mt-1 text-right text-xs font-black tabular-nums ${
-              isWarning ? "text-saffron" : "text-sand/42"
+              value.length >= SONG_DESCRIPTION_MAX_LENGTH
+                ? "text-[#ff9585]"
+                : isWarning
+                  ? "text-saffron"
+                  : "text-sand/42"
             }`}
           >
             {value.length} / {SONG_DESCRIPTION_MAX_LENGTH}
@@ -2771,11 +3523,13 @@ function SongDescriptionPanel({
 
       {actions}
 
-      <SuggestionTags
-        tags={suggestionTags}
-        isGenerating={isGenerating}
-        onClick={onSuggestionClick}
-      />
+      {suggestionTags.length > 0 && (
+        <SuggestionTags
+          tags={suggestionTags}
+          isGenerating={isGenerating}
+          onClick={onSuggestionClick}
+        />
+      )}
     </div>
   )
 }
@@ -2812,9 +3566,8 @@ function SuggestionTags({
 function GenerationSettingsPanel({
   bpm,
   duration,
-  isBpmProminent,
+  embedded = false,
   isGenerating,
-  isKeyProminent,
   musicKey,
   onBpmChange,
   onDurationChange,
@@ -2825,9 +3578,8 @@ function GenerationSettingsPanel({
 }: {
   bpm: number
   duration: DurationOption
-  isBpmProminent: boolean
+  embedded?: boolean
   isGenerating: boolean
-  isKeyProminent: boolean
   musicKey: MusicKey
   onBpmChange: (value: number) => void
   onDurationChange: (value: DurationOption) => void
@@ -2836,19 +3588,43 @@ function GenerationSettingsPanel({
   totalCreditCost: number
   variationCount: VariationCount
 }) {
-  const isTuningProminent = isBpmProminent || isKeyProminent
-  const [isTuningOpen, setIsTuningOpen] = useState(isTuningProminent)
+  const [isTuningOpen, setIsTuningOpen] = useState(false)
+  const tapTimesRef = useRef<number[]>([])
+
+  // Task 3b: tap-tempo — average the gaps between recent taps to derive BPM.
+  function handleTapTempo() {
+    if (isGenerating) return
+    const now = performance.now()
+    const times = tapTimesRef.current
+    if (times.length > 0 && now - times[times.length - 1] > 2000) {
+      times.length = 0
+    }
+    times.push(now)
+    if (times.length > 5) times.shift()
+    if (times.length >= 2) {
+      let total = 0
+      for (let index = 1; index < times.length; index += 1) {
+        total += times[index] - times[index - 1]
+      }
+      const average = total / (times.length - 1)
+      if (average > 0) {
+        onBpmChange(Math.min(200, Math.max(60, Math.round(60000 / average))))
+      }
+    }
+  }
 
   return (
-    <div className="mt-3 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-4 sm:rounded-[1.35rem] sm:p-4">
+    <div className={embedded ? "grid gap-3" : "mt-3 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-4 sm:rounded-[1.35rem] sm:p-4"}>
+      {!embedded && (
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-black text-sand">Generation</span>
         <span className="ml-auto rounded-full border border-saffron/20 bg-saffron/8 px-2.5 py-1 text-xs font-black text-saffron">
           {totalCreditCost} credits
         </span>
       </div>
+      )}
 
-      <div className="mt-4 grid gap-3">
+      <div className={embedded ? "grid gap-3" : "mt-4 grid gap-3"}>
         <OptionPillGroup
           label="Duration"
           options={DURATION_OPTIONS.map((option) => ({
@@ -2883,13 +3659,18 @@ function GenerationSettingsPanel({
         </summary>
 
         <div className="mt-3 grid gap-3">
-          <div
-            className={`rounded-xl bg-black/30 p-3 ${
-              isBpmProminent ? "ring-1 ring-saffron/25" : ""
-            }`}
-          >
+          <div className="rounded-xl bg-black/30 p-3">
             <div className="flex items-center gap-2">
               <span className="text-xs font-black text-sand">BPM</span>
+              <button
+                type="button"
+                onClick={handleTapTempo}
+                disabled={isGenerating}
+                aria-label="Tap tempo"
+                className="rounded-full bg-sand/[0.08] px-2.5 py-1 text-[11px] font-black text-sand/70 transition hover:bg-saffron hover:text-[#171717] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+              >
+                Tap
+              </button>
               <span className="ml-auto text-xs font-black tabular-nums text-saffron">
                 {bpm}
               </span>
@@ -2924,11 +3705,7 @@ function GenerationSettingsPanel({
             </div>
           </div>
 
-          <div
-            className={`rounded-xl bg-black/30 p-3 ${
-              isKeyProminent ? "ring-1 ring-saffron/25" : ""
-            }`}
-          >
+          <div className="rounded-xl bg-black/30 p-3">
             <span className="text-xs font-black text-sand">Key</span>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {KEY_OPTIONS.map((keyOption) => (
