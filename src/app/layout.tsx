@@ -30,6 +30,7 @@ export default function RootLayout({
     <html
       lang="en"
       dir="ltr"
+      data-scroll-behavior="smooth"
       className={`${displayFont.variable} ${bodyFont.variable}`}
     >
       <body>

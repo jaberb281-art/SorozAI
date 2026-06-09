@@ -54,7 +54,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {showMobileAppNavbar && <MobileAppNavbar />}
 
             {/* Main scrollable area; the shell owns fixed-nav safe-area spacing. */}
-            <main className={`main-content flex min-h-dvh w-full min-w-0 flex-col pb-[var(--app-bottom-safe-area)] transition-[margin-left,padding-bottom] duration-200 lg:ms-[var(--app-sidebar-width,248px)] lg:w-auto lg:flex-1 lg:pb-0 lg:pt-0 ${showMobileAppNavbar ? "pt-14" : "pt-0"}`}>
+            <main className={`main-content flex min-h-dvh w-full min-w-0 flex-col pb-[var(--app-bottom-safe-area)] transition-[margin-left,padding-bottom] duration-200 lg:ms-[var(--app-sidebar-width,248px)] lg:w-auto lg:flex-1 lg:pb-[var(--app-desktop-bottom-safe-area)] lg:pt-0 ${showMobileAppNavbar ? "pt-14" : "pt-0"}`}>
                 <div className="flex-1">
                     {children}
                 </div>

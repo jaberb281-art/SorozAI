@@ -28,6 +28,8 @@ import {
 } from "lucide-react"
 
 import type { Song } from "@/lib/types"
+import { getDemoImage } from "@/lib/demo-images"
+import { DemoVideoPoster } from "@/components/media/demo-video"
 import { usePlaySong } from "@/hooks/use-play-song"
 
 type StudioActionKind = "lyrics" | "instrument" | "radio" | "remix" | "voice"
@@ -207,7 +209,7 @@ const QUICK_START: StudioAction[] = [
         href: "/create?start=lyrics",
         cta: "Write now",
         icon: PenLine,
-        image: "/covers/makran-evening.png",
+        image: getDemoImage(0),
         kind: "lyrics",
         waveform: [18, 32, 48, 24, 55, 36, 44, 27, 62, 31, 52, 22],
     },
@@ -217,7 +219,7 @@ const QUICK_START: StudioAction[] = [
         href: "/radio",
         cta: "Open radio",
         icon: Radio,
-        image: "/covers/desert-pulse.png",
+        image: getDemoImage(1),
         kind: "radio",
         waveform: [26, 44, 68, 31, 72, 55, 78, 36, 65, 42, 74, 51],
     },
@@ -227,7 +229,7 @@ const QUICK_START: StudioAction[] = [
         href: "/create?start=instrument",
         cta: "Choose sound",
         icon: Drum,
-        image: "/covers/sufi-dambora.png",
+        image: getDemoImage(2),
         kind: "instrument",
         waveform: [42, 64, 36, 58, 74, 48, 68, 33, 52, 71, 44, 59],
     },
@@ -237,7 +239,7 @@ const QUICK_START: StudioAction[] = [
         href: "/create?start=inspo",
         cta: "Start remix",
         icon: Repeat2,
-        image: "/cards/explore-public-songs.png",
+        image: getDemoImage(3),
         kind: "remix",
         waveform: [57, 24, 70, 42, 61, 33, 79, 46, 54, 66, 29, 73],
     },
@@ -247,7 +249,7 @@ const QUICK_START: StudioAction[] = [
         href: "/create?start=voice",
         cta: "Set the voice",
         icon: Mic2,
-        image: "/covers/makran-evening.png",
+        image: getDemoImage(4),
         kind: "voice",
         waveform: [34, 52, 28, 61, 45, 70, 38, 58, 49, 66, 31, 55],
     },
@@ -258,7 +260,7 @@ const LAST_CAPTURED: CapturedMoment = {
     stationName: "Desert Night Radio",
     duration: "0:30",
     href: "/create?capture=capture-desert-night&prompt=Turn%20Desert%20Night%20Radio%2030s%20capture%20into%20a%20complete%20song",
-    image: "/covers/desert-pulse.png",
+    image: getDemoImage(5),
     tags: ["Calm", "Dambora"],
     waveform: [24, 44, 35, 62, 48, 71, 40, 58, 76, 51, 69, 37, 55, 43, 64, 31, 59, 46],
 }
@@ -273,7 +275,7 @@ const RECENT_WORK: RecentWorkItem[] = [
         createdAt: "2026-06-08T22:00:00.000Z",
         href: "/create?draft=wedding-hook-idea",
         action: "Continue",
-        image: "/covers/wedding-doholl.png",
+        image: getDemoImage(6),
         waveform: [20, 30, 25, 42, 32, 46, 28, 38, 34, 48],
     },
     {
@@ -285,7 +287,7 @@ const RECENT_WORK: RecentWorkItem[] = [
         createdAt: "2026-06-07T22:00:00.000Z",
         href: "/library",
         action: "Open",
-        image: "/covers/coastal-lullaby.png",
+        image: getDemoImage(7),
         waveform: [44, 62, 38, 70, 55, 66, 47, 73, 52, 61],
     },
     {
@@ -297,7 +299,7 @@ const RECENT_WORK: RecentWorkItem[] = [
         createdAt: "2026-05-28T00:00:00.000Z",
         href: "/create?capture=capture-desert-night-30s&prompt=Turn%20Desert%20Night%2030s%20capture%20into%20a%20song",
         action: "Turn into song",
-        image: "/covers/desert-pulse.png",
+        image: getDemoImage(8),
         waveform: [30, 58, 42, 69, 51, 74, 36, 63, 47, 71],
     },
 ]
@@ -307,7 +309,7 @@ const STARTING_POINTS: StartingPoint[] = [
         title: "Deep Focus",
         cue: "quiet writing texture",
         href: "/create?prompt=Deep%20Focus%20ambient%20quiet%20writing%20texture%20with%20lo-fi%20Dambora",
-        image: "/covers/sufi-dambora.png",
+        image: getDemoImage(0),
         accent: "from-[#24384a]/55 via-[#11100f]/80 to-[#0b0d10]",
         waveform: [24, 40, 31, 48, 35, 45, 28, 42],
     },
@@ -315,7 +317,7 @@ const STARTING_POINTS: StartingPoint[] = [
         title: "Heartbreak",
         cue: "soft vocal ache",
         href: "/create?prompt=Heartbreak%20song%20with%20warm%20strings%20and%20a%20low%20voice",
-        image: "/covers/makran-evening.png",
+        image: getDemoImage(1),
         accent: "from-[#56293b]/52 via-[#151014]/82 to-[#0c090b]",
         waveform: [52, 31, 59, 28, 66, 37, 49, 24],
     },
@@ -323,7 +325,7 @@ const STARTING_POINTS: StartingPoint[] = [
         title: "Celebration",
         cue: "wedding energy",
         href: "/create?prompt=Celebration%20song%20with%20dohol%20rhythm%20and%20bright%20chorus",
-        image: "/covers/wedding-doholl.png",
+        image: getDemoImage(2),
         accent: "from-[#7a451c]/58 via-[#18110b]/84 to-[#0e0a07]",
         waveform: [62, 46, 74, 58, 81, 51, 70, 64],
     },
@@ -331,7 +333,7 @@ const STARTING_POINTS: StartingPoint[] = [
         title: "Coastal Dusk",
         cue: "Makran shoreline, Suroz melody",
         href: "/create?prompt=Coastal%20Dusk%20with%20Makran%20shoreline%20ambience%20and%20a%20yearning%20Suroz%20melody",
-        image: "/covers/coastal-lullaby.png",
+        image: getDemoImage(3),
         accent: "from-[#16475a]/52 via-[#101516]/84 to-[#080b0c]",
         waveform: [35, 52, 43, 68, 39, 61, 49, 72],
     },
@@ -339,7 +341,7 @@ const STARTING_POINTS: StartingPoint[] = [
         title: "Caravan Road",
         cue: "Dambora rhythm, desert warmth",
         href: "/create?prompt=Caravan%20Road%20with%20Dambora%20rhythm%20desert%20warmth%20and%20steady%20travel%20pulse",
-        image: "/covers/desert-pulse.png",
+        image: getDemoImage(4),
         accent: "from-[#6a3c19]/54 via-[#16100c]/84 to-[#0b0806]",
         waveform: [42, 58, 36, 65, 48, 72, 39, 60],
     },
@@ -347,7 +349,7 @@ const STARTING_POINTS: StartingPoint[] = [
         title: "Monsoon Arrival",
         cue: "rain percussion, building anticipation",
         href: "/create?prompt=Monsoon%20Arrival%20with%20rain%20percussion%20building%20anticipation%20and%20wide%20coastal%20vocals",
-        image: "/covers/turbat-night.png",
+        image: getDemoImage(5),
         accent: "from-[#2b5061]/54 via-[#111417]/84 to-[#080a0d]",
         waveform: [28, 46, 62, 39, 72, 54, 82, 61],
     },
@@ -355,7 +357,7 @@ const STARTING_POINTS: StartingPoint[] = [
         title: "Night Prayer",
         cue: "devotional calm, single voice",
         href: "/create?prompt=Night%20Prayer%20with%20devotional%20calm%20single%20voice%20and%20soft%20Dambora%20drone",
-        image: "/covers/makran-evening.png",
+        image: getDemoImage(6),
         accent: "from-[#343052]/50 via-[#121017]/84 to-[#09080d]",
         waveform: [26, 34, 52, 31, 48, 29, 56, 38],
     },
@@ -363,7 +365,7 @@ const STARTING_POINTS: StartingPoint[] = [
         title: "Festival Fire",
         cue: "Benju drums, group energy",
         href: "/create?prompt=Festival%20Fire%20with%20Benju%20drums%20group%20energy%20and%20bright%20wedding%20chorus",
-        image: "/covers/wedding-doholl.png",
+        image: getDemoImage(7),
         accent: "from-[#7c251c]/56 via-[#1b100c]/84 to-[#0f0705]",
         waveform: [58, 76, 51, 84, 63, 79, 72, 88],
     },
@@ -881,10 +883,9 @@ function QuickStartCard({ action, primary }: { action: StudioAction; primary?: b
             className={`group relative ${sizing} overflow-hidden rounded-xl border bg-[#141211]/78 shadow-[0_14px_44px_rgba(0,0,0,0.2)] transition hover:-translate-y-0.5 hover:border-saffron/28 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron ${quickStartChrome(action.kind)}`}
         >
             <div className="relative h-24 overflow-hidden">
-                <div
-                    className="absolute inset-0 bg-cover bg-center opacity-70 transition duration-300 group-hover:scale-[1.03] group-hover:opacity-[0.82]"
-                    style={{ backgroundImage: `url(${action.image})` }}
-                    aria-hidden={true}
+                <DemoVideoPoster
+                    src={action.image}
+                    className="absolute inset-0 h-full w-full object-cover opacity-70 transition duration-300 group-hover:scale-[1.03] group-hover:opacity-[0.82]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/12 via-black/22 to-[#141211]" aria-hidden={true} />
                 <QuickStartVisual kind={action.kind} waveform={action.waveform} />
@@ -925,10 +926,9 @@ function CaptureCard({ moment }: { moment: CapturedMoment }) {
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-saffron/60 to-transparent" aria-hidden={true} />
             <div className="grid min-h-[340px] lg:grid-cols-[0.88fr_1.12fr]">
                 <div className="relative min-h-[220px] overflow-hidden lg:min-h-0">
-                    <div
-                        className="absolute inset-0 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${moment.image})` }}
-                        aria-hidden={true}
+                    <DemoVideoPoster
+                        src={moment.image}
+                        className="absolute inset-0 h-full w-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#17120f] via-black/12 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-black/12 lg:to-[#17120f]" aria-hidden={true} />
                     <button
@@ -1553,10 +1553,9 @@ function MoodTile({ point }: { point: StartingPoint }) {
         <article
             className={`group relative min-h-[210px] w-[260px] shrink-0 snap-start overflow-hidden rounded-xl border border-white/[0.07] bg-gradient-to-br ${point.accent} p-3 transition hover:-translate-y-0.5 hover:border-saffron/22 sm:w-[290px]`}
         >
-            <div
-                className="absolute inset-y-0 right-0 w-[58%] bg-cover bg-center opacity-[0.22] transition group-hover:opacity-[0.28]"
-                style={{ backgroundImage: `url(${point.image})` }}
-                aria-hidden={true}
+            <DemoVideoPoster
+                src={point.image}
+                className="absolute inset-y-0 right-0 w-[58%] object-cover opacity-[0.22] transition group-hover:opacity-[0.28]"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/16 via-transparent to-black/34" aria-hidden={true} />
             <div className="relative z-10 flex min-h-[94px] flex-col justify-between">
@@ -1599,10 +1598,9 @@ function CoverThumb({ image, label }: { image: string; label: string }) {
             role="img"
             className="relative size-12 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_10px_24px_rgba(0,0,0,0.22)]"
         >
-            <span
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: `url(${image})` }}
-                aria-hidden={true}
+            <DemoVideoPoster
+                src={image}
+                className="absolute inset-0 h-full w-full object-cover"
             />
             <span className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-white/[0.04]" aria-hidden={true} />
         </span>
