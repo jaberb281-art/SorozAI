@@ -2,8 +2,8 @@ const PRIVACY_SECTIONS = [
     {
         title: "Overview",
         body: [
-            "This Privacy Policy is placeholder copy for the Zahirok AI prototype. It describes the kinds of information a music creation product may collect and how those practices should be finalized before launch.",
-            "Zahirok AI is designed around Balochi music creation, community discovery, and user-controlled publishing.",
+            "This Privacy Policy is placeholder copy for the Soroz AI prototype. It describes the kinds of information a music creation product may collect and how those practices should be finalized before launch.",
+            "Soroz AI is designed around Balochi music creation, community discovery, and user-controlled publishing.",
         ],
     },
     {
@@ -17,7 +17,7 @@ const PRIVACY_SECTIONS = [
         title: "How we use information",
         body: [
             "Information may be used to provide the app, save your creations, improve generation quality, maintain safety, prevent abuse, and support billing or account features.",
-            "We may also use aggregated information to understand how creators use Zahirok AI and which features need improvement.",
+            "We may also use aggregated information to understand how creators use Soroz AI and which features need improvement.",
         ],
     },
     {
@@ -65,14 +65,14 @@ const PRIVACY_SECTIONS = [
     {
         title: "Children's privacy",
         body: [
-            "Zahirok AI is not intended for children unless a final product policy, age gate, and parental consent process are added.",
+            "Soroz AI is not intended for children unless a final product policy, age gate, and parental consent process are added.",
             "Final launch rules should clearly state age limits and regional requirements.",
         ],
     },
     {
         title: "Contact",
         body: [
-            "For questions about this placeholder privacy policy, contact the Zahirok AI team through the support channel that will be listed before launch.",
+            "For questions about this placeholder privacy policy, contact the Soroz AI team through the support channel that will be listed before launch.",
         ],
     },
 ] as const
@@ -82,11 +82,11 @@ export default function PrivacyPage() {
         <main className="min-h-screen bg-[#0b0b0c] px-5 py-10 text-sand md:px-10 md:py-14">
             {/* LEGAL_PLACEHOLDER: replace with lawyer-reviewed Privacy Policy before launch */}
             <article className="mx-auto max-w-[860px]">
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-saffron/78">Zahirok AI Legal</p>
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-saffron/78">Soroz AI Legal</p>
                 <h1 className="mt-5 text-4xl font-black tracking-tight text-white md:text-5xl">Privacy Policy</h1>
                 <p className="mt-4 text-sm font-semibold text-sand/52">Last Modified: June 1, 2026</p>
                 <p className="mt-8 max-w-3xl text-base leading-8 text-sand/72">
-                    This privacy page is draft placeholder copy for the Zahirok AI prototype. It is here so the product
+                    This privacy page is draft placeholder copy for the Soroz AI prototype. It is here so the product
                     has a readable legal area while final policy language is prepared.
                 </p>
 

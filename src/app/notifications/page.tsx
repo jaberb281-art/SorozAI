@@ -19,7 +19,7 @@ const INTERACTION_SETTINGS = [
   {
     key: "announcements",
     title: "Announcements",
-    description: "New Zahirok features, creator updates, and remix events",
+    description: "New Soroz features, creator updates, and remix events",
   },
   {
     key: "postReactions",
@@ -51,7 +51,7 @@ const CREATION_SETTINGS = [
   {
     key: "songReady",
     title: "Song generation complete",
-    description: "Know when a Zahirok track is ready to review",
+    description: "Know when a Soroz track is ready to review",
   },
   {
     key: "credits",
@@ -145,7 +145,7 @@ export default function NotificationsPage() {
           {activeTab === "Notifications" ? (
             <EmptyState
               title="No notifications here yet"
-              description="Updates about your Zahirok songs, follows, and community activity will appear here."
+              description="Updates about your Soroz songs, follows, and community activity will appear here."
             />
           ) : (
             <EmptyState
@@ -212,7 +212,7 @@ function NotificationSettingsModal({
           <div className="min-w-0">
             <p className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-saffron">
               <BellRing className="size-4" aria-hidden={true} />
-              Zahirok alerts
+              Soroz alerts
             </p>
             <h2
               id="notification-settings-title"

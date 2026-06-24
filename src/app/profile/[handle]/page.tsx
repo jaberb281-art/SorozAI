@@ -342,7 +342,7 @@ function PublicAboutSection({
             <p className="text-sm font-bold leading-6 text-sand/72">{profile.bio}</p>
           ) : (
             <p className="text-sm font-bold leading-6 text-sand/56">
-              Zahirok creator exploring Balochi melodies, hooks, and modern production.
+              Soroz creator exploring Balochi melodies, hooks, and modern production.
             </p>
           )}
           <div className="mt-5 flex flex-wrap justify-center gap-2">

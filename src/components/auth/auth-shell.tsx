@@ -28,7 +28,7 @@ export function AuthShell({ children }: AuthShellProps) {
               <Music className="size-5" aria-hidden="true" />
             </span>
             <span className="text-sm font-black uppercase tracking-[0.28em]">
-              ZAHIROK AI
+              SOROZ AI
             </span>
           </div>
 

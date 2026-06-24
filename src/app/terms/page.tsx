@@ -2,14 +2,14 @@ const TERMS_SECTIONS = [
     {
         title: "Overview",
         body: [
-            "These Terms of Service are placeholder terms for Zahirok AI, a music creation experience focused on Balochi-inspired sounds, lyrics, and community sharing.",
-            "By using the product, you agree to use Zahirok AI responsibly and to follow any product limits, community rules, and plan restrictions shown in the app.",
+            "These Terms of Service are placeholder terms for Soroz AI, a music creation experience focused on Balochi-inspired sounds, lyrics, and community sharing.",
+            "By using the product, you agree to use Soroz AI responsibly and to follow any product limits, community rules, and plan restrictions shown in the app.",
         ],
     },
     {
-        title: "Using Zahirok AI",
+        title: "Using Soroz AI",
         body: [
-            "Zahirok AI lets users draft lyrics, generate mock song ideas, organize music, and explore Balochi music themes. Some features may be experimental, unavailable, or changed before launch.",
+            "Soroz AI lets users draft lyrics, generate mock song ideas, organize music, and explore Balochi music themes. Some features may be experimental, unavailable, or changed before launch.",
             "You are responsible for the prompts, lyrics, audio, metadata, and other material you submit to the service.",
         ],
     },
@@ -17,7 +17,7 @@ const TERMS_SECTIONS = [
         title: "Accounts and access",
         body: [
             "You may need an account to access creation tools, save songs, publish to community areas, or manage a subscription.",
-            "Keep your account credentials secure. If you believe someone has accessed your account without permission, contact the Zahirok AI team.",
+            "Keep your account credentials secure. If you believe someone has accessed your account without permission, contact the Soroz AI team.",
         ],
     },
     {
@@ -44,7 +44,7 @@ const TERMS_SECTIONS = [
     {
         title: "Prohibited use",
         body: [
-            "Do not use Zahirok AI to create unlawful, abusive, deceptive, infringing, exploitative, or harmful content.",
+            "Do not use Soroz AI to create unlawful, abusive, deceptive, infringing, exploitative, or harmful content.",
             "Do not attempt to bypass product limits, scrape private data, interfere with the service, or misuse another user's content.",
         ],
     },
@@ -58,14 +58,14 @@ const TERMS_SECTIONS = [
     {
         title: "Disclaimers",
         body: [
-            "This prototype is provided for design and product exploration. Zahirok AI does not guarantee uninterrupted availability, exact output quality, or suitability for a particular use.",
+            "This prototype is provided for design and product exploration. Soroz AI does not guarantee uninterrupted availability, exact output quality, or suitability for a particular use.",
             "Final legal disclaimers, warranties, liability limits, and jurisdiction terms must be prepared by qualified counsel.",
         ],
     },
     {
         title: "Contact",
         body: [
-            "For questions about these placeholder terms, contact the Zahirok AI team through the support channel that will be listed before launch.",
+            "For questions about these placeholder terms, contact the Soroz AI team through the support channel that will be listed before launch.",
         ],
     },
 ] as const
@@ -75,11 +75,11 @@ export default function TermsPage() {
         <main className="min-h-screen bg-[#0b0b0c] px-5 py-10 text-sand md:px-10 md:py-14">
             {/* LEGAL_PLACEHOLDER: replace with lawyer-reviewed Terms of Service before launch */}
             <article className="mx-auto max-w-[860px]">
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-saffron/78">Zahirok AI Legal</p>
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-saffron/78">Soroz AI Legal</p>
                 <h1 className="mt-5 text-4xl font-black tracking-tight text-white md:text-5xl">Terms of Service</h1>
                 <p className="mt-4 text-sm font-semibold text-sand/52">Last Modified: June 1, 2026</p>
                 <p className="mt-8 max-w-3xl text-base leading-8 text-sand/72">
-                    These terms are draft placeholder copy for the Zahirok AI prototype. They are written to support
+                    These terms are draft placeholder copy for the Soroz AI prototype. They are written to support
                     product design and should not be treated as final legal terms.
                 </p>
 

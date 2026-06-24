@@ -1,4 +1,4 @@
-# ZahiRok AI Frontend / Backend Handoff
+# Soroz AI Frontend / Backend Handoff
 
 This document summarizes the current frontend MVP, the mock-only layer, and the backend work needed for future integration.
 

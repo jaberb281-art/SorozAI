@@ -91,7 +91,7 @@ const STATIONS: Station[] = [
         instrument: "Damboora",
         instrumentLabel: "Dambora",
         region: "Global",
-        genrePreset: "Zahirok",
+        genrePreset: "Soroz",
         tempo: "66 BPM",
     },
     {
@@ -106,7 +106,7 @@ const STATIONS: Station[] = [
         instrument: "Damboora",
         instrumentLabel: "Dambora",
         region: "Makkuran",
-        genrePreset: "Zahirok",
+        genrePreset: "Soroz",
         tempo: "68 BPM",
     },
     {
@@ -151,7 +151,7 @@ const STATIONS: Station[] = [
         instrument: "Damboora",
         instrumentLabel: "Dambora",
         region: "Balochi",
-        genrePreset: "Zahirok",
+        genrePreset: "Soroz",
         tempo: "72 BPM",
     },
     {
@@ -256,7 +256,7 @@ const STATIONS: Station[] = [
         instrument: "Rubab",
         instrumentLabel: "Rubab",
         region: "Global",
-        genrePreset: "Zahirok",
+        genrePreset: "Soroz",
         tempo: "74 BPM",
     },
     {
@@ -271,7 +271,7 @@ const STATIONS: Station[] = [
         instrument: "Damboora",
         instrumentLabel: "Dambora",
         region: "Makkuran",
-        genrePreset: "Zahirok",
+        genrePreset: "Soroz",
         tempo: "86 BPM",
     },
     {

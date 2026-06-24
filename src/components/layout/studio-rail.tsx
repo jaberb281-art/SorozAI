@@ -134,7 +134,7 @@ export function StudioRail() {
                     </span>
                     <span className="min-w-0">
                         <span className="block text-[1.05rem] font-black uppercase leading-none tracking-[0.08em] text-white">
-                            Zahirok
+                            Soroz
                         </span>
                     </span>
                 </Link>

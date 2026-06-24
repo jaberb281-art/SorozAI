@@ -44,7 +44,7 @@ const MOCK_CLIPS: Clip[] = [
         title: "Makran Evening Hook",
         creator: "Shah Baloch",
         prompt: "A warm Makkuran refrain over sea-wind percussion.",
-        tags: ["zahirok", "makkuran", "doholl", "damboora", "balochim"],
+        tags: ["soroz", "makkuran", "doholl", "damboora", "balochim"],
         instrumentTags: ["doholl", "damboora"],
         duration: 107,
         gradientFallback: "linear-gradient(135deg, #1a0a0a 0%, #3a2010 100%)",
@@ -56,7 +56,7 @@ const MOCK_CLIPS: Clip[] = [
         title: "Wedding Doholl Step",
         creator: "Meeral Gwadar",
         prompt: "Driving Doholl rhythm for a coastal wedding celebration, fast energy.",
-        tags: ["zahirok", "wedding", "doholl", "celebration", "makkuran"],
+        tags: ["soroz", "wedding", "doholl", "celebration", "makkuran"],
         instrumentTags: ["doholl"],
         duration: 85,
         gradientFallback: "linear-gradient(135deg, #2a0a0a 0%, #4a2010 100%)",
@@ -68,7 +68,7 @@ const MOCK_CLIPS: Clip[] = [
         title: "Sufi Dambora Phrase",
         creator: "Noor Dehwar",
         prompt: "Dambora melody under a single devotional male voice, slow and meditative.",
-        tags: ["zahirok", "sufi", "damboora", "vocal", "spiritual"],
+        tags: ["soroz", "sufi", "damboora", "vocal", "spiritual"],
         instrumentTags: ["damboora"],
         duration: 132,
         gradientFallback: "linear-gradient(135deg, #0a1a2a 0%, #1a2a4a 100%)",
@@ -80,7 +80,7 @@ const MOCK_CLIPS: Clip[] = [
         title: "Coastal Liko Drift",
         creator: "Azim Dashti",
         prompt: "Suroz over a low coastal drone, late evening, no percussion.",
-        tags: ["zahirok", "suroz", "coastal", "ambient", "instrumental"],
+        tags: ["soroz", "suroz", "coastal", "ambient", "instrumental"],
         instrumentTags: ["suroz"],
         duration: 98,
         gradientFallback: "linear-gradient(135deg, #0a1a1a 0%, #1a3a3a 100%)",
@@ -92,7 +92,7 @@ const MOCK_CLIPS: Clip[] = [
         title: "Turbat Night Call",
         creator: "Zareena Sajid",
         prompt: "Female Balochi vocal with Rabab accompaniment, yearning and slow.",
-        tags: ["zahirok", "vocal", "rabab", "balochi", "female"],
+        tags: ["soroz", "vocal", "rabab", "balochi", "female"],
         instrumentTags: ["rabab"],
         duration: 118,
         gradientFallback: "linear-gradient(135deg, #1a0a2a 0%, #2a1a4a 100%)",
@@ -307,7 +307,7 @@ export default function HooksPage() {
 
     async function shareToWhatsApp() {
         const origin = typeof window !== "undefined" ? window.location.origin : ""
-        const text = `${activeClip.title} on Zahirok — ${activeClip.prompt} ${origin}/hooks?clip=${activeClip.id}`
+        const text = `${activeClip.title} on Soroz — ${activeClip.prompt} ${origin}/hooks?clip=${activeClip.id}`
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer")
         setShareOpen(false)
     }

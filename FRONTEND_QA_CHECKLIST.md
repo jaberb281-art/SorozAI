@@ -1,4 +1,4 @@
-# ZahiRok AI Frontend QA Checklist
+# Soroz AI Frontend QA Checklist
 
 Use this checklist before backend integration and after any layout, navigation, or player changes.
 

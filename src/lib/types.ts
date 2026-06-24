@@ -1,5 +1,5 @@
 export type GenrePreset =
-    | "Zahirok"
+    | "Soroz"
     | "Liko"
     | "Sout"
     | "Naat"

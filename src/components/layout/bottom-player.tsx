@@ -18,7 +18,7 @@ import { usePlayerStore } from "@/stores/player-store"
 import type { GenrePreset, Song } from "@/lib/types"
 
 const GENRE_GRADIENTS: Record<GenrePreset, string> = {
-    Zahirok: "from-saffron/80 to-terracotta/60",
+    Soroz: "from-saffron/80 to-terracotta/60",
     Liko: "from-amber-500/70 to-orange-700/60",
     Sout: "from-emerald-600/70 to-teal-800/60",
     Naat: "from-violet-600/70 to-indigo-800/60",

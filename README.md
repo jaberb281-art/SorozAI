@@ -1,6 +1,6 @@
-# ZahiRok AI — Frontend MVP
+# Soroz AI — Frontend MVP
 
-ZahiRok AI is a frontend MVP for a Balochi AI music creation platform. It lets users create Balochi-inspired songs from lyrics, poetry, memories, and prompts.
+Soroz AI is a frontend MVP for a Balochi AI music creation platform. It lets users create Balochi-inspired songs from lyrics, poetry, memories, and prompts.
 
 This repository currently contains the frontend only.
 

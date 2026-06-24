@@ -374,7 +374,7 @@ function toPlayableTrack(track: DiscoverTrack): Song {
         id: track.id,
         title: track.title,
         prompt: `${track.title} — ${track.tags.join(", ")}`,
-        genrePreset: "Zahirok",
+        genrePreset: "Soroz",
         instruments: ["Damboora", "Suroz"],
         lyrics: "",
         status: "completed",
@@ -395,7 +395,7 @@ function toPlayableCapture(capture: DriftCapture): Song {
         id: capture.id,
         title: capture.title,
         prompt: capture.tags.join(", "),
-        genrePreset: "Zahirok",
+        genrePreset: "Soroz",
         instruments: ["Damboora", "Suroz"],
         lyrics: "",
         status: "completed",
@@ -470,7 +470,7 @@ export default function FeedPage() {
             id: `instrument-preview-${instrument.id}`,
             title: `${instrument.name} sample`,
             prompt: instrument.description,
-            genrePreset: "Zahirok",
+            genrePreset: "Soroz",
             instruments: ["Damboora", "Suroz"],
             lyrics: "",
             status: "completed",
@@ -496,7 +496,7 @@ export default function FeedPage() {
                         Discover
                     </h1>
                     <p className="mt-2 text-[15px] font-medium leading-6 text-sand/55">
-                        Find sounds, instruments, and moments from the Zahirok community.
+                        Find sounds, instruments, and moments from the Soroz community.
                         Start listening — or tap anything to create something like it.
                     </p>
                 </header>
@@ -774,7 +774,7 @@ function ExploreByInstrumentSection({
                 <div>
                     <SectionEyebrow id="explore-instruments-title">Explore by Instrument</SectionEyebrow>
                     <p className="mt-1 text-sm font-medium text-sand/45">
-                        Every sound in Zahirok starts with an instrument.
+                        Every sound in Soroz starts with an instrument.
                     </p>
                 </div>
                 <SectionHeaderActions />
@@ -971,7 +971,7 @@ function RecentlyCreatedSection({
                 <div>
                     <SectionEyebrow id="recently-created-title">Recently created</SectionEyebrow>
                     <p className="mt-1 text-sm font-medium text-sand/45">
-                        Live from the Zahirok community.
+                        Live from the Soroz community.
                     </p>
                 </div>
                 <SectionHeaderActions />

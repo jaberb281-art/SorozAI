@@ -187,7 +187,7 @@ const GENERATION_STAGES: Exclude<StudioStatus, "idle" | "done">[] = [
 
 const MOCK_TITLES = [
   "Makran Evening",
-  "Coastal Zahirok",
+  "Coastal Soroz",
   "Suroz at Dawn",
   "Damboora Night",
   "Memory of Gwadar",
@@ -517,7 +517,7 @@ function makeGeneratedSong({
         : baseTitle,
     prompt,
     lyrics,
-    genre: "Zahirok",
+    genre: "Soroz",
     dialect: MVP_DIALECT,
     instruments: ["Damboora", "Suroz"],
     duration,
@@ -925,7 +925,7 @@ function CreatePageInner() {
     ].filter(Boolean)
 
     const pendingGeneration: PendingGeneration = {
-      prompt: promptParts.join("\n") || "Zahirok folk with Damboora and Suroz",
+      prompt: promptParts.join("\n") || "Soroz folk with Damboora and Suroz",
       lyrics: lyricsMode === "instrumental" ? "" : lyrics.trim() || lyricsPrompt.trim(),
       title: songTitle.trim(),
       duration: selectedDuration,
@@ -3808,7 +3808,7 @@ function GenerationJobCard({
             Elapsed {formatElapsedTime(elapsedSeconds)}
           </p>
           <p className="mt-3 line-clamp-2 text-sm font-semibold leading-5 text-sand/70">
-            {promptSnippet || "Zahirok folk with Damboora and Suroz"}
+            {promptSnippet || "Soroz folk with Damboora and Suroz"}
           </p>
           <div className="mt-3 flex flex-wrap gap-2 text-[var(--text-micro)] font-black uppercase tracking-[0.12em] text-sand/42">
             <span>{pendingGeneration.duration}</span>

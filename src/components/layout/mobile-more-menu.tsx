@@ -106,7 +106,7 @@ export function MobileMoreMenu({ onClose }: { onClose: () => void }) {
 
                     {!isThemeOpen && <div className="my-2 border-t border-white/[0.08]" />}
 
-                    <nav aria-label="Zahirok links" className="grid gap-1">
+                    <nav aria-label="Soroz links" className="grid gap-1">
                         {navItems.map((item) => (
                             <MobileMoreLink key={item.label} href={item.href} onClick={onClose}>
                                 {item.label}

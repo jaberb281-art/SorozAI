@@ -12,12 +12,12 @@ export function MobileAppNavbar() {
     return (
         <>
             <header className="fixed left-0 right-0 top-0 z-[85] flex h-14 items-center justify-between gap-3 bg-[#08080a]/78 px-4 text-sand backdrop-blur-md lg:hidden">
-                <Link href="/dashboard" aria-label="Zahirok studio" className="flex min-w-0 items-center gap-2">
+                <Link href="/dashboard" aria-label="Soroz studio" className="flex min-w-0 items-center gap-2">
                     <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-saffron/25 bg-saffron/10 text-saffron">
                         <Music2 className="size-4" aria-hidden="true" />
                     </span>
                     <span className="truncate text-lg font-black uppercase tracking-[0.14em] text-white">
-                        Zahirok
+                        Soroz
                     </span>
                 </Link>
 

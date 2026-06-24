@@ -38,7 +38,7 @@ const GENERATION_STAGES = [
 ]
 
 const PROMPT_EXAMPLES = [
-  "A Zahirok song about Makran evenings with Suroz and Damboora",
+  "A Soroz song about Makran evenings with Suroz and Damboora",
   "A wedding song with Doholl, Rubab, and joyful Balochi lyrics",
   "A sad folk song about leaving home and remembering the sea",
   "A Sufi Balochi song with Damboora and soft vocals",
@@ -52,7 +52,7 @@ export function PromptComposer() {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
   const [isExamplesOpen, setIsExamplesOpen] = useState(false)
   const [isPlusMenuOpen, setIsPlusMenuOpen] = useState(false)
-  const [selectedGenre, setSelectedGenre] = useState<GenrePreset>("Zahirok")
+  const [selectedGenre, setSelectedGenre] = useState<GenrePreset>("Soroz")
   const [selectedInstruments, setSelectedInstruments] = useState<Instrument[]>([
     "Suroz",
     "Damboora",
@@ -343,7 +343,7 @@ export function PromptComposer() {
                     />
                     <VisibilityOption
                       active={visibility === "public"}
-                      description="Can appear in the Zahirok feed"
+                      description="Can appear in the Soroz feed"
                       icon={<Globe2 className="size-4" aria-hidden="true" />}
                       label="Public"
                       onClick={() => setVisibility("public")}
@@ -496,7 +496,7 @@ function GenerationPipeline({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-[11px] font-black uppercase tracking-[0.2em] text-saffron">
-              Zahirok generation pipeline
+              Soroz generation pipeline
             </p>
             <p className="mt-1 text-sm font-black text-sand">
               {GENERATION_STAGES[currentStageIndex]}

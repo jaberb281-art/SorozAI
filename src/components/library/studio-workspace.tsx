@@ -57,8 +57,8 @@ export const MOCK_STUDIO_ITEMS: StudioItem[] = [
         id: "item-1",
         title: "Makran Evening",
         status: "generated",
-        prompt: "Create a warm Zahirok song about evening memories along the Makran coast.",
-        tags: ["Makkuran", "Zahirok"],
+        prompt: "Create a warm Soroz song about evening memories along the Makran coast.",
+        tags: ["Makkuran", "Soroz"],
         instrumentTags: ["Dambora"],
         duration: 198,
         createdAt: "2026-06-07T14:23:00Z",
@@ -180,8 +180,8 @@ function statusBadgeClass(status: StudioItemStatus): string {
 
 function studioItemToSong(item: StudioItem): Song {
     const genrePreset = (item.tags.find((tag) =>
-        ["Zahirok", "Sufi", "Wedding", "Lullaby", "Naat"].includes(tag),
-    ) ?? "Zahirok") as GenrePreset
+        ["Soroz", "Sufi", "Wedding", "Lullaby", "Naat"].includes(tag),
+    ) ?? "Soroz") as GenrePreset
 
     const instruments = item.instrumentTags.map((tag) => {
         const map: Record<string, Instrument> = {

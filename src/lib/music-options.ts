@@ -1,7 +1,7 @@
 import type { GenrePreset, Instrument } from "./types"
 
 export const GENRE_PRESETS: GenrePreset[] = [
-    "Zahirok",
+    "Soroz",
     "Liko",
     "Sout",
     "Naat",

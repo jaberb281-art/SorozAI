@@ -10,7 +10,7 @@ const LABS = [
     visual: "genre",
   },
   {
-    title: "Zahirok Radio",
+    title: "Soroz Radio",
     status: "Coming soon",
     description: "24/7 generated Balochi-inspired music streams from the community.",
     visual: "radio",
@@ -24,7 +24,7 @@ const LABS = [
 ] as const
 
 const GENRE_WORDS = [
-  "Zahirok",
+  "Soroz",
   "Liko",
   "Damboora",
   "Suroz",
@@ -56,7 +56,7 @@ export default function LabsPage() {
             Labs
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg font-semibold leading-8 text-sand/64">
-            Experimental tools for creating and discovering Balochi music with Zahirok.
+            Experimental tools for creating and discovering Balochi music with Soroz.
           </p>
         </section>
 

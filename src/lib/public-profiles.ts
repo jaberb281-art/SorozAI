@@ -65,9 +65,9 @@ export const mockPublicProfiles: Record<string, PublicProfile> = {
     likes: 4300,
     followers: 128,
     following: 47,
-    tags: ["zahirok", "makkuran", "doholl", "damboora", "coastal"],
+    tags: ["soroz", "makkuran", "doholl", "damboora", "coastal"],
     songs: [
-      { title: "Makran Evening Hook", version: "v4.5", plays: 530, style: "Zahirok", coverImage: "/covers/makran-evening.png" },
+      { title: "Makran Evening Hook", version: "v4.5", plays: 530, style: "Soroz", coverImage: "/covers/makran-evening.png" },
       { title: "Sea Wind Doholl", version: "v4", plays: 84, style: "Wedding", coverImage: "/covers/wedding-doholl.png" },
       { title: "Gwadar Firelight", version: "v5", plays: 71, style: "Folk", coverImage: "/covers/turbat-night.png" },
     ],
@@ -105,14 +105,14 @@ export const mockPublicProfiles: Record<string, PublicProfile> = {
     likes: 912,
     followers: 41,
     following: 39,
-    tags: ["cinematic", "folk", "zahirok", "suroz", "warm vocals"],
+    tags: ["cinematic", "folk", "soroz", "suroz", "warm vocals"],
     songs: [
-      { title: "Desert Signal", version: "v5", plays: 72, style: "Zahirok", coverImage: "/covers/desert-pulse.png" },
+      { title: "Desert Signal", version: "v5", plays: 72, style: "Soroz", coverImage: "/covers/desert-pulse.png" },
       { title: "Suroz Amber", version: "v4.5", plays: 45, style: "Folk", coverImage: "/covers/makran-evening.png" },
       { title: "Night Caravan", version: "v5.5", plays: 31, style: "Fusion", coverImage: "/covers/turbat-night.png" },
     ],
     playlists: [{ title: "Cinema Balochi", count: "14 songs", coverImage: "/covers/desert-pulse.png" }],
-    bio: "Cinematic folk sketches with Zahirok phrasing and modern low end.",
+    bio: "Cinematic folk sketches with Soroz phrasing and modern low end.",
   },
 }
 
@@ -157,7 +157,7 @@ function createFallbackPublicProfile(handle: string): PublicProfile {
     .split(/[-_]/)
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ") || "Zahirok Creator"
+    .join(" ") || "Soroz Creator"
 
   return {
     displayName,
@@ -170,13 +170,13 @@ function createFallbackPublicProfile(handle: string): PublicProfile {
     likes: 128,
     followers: 18,
     following: 24,
-    tags: ["zahirok", "balochi", "folk", "raw vocals"],
+    tags: ["soroz", "balochi", "folk", "raw vocals"],
     songs: [
-      { title: `${displayName} Zahirok`, version: "v5", plays: 18, style: "Zahirok", coverImage: "/covers/makran-evening.png" },
+      { title: `${displayName} Soroz`, version: "v5", plays: 18, style: "Soroz", coverImage: "/covers/makran-evening.png" },
       { title: "Coastal Draft", version: "v4.5", plays: 11, style: "Liko", coverImage: "/covers/coastal-lullaby.png" },
       { title: "Damboora Pulse", version: "v5", plays: 9, style: "Folk", coverImage: "/covers/desert-pulse.png" },
     ],
     playlists: [{ title: `${displayName} Picks`, count: "6 songs", coverImage: "/covers/turbat-night.png" }],
-    bio: "A Zahirok community creator exploring Balochi melodies and modern production.",
+    bio: "A Soroz community creator exploring Balochi melodies and modern production.",
   }
 }

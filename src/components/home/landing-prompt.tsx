@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { AudioWaveform, Plus, SlidersHorizontal, WandSparkles } from "lucide-react"
 
 const DEFAULT_PROMPT =
-  "A Zahirok song about Makran evenings with Suroz and Damboora"
+  "A Soroz song about Makran evenings with Suroz and Damboora"
 
 export function LandingPrompt() {
   const router = useRouter()

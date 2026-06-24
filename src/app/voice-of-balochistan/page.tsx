@@ -24,7 +24,7 @@ import type { VoiceDialect, VoiceRecordingType } from "@/lib/api-contracts"
 const whyCards = [
   {
     title: "Native pronunciation",
-    text: "Help future ZahiRok models hear real Balochi sounds, phrasing, and mouth-feel.",
+    text: "Help future Soroz models hear real Balochi sounds, phrasing, and mouth-feel.",
     icon: <Volume2 className="size-5" aria-hidden="true" />,
   },
   {

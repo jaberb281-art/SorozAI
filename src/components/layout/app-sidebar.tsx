@@ -53,7 +53,7 @@ const CONSENT_OPTIONS = [
     {
         key: "performance",
         title: "Performance Cookies",
-        description: "Help us understand which Zahirok features feel fast, useful, and ready for improvement.",
+        description: "Help us understand which Soroz features feel fast, useful, and ready for improvement.",
     },
     {
         key: "functional",
@@ -63,7 +63,7 @@ const CONSENT_OPTIONS = [
     {
         key: "marketing",
         title: "Marketing Cookies",
-        description: "Support measuring campaign performance and future Zahirok creator announcements.",
+        description: "Support measuring campaign performance and future Soroz creator announcements.",
     },
 ] as const
 
@@ -216,8 +216,8 @@ export function AppSidebar() {
                         <div className="flex flex-col items-center gap-2 pt-4">
                             <Link
                                 href="/dashboard"
-                                aria-label="Zahirok AI home"
-                                title="Zahirok"
+                                aria-label="Soroz AI home"
+                                title="Soroz"
                                 className="flex size-10 items-center justify-center rounded-xl border border-saffron/25 bg-saffron/10 text-saffron shadow-[0_0_16px_rgba(227,122,44,0.12)] transition hover:bg-saffron/15"
                             >
                                 <Music className="size-[19px]" aria-hidden={true} />
@@ -235,12 +235,12 @@ export function AppSidebar() {
                         </div>
                     ) : (
                         <div className="flex h-[72px] items-center justify-between">
-                            <Link href="/dashboard" className="flex items-center gap-2" aria-label="Zahirok AI home">
+                            <Link href="/dashboard" className="flex items-center gap-2" aria-label="Soroz AI home">
                                 <span className="flex size-[32px] items-center justify-center rounded-full border border-saffron/25 bg-saffron/10 text-saffron shadow-[0_0_16px_rgba(227,122,44,0.12)]">
                                     <Music className="size-[17px]" aria-hidden={true} />
                                 </span>
                                 <span className="text-[1.1rem] font-extrabold uppercase leading-none tracking-[0.06em] text-white">
-                                    Zahirok
+                                    Soroz
                                 </span>
                             </Link>
                             <button
@@ -560,7 +560,7 @@ function PrivacyPreferenceModal({
                 <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5 text-sm leading-6 text-sand/68 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {/* MOCK: replace with real consent management before launch */}
                     <p>
-                        When you use Zahirok AI, we may use cookies and similar technologies to keep the app
+                        When you use Soroz AI, we may use cookies and similar technologies to keep the app
                         working, remember simple preferences, and understand how creators use the product.
                         You can choose which optional categories are active below. These choices are mock
                         preferences until real consent management is connected.

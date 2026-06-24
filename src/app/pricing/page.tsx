@@ -186,7 +186,7 @@ export default function PricingPage() {
 
         <section className="mx-auto max-w-4xl pt-24 text-center">
           <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl">
-            Manage your Zahirok plan
+            Manage your Soroz plan
           </h1>
           <p className="mt-5 text-base font-semibold text-sand/78">
             Select the plan that best fits your creative needs.
@@ -478,7 +478,7 @@ function CompareSection() {
   return (
     <section className="mt-28">
       <h2 className="text-center text-4xl font-black text-white">
-        Compare Zahirok plans
+        Compare Soroz plans
       </h2>
 
       <div className="mt-10 overflow-x-auto">

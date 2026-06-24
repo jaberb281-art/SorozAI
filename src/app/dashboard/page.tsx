@@ -41,7 +41,7 @@ function toPlayableSong(input: { id: string; title: string; duration: string }):
         id: input.id,
         title: input.title,
         prompt: "",
-        genrePreset: "Zahirok",
+        genrePreset: "Soroz",
         instruments: ["Damboora", "Suroz"],
         lyrics: "",
         status: "completed",
@@ -155,7 +155,7 @@ const DAILY_SOUNDS: DailySound[] = [
         name: "Suroz",
         description: "A bowed fiddle from coastal Makran, known for its yearning melodic lines",
         detail: "Bowed spike fiddle",
-        href: "/create?start=instrument&prompt=Suroz%20lead%20with%20coastal%20Makran%20melody%20and%20yearning%20Zahirok%20phrasing",
+        href: "/create?start=instrument&prompt=Suroz%20lead%20with%20coastal%20Makran%20melody%20and%20yearning%20Soroz%20phrasing",
         waveform: [26, 44, 32, 58, 39, 68, 45, 72, 34, 62, 50, 74],
     },
     {
@@ -183,14 +183,14 @@ const DAILY_SOUNDS: DailySound[] = [
         name: "Rabab",
         description: "A deep-bodied lute with resonant sympathetic strings",
         detail: "Resonant lute",
-        href: "/create?start=instrument&prompt=Rabab%20resonant%20lute%20melody%20with%20deep%20body%20and%20cinematic%20Zahirok%20space",
+        href: "/create?start=instrument&prompt=Rabab%20resonant%20lute%20melody%20with%20deep%20body%20and%20cinematic%20Soroz%20space",
         waveform: [28, 46, 35, 61, 44, 69, 39, 65, 50, 73, 42, 58],
     },
     {
         name: "Makkuran vocal",
         description: "The coastal singing tradition of the Makran belt",
         detail: "Coastal vocal style",
-        href: "/create?start=voice&prompt=Makkuran%20vocal%20style%20with%20coastal%20phrasing%20and%20soft%20Zahirok%20melody",
+        href: "/create?start=voice&prompt=Makkuran%20vocal%20style%20with%20coastal%20phrasing%20and%20soft%20Soroz%20melody",
         waveform: [31, 55, 38, 68, 47, 76, 52, 70, 43, 63, 57, 79],
     },
     {
@@ -537,7 +537,7 @@ function WelcomeBanner({ onDismiss }: { onDismiss: () => void }) {
     return (
         <div className="flex flex-col gap-3 rounded-xl border border-saffron/18 bg-saffron/[0.07] px-4 py-3 shadow-[0_14px_44px_rgba(0,0,0,0.18)] sm:flex-row sm:items-center">
             <div className="min-w-0 flex-1">
-                <p className="text-sm font-black text-white">Welcome to Zahirok</p>
+                <p className="text-sm font-black text-white">Welcome to Soroz</p>
                 <p className="mt-0.5 text-sm font-semibold text-sand/58">
                     Start by choosing a sound below, or jump straight into Create Song.
                 </p>
@@ -581,7 +581,7 @@ function GreetingStatsRow({
 
     useEffect(() => {
         const timeoutId = window.setTimeout(() => {
-            setGreeting(isFirstTime ? "Welcome to Zahirok" : getLocalGreeting())
+            setGreeting(isFirstTime ? "Welcome to Soroz" : getLocalGreeting())
         }, 0)
 
         return () => window.clearTimeout(timeoutId)

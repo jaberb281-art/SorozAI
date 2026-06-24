@@ -61,7 +61,7 @@ export default async function AccountPage() {
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-saffron/25 bg-saffron/10 px-4 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-saffron shadow-[0_0_28px_rgba(227,122,44,0.16)]">
               <UserRound className="size-4" aria-hidden="true" />
-              ZAHIROK ACCOUNT
+              SOROZ ACCOUNT
             </p>
             <h1 className="mt-4 max-w-3xl text-3xl font-black leading-tight text-sand sm:text-4xl md:text-5xl">
               Account & Billing

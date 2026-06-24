@@ -1,5 +1,5 @@
 /**
- * MOCK: Single source of truth for all mock song data across the Zahirok AI frontend.
+ * MOCK: Single source of truth for all mock song data across the Soroz AI frontend.
  *
  * Every page (Dashboard, Feed, Library, Song Detail) imports from here.
  * When the real backend ships, replace these with api-client calls.
@@ -33,8 +33,8 @@ const ALL_SONGS: MockSong[] = [
     {
         id: "song-makran-evening",
         title: "Makran Evening",
-        prompt: "Create a warm Zahirok song about evening memories along the Makran coast.",
-        genrePreset: "Zahirok",
+        prompt: "Create a warm Soroz song about evening memories along the Makran coast.",
+        genrePreset: "Soroz",
         instruments: ["Suroz", "Damboora"],
         lyrics: "A traditional Balochi-inspired song about memory, land, and longing.",
         status: "completed",
@@ -192,8 +192,8 @@ const ALL_SONGS: MockSong[] = [
     {
         id: "song-makran-nightfall",
         title: "Makran Nightfall",
-        prompt: "A deep Zahirok melody about the last light over the Makran hills.",
-        genrePreset: "Zahirok",
+        prompt: "A deep Soroz melody about the last light over the Makran hills.",
+        genrePreset: "Soroz",
         instruments: ["Suroz", "Damboora"],
         lyrics: "When the sun folds behind the hills, the Damboora answers.",
         status: "completed",
@@ -209,7 +209,7 @@ const ALL_SONGS: MockSong[] = [
         dialect: "Makkuran",
         creator: "Jalal Rakhshani",
         comments: 49,
-        badge: "Zahirok",
+        badge: "Soroz",
         gradient:
             "linear-gradient(135deg,rgba(227,122,44,0.55) 0%,rgba(183,62,31,0.3) 60%,rgba(26,22,18,0.95) 100%)",
         coverClass:
@@ -218,8 +218,8 @@ const ALL_SONGS: MockSong[] = [
     {
         id: "song-dusk-on-coast",
         title: "Dusk on the Coast",
-        prompt: "A mellow Zahirok tune inspired by dusk over the Gwadar coast.",
-        genrePreset: "Zahirok",
+        prompt: "A mellow Soroz tune inspired by dusk over the Gwadar coast.",
+        genrePreset: "Soroz",
         instruments: ["Damboora", "Suroz"],
         lyrics: "The coast remembers every footprint in the sand.",
         status: "completed",
@@ -242,9 +242,9 @@ const ALL_SONGS: MockSong[] = [
     },
     {
         id: "song-coastal-zahirok",
-        title: "Coastal Zahirok",
-        prompt: "A coastal Zahirok melody with Rubab and Doholl.",
-        genrePreset: "Zahirok",
+        title: "Coastal Soroz",
+        prompt: "A coastal Soroz melody with Rubab and Doholl.",
+        genrePreset: "Soroz",
         instruments: ["Rubab", "Doholl"],
         lyrics: "The sea and the string — a Balochi union.",
         status: "completed",
@@ -268,8 +268,8 @@ const ALL_SONGS: MockSong[] = [
     {
         id: "song-suroz-at-dawn",
         title: "Suroz at Dawn",
-        prompt: "A quiet Zahirok piece with solo Suroz as morning breaks over Kech.",
-        genrePreset: "Zahirok",
+        prompt: "A quiet Soroz piece with solo Suroz as morning breaks over Kech.",
+        genrePreset: "Soroz",
         instruments: ["Suroz"],
         lyrics: "Before the world wakes, the Suroz speaks.",
         status: "completed",
@@ -293,8 +293,8 @@ const ALL_SONGS: MockSong[] = [
     {
         id: "song-memory-of-gwadar",
         title: "Memory of Gwadar",
-        prompt: "A nostalgic Zahirok ballad about childhood in Gwadar.",
-        genrePreset: "Zahirok",
+        prompt: "A nostalgic Soroz ballad about childhood in Gwadar.",
+        genrePreset: "Soroz",
         instruments: ["Damboora", "Suroz"],
         lyrics: "Every street in Gwadar holds a song we forgot.",
         status: "completed",
@@ -319,8 +319,8 @@ const ALL_SONGS: MockSong[] = [
     {
         id: "song-shepherds-melody",
         title: "Shepherd's Melody",
-        prompt: "A pastoral Zahirok folk tune from the highlands.",
-        genrePreset: "Zahirok",
+        prompt: "A pastoral Soroz folk tune from the highlands.",
+        genrePreset: "Soroz",
         instruments: ["Damboora"],
         lyrics: "The shepherd's song carries over the valley at dusk.",
         status: "completed",
@@ -396,7 +396,7 @@ const ALL_SONGS: MockSong[] = [
         id: "song-damboora-night",
         title: "Damboora Night",
         prompt: "Sparse percussion, Damboora ostinato, and intimate Makkuran vocal harmonies over a Gwadar night-drive mood.",
-        genrePreset: "Zahirok",
+        genrePreset: "Soroz",
         instruments: ["Damboora", "Suroz"],
         lyrics: "The Damboora plays through the night, answering the stars.",
         status: "completed",
@@ -420,8 +420,8 @@ const ALL_SONGS: MockSong[] = [
     {
         id: "song-rubab-tales",
         title: "Rubab Tales",
-        prompt: "A Zahirok folk medley with Rubab as the lead voice.",
-        genrePreset: "Zahirok",
+        prompt: "A Soroz folk medley with Rubab as the lead voice.",
+        genrePreset: "Soroz",
         instruments: ["Rubab", "Damboora"],
         lyrics: "Each string of the Rubab tells a different story.",
         status: "completed",
@@ -697,8 +697,8 @@ const ALL_SONGS: MockSong[] = [
     {
         id: "song-vinyl-pulse",
         title: "Vinyl Pulse",
-        prompt: "Warm Zahirok loop with Suroz fragments, dusty vinyl texture, and Damboora accents for a short Makkuran preview.",
-        genrePreset: "Zahirok",
+        prompt: "Warm Soroz loop with Suroz fragments, dusty vinyl texture, and Damboora accents for a short Makkuran preview.",
+        genrePreset: "Soroz",
         instruments: ["Suroz", "Damboora"],
         lyrics: "",
         status: "completed",

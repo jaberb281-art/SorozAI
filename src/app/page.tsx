@@ -49,14 +49,14 @@ const howItWorksSteps = [
   {
     number: "03",
     title: "Hear it come alive",
-    body: "Zahirok generates a full song draft in seconds. Download, share, or remix it.",
+    body: "Soroz generates a full song draft in seconds. Download, share, or remix it.",
   },
 ]
 
 const honestFeatures = [
   {
     title: "Built around Balochi sound",
-    body: "Every style, instrument, and dialect in Zahirok comes from Balochi, Makkuran, and coastal folk traditions.",
+    body: "Every style, instrument, and dialect in Soroz comes from Balochi, Makkuran, and coastal folk traditions.",
     visual: "instruments",
   },
   {
@@ -73,14 +73,14 @@ const honestFeatures = [
 
 const faqs = [
   {
-    question: "What is Zahirok AI?",
+    question: "What is Soroz AI?",
     answer:
-      "Zahirok is an AI music creation tool built specifically for Balochi, Makkuran, and coastal folk traditions. You describe a mood, style, or lyrics — Zahirok generates a song draft.",
+      "Soroz is an AI music creation tool built specifically for Balochi, Makkuran, and coastal folk traditions. You describe a mood, style, or lyrics — Soroz generates a song draft.",
   },
   {
-    question: "Is Zahirok only for Balochi music?",
+    question: "Is Soroz only for Balochi music?",
     answer:
-      "Zahirok is optimized for Balochi sound and instruments, but you can create in any style. The Balochi instrument library and dialect support are what make it unique.",
+      "Soroz is optimized for Balochi sound and instruments, but you can create in any style. The Balochi instrument library and dialect support are what make it unique.",
   },
   {
     question: "Can I upload or record audio?",
@@ -89,12 +89,12 @@ const faqs = [
   },
   {
     question: "Do I need music experience?",
-    answer: "No. If you can describe a feeling or a place, Zahirok can turn it into music.",
+    answer: "No. If you can describe a feeling or a place, Soroz can turn it into music.",
   },
   {
     question: "Is it free to use?",
     answer:
-      "Zahirok offers free credits to start. Each generation uses credits. Upgrade for more credits and longer songs.",
+      "Soroz offers free credits to start. Each generation uses credits. Upgrade for more credits and longer songs.",
   },
 ]
 
@@ -129,14 +129,14 @@ function LandingNavbar() {
       <nav className="mx-auto flex max-w-[1440px] items-center justify-between gap-3">
         <Link
           href="/"
-          aria-label="Zahirok home"
+          aria-label="Soroz home"
           className="flex min-w-0 items-center gap-2 sm:gap-2.5"
         >
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-saffron/30 bg-saffron/10 text-saffron shadow-[0_0_28px_rgba(227,122,44,0.18)] sm:size-10">
             <Music2 className="size-5" aria-hidden="true" />
           </span>
           <span className="text-lg font-black uppercase tracking-[0.14em] text-white sm:text-2xl sm:tracking-[0.18em]">
-            Zahirok
+            Soroz
           </span>
         </Link>
 
@@ -151,7 +151,7 @@ function LandingNavbar() {
             href="/auth/sign-up"
             className="inline-flex h-10 items-center justify-center rounded-full [background:var(--gradient-brand)] px-3 text-sm font-black text-white shadow-[0_14px_36px_rgba(227,122,44,0.28)] transition hover:[background:var(--gradient-brand-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:h-12 sm:px-6"
           >
-            <span className="hidden sm:inline">Join Zahirok for free</span>
+            <span className="hidden sm:inline">Join Soroz for free</span>
             <span className="sm:hidden">Join free</span>
           </Link>
         </div>
@@ -187,7 +187,7 @@ function LandingHero() {
           <span className="sm:whitespace-nowrap"> what a Dambora sounds like.</span>
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-6 text-white/72 sm:text-base sm:leading-7">
-          Zahirok is the first AI music tool built for Balochi, Makkuran, and coastal folk traditions.
+          Soroz is the first AI music tool built for Balochi, Makkuran, and coastal folk traditions.
           Start with a mood, a lyric, or just an instrument — and hear it become a song.
         </p>
 
@@ -270,7 +270,7 @@ function HowItWorksSection() {
     <section className="bg-[#111113] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
       <div className="mx-auto max-w-6xl">
         <SectionHeading
-          title="How Zahirok works"
+          title="How Soroz works"
           body="Three steps. No music experience needed."
           align="center"
         />
@@ -293,7 +293,7 @@ function SongShowcaseSection() {
   return (
     <section className="bg-[#0f0f11] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
       <SectionHeading
-        title="Hear what Zahirok creates"
+        title="Hear what Soroz creates"
         body="From wedding rhythms to coastal folk — real drafts shaped by Balochi instruments and dialect."
         align="center"
       />
@@ -457,7 +457,7 @@ function FaqSection() {
       <div className="mx-auto max-w-3xl">
         <SectionHeading
           title="Frequently asked questions"
-          body="Everything you need to know about creating with Zahirok."
+          body="Everything you need to know about creating with Soroz."
           align="center"
         />
 
@@ -500,14 +500,14 @@ function FinalCtaSection() {
         <h2 className="text-3xl font-black leading-tight tracking-[-0.03em] text-white sm:text-5xl">
           Ready to make your first
           <br />
-          Zahirok track?
+          Soroz track?
         </h2>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href="/auth/sign-up"
             className="inline-flex h-12 w-full items-center justify-center rounded-full [background:var(--gradient-brand)] px-7 text-sm font-black text-white shadow-[0_18px_42px_rgba(227,122,44,0.28)] transition hover:[background:var(--gradient-brand-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:w-auto"
           >
-            Join Zahirok for free
+            Join Soroz for free
           </Link>
           <Link
             href="/feed"
@@ -526,7 +526,7 @@ function LandingFooter() {
     <footer className="border-t border-white/[0.06] bg-[#0d0d0f] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <p className="text-sm font-semibold text-white/42">
-          © 2026 Zahirok AI. Built for Balochi creators.
+          © 2026 Soroz AI. Built for Balochi creators.
         </p>
         <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold text-white/48">
           {footerLinks.map((link) => (

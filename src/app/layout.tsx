@@ -18,7 +18,7 @@ const bodyFont = Manrope({
 })
 
 export const metadata: Metadata = {
-  title: "ZahiRok AI — The Sound of Balochistan, Generated",
+  title: "Soroz AI — The Sound of Balochistan, Generated",
   description:
     "Create and discover Balochi music powered by AI. Traditional instruments, native vocal style, multiple dialects.",
 }

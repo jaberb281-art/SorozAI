@@ -21,7 +21,7 @@ const MOCK_COMMENTS = [
   {
     id: "comment-1",
     songId: "song-1",
-    authorName: "ZahiRok Creator",
+    authorName: "Soroz Creator",
     body: "This sounds like home.",
     createdAt: "2026-05-23T12:00:00Z",
   },
@@ -153,7 +153,7 @@ export async function getAccount(): Promise<AccountResponse> {
 
   return {
     id: "user-1",
-    name: "ZahiRok Creator",
+    name: "Soroz Creator",
     email: "creator@example.com",
     country: "Pakistan",
     tier: "free",
