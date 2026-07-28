@@ -15,7 +15,7 @@ export default tseslint.config(
     plugins: { "react-hooks": reactHooks },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      // Allow setState in effects for intentional reset-on-change patterns (e.g. hooks page)
+      // Allow setState in effects for intentional reset-on-change patterns
       "react-hooks/set-state-in-effect": "warn",
     },
   },

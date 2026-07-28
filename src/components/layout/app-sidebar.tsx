@@ -22,7 +22,6 @@ import {
     Search,
     SlidersHorizontal,
     Sparkles,
-    SquarePlay,
     User,
     X,
 } from "lucide-react"
@@ -41,7 +40,6 @@ const MAIN_NAV_ITEMS: NavItem[] = [
     // MOCK: placeholder route until Studio ships
     { href: "/studio", label: "Studio", icon: SlidersHorizontal },
     { href: "/library", label: "Library", icon: Library },
-    { href: "/hooks", label: "Hooks", icon: SquarePlay },
     { href: "/notifications", label: "Notifications", icon: Bell },
 ] as const
 

@@ -16,7 +16,8 @@ import {
 
 import { usePlaySong } from "@/hooks/use-play-song"
 import { DemoVideoPoster } from "@/components/media/demo-video"
-import { withDemoImageField, withDemoImageUrl } from "@/lib/demo-images"
+import { withDemoImageUrl } from "@/lib/demo-images"
+import { profilePathForCreator } from "@/lib/public-profiles"
 import type { Song } from "@/lib/types"
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -52,14 +53,6 @@ type DiscoverTrack = {
     imageUrl?: string
     audioUrl?: string
     timeAgo?: string
-}
-
-type DiscoverClip = {
-    id: string
-    title: string
-    creator: string
-    gradient: string
-    image?: string
 }
 
 // ── Mock data ──────────────────────────────────────────────────────────────────
@@ -235,48 +228,6 @@ const TRENDING_TRACKS_BASE: DiscoverTrack[] = [
     },
 ]
 
-const EXPLORE_CLIPS_BASE: DiscoverClip[] = [
-    {
-        id: "clip-1",
-        title: "Makran Evening Hook",
-        creator: "Shah Baloch",
-        gradient:
-            "linear-gradient(180deg, rgba(31,78,86,0.95), rgba(11,14,18,0.96) 48%, rgba(92,47,23,0.9))",
-    },
-    {
-        id: "clip-2",
-        title: "Wedding Doholl Step",
-        creator: "Meeral Gwadar",
-        gradient:
-            "radial-gradient(circle at 48% 48%, rgba(79,214,201,0.9) 0%, rgba(227,122,44,0.62) 16%, rgba(24,23,42,0.96) 44%, rgba(9,9,12,1) 100%)",
-    },
-    {
-        id: "clip-3",
-        title: "Sufi Dambora Phrase",
-        creator: "Noor Dehwar",
-        gradient:
-            "linear-gradient(145deg, rgba(67,45,100,0.86), rgba(12,12,15,0.98)), radial-gradient(circle at 52% 34%, rgba(237,227,211,0.68), transparent 20%)",
-    },
-    {
-        id: "clip-4",
-        title: "Coastal Liko Drift",
-        creator: "Azim Dashti",
-        gradient: "linear-gradient(180deg, rgba(14,71,83,0.96), rgba(9,10,14,0.98) 50%, rgba(25,31,54,0.94))",
-    },
-    {
-        id: "clip-5",
-        title: "Turbat Night Call",
-        creator: "Zareena Sajid",
-        gradient: "linear-gradient(180deg, rgba(183,62,31,0.78), rgba(22,18,28,0.98) 54%, rgba(9,9,12,1))",
-    },
-    {
-        id: "clip-6",
-        title: "Suroz Dawn Loop",
-        creator: "James Bakian",
-        gradient: "linear-gradient(180deg, rgba(227,122,44,0.62), rgba(26,58,92,0.86) 52%, rgba(9,9,12,1))",
-    },
-]
-
 const RECENTLY_CREATED_BASE: DiscoverTrack[] = [
     {
         id: "r1",
@@ -362,7 +313,6 @@ const RECENTLY_CREATED_BASE: DiscoverTrack[] = [
 ]
 
 const TRENDING_TRACKS: DiscoverTrack[] = withDemoImageUrl(TRENDING_TRACKS_BASE)
-const EXPLORE_CLIPS: DiscoverClip[] = withDemoImageField(EXPLORE_CLIPS_BASE)
 const RECENTLY_CREATED: DiscoverTrack[] = withDemoImageUrl(RECENTLY_CREATED_BASE)
 
 const ALL_SEARCHABLE_TRACKS = [...TRENDING_TRACKS, ...RECENTLY_CREATED]
@@ -557,39 +507,6 @@ export default function FeedPage() {
                             onCreateLike={(track) => router.push(buildCreateLikeHref(track))}
                             onPlayTrack={handlePlayTrack}
                             tracks={TRENDING_TRACKS}
-                        />
-                        <ClipsSection
-                            clips={EXPLORE_CLIPS}
-                            isCurrentSong={isCurrentSong}
-                            isPlaying={isPlaying}
-                            onCreateLike={(clip) =>
-                                router.push(
-                                    buildCreateLikeHref({
-                                        title: clip.title,
-                                        tags: ["Clip", clip.creator],
-                                    }),
-                                )
-                            }
-                            onPlayClip={(clip) =>
-                                handlePlayTrack(
-                                    {
-                                        id: clip.id,
-                                        title: clip.title,
-                                        creator: clip.creator,
-                                        duration: "0:30",
-                                        tags: ["Clip"],
-                                        gradient: clip.gradient,
-                                    },
-                                    EXPLORE_CLIPS.map((item) => ({
-                                        id: item.id,
-                                        title: item.title,
-                                        creator: item.creator,
-                                        duration: "0:30",
-                                        tags: ["Clip"],
-                                        gradient: item.gradient,
-                                    })),
-                                )
-                            }
                         />
                         <RecentlyCreatedSection
                             isCurrentSong={isCurrentSong}
@@ -863,95 +780,6 @@ function TrendingSection({
     )
 }
 
-function ClipsSection({
-    clips,
-    isCurrentSong,
-    isPlaying,
-    onCreateLike,
-    onPlayClip,
-}: {
-    clips: DiscoverClip[]
-    isCurrentSong: (song: Song) => boolean
-    isPlaying: boolean
-    onCreateLike: (clip: DiscoverClip) => void
-    onPlayClip: (clip: DiscoverClip) => void
-}) {
-    return (
-        <section aria-labelledby="clips-title">
-            <div className="flex items-center justify-between gap-4">
-                <h2 id="clips-title" className="text-xl font-black text-white sm:text-2xl">
-                    Clips
-                </h2>
-                <Link
-                    href="/hooks"
-                    className="inline-flex h-10 shrink-0 items-center gap-1 rounded-full border border-sand/12 bg-sand/5 px-4 text-sm font-black text-white transition hover:border-saffron/35 hover:bg-saffron/10"
-                >
-                    See all
-                    <ChevronRight className="size-4" aria-hidden="true" />
-                </Link>
-            </div>
-
-            <HorizontalScrollRow className="mt-4">
-                {clips.map((clip) => {
-                    const playing =
-                        isCurrentSong(
-                            toPlayableTrack({
-                                id: clip.id,
-                                title: clip.title,
-                                creator: clip.creator,
-                                duration: "0:30",
-                                tags: ["Clip"],
-                                gradient: clip.gradient,
-                            }),
-                        ) && isPlaying
-
-                    return (
-                        <article
-                            key={clip.id}
-                            className="group relative h-[310px] w-[min(62vw,210px)] shrink-0 snap-start overflow-hidden rounded-2xl border border-sand/10 shadow-[0_18px_46px_rgba(0,0,0,0.26)] sm:h-[390px] sm:w-[236px]"
-                            style={{ background: clip.gradient }}
-                        >
-                            {clip.image ? (
-                                <DemoVideoPoster
-                                    src={clip.image}
-                                    className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                                />
-                            ) : null}
-                            <span className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/18 to-transparent" />
-
-                            <button
-                                type="button"
-                                onClick={() => onPlayClip(clip)}
-                                aria-label={`${playing ? "Pause" : "Play"} ${clip.title}`}
-                                className="absolute left-4 top-4 inline-flex size-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-saffron hover:text-charcoal"
-                            >
-                                {playing ? (
-                                    <Pause className="size-4 fill-current" aria-hidden="true" />
-                                ) : (
-                                    <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
-                                )}
-                            </button>
-
-                            <div className="absolute inset-x-4 bottom-4">
-                                <h3 className="text-lg font-black leading-tight text-white">{clip.title}</h3>
-                                <p className="mt-2 text-sm font-bold text-sand/72">{clip.creator}</p>
-                                <button
-                                    type="button"
-                                    onClick={() => onCreateLike(clip)}
-                                    className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1 rounded-full bg-saffron/90 text-xs font-black text-charcoal opacity-0 transition group-hover:opacity-100 hover:bg-saffron"
-                                >
-                                    Create like this
-                                    <ArrowRight className="size-3.5" aria-hidden="true" />
-                                </button>
-                            </div>
-                        </article>
-                    )
-                })}
-            </HorizontalScrollRow>
-        </section>
-    )
-}
-
 function RecentlyCreatedSection({
     isCurrentSong,
     isPlaying,
@@ -1141,7 +969,12 @@ function TrendingTrackCard({
 
             <div className="p-4">
                 <h3 className="line-clamp-1 text-sm font-black text-white">{track.title}</h3>
-                <p className="mt-1 text-xs font-semibold text-sand/45">{track.creator}</p>
+                <Link
+                    href={profilePathForCreator(track.creator)}
+                    className="mt-1 inline-block text-xs font-semibold text-sand/45 transition hover:text-saffron"
+                >
+                    {track.creator}
+                </Link>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                     {track.tags.slice(0, 2).map((tag) => (
                         <TagPill key={tag} label={tag} />
@@ -1199,7 +1032,12 @@ function RecentFeedCard({
             </div>
             <div className="p-3">
                 <h3 className="line-clamp-1 text-sm font-black text-white">{track.title}</h3>
-                <p className="mt-0.5 text-xs font-semibold text-sand/45">{track.creator}</p>
+                <Link
+                    href={profilePathForCreator(track.creator)}
+                    className="mt-0.5 inline-block text-xs font-semibold text-sand/45 transition hover:text-saffron"
+                >
+                    {track.creator}
+                </Link>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                     {track.tags.slice(0, 2).map((tag) => (
                         <TagPill key={tag} label={tag} />

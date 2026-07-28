@@ -36,7 +36,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
 
     const showPlayer = shouldShowBottomPlayer(pathname)
-    const showMobileAppNavbar = pathname !== "/hooks"
+    const showMobileAppNavbar = true
     const showMobileTabBar = true
 
     return (

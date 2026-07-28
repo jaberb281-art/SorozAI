@@ -7,6 +7,7 @@ import { ArrowRight, Minus, Music2, Play, Plus } from "lucide-react"
 import { DemoVideoPoster } from "@/components/media/demo-video"
 import { getDemoImage } from "@/lib/demo-images"
 import { getFeedSongs } from "@/lib/mock-songs"
+import { profilePathForCreator } from "@/lib/public-profiles"
 
 const showcaseSongs = getFeedSongs().slice(0, 5)
 
@@ -63,11 +64,6 @@ const honestFeatures = [
     title: "Advanced creation tools",
     body: "Lyrics editor, vocal gender, weirdness, BPM, key, and style influence — the tools serious creators need.",
     visual: "controls",
-  },
-  {
-    title: "Short-form hooks",
-    body: "Create short musical moments for reels, stories, and cinematic previews.",
-    visual: "hooks",
   },
 ]
 
@@ -233,7 +229,12 @@ function FloatingSongCard({
         </span>
         <div className="absolute inset-x-3 bottom-3">
           <p className="text-sm font-black text-white">{title}</p>
-          <p className="mt-0.5 text-xs font-bold text-white/62">{creator}</p>
+          <Link
+            href={profilePathForCreator(creator)}
+            className="mt-0.5 inline-block text-xs font-bold text-white/62 transition hover:text-saffron"
+          >
+            {creator}
+          </Link>
         </div>
       </div>
     </div>
@@ -315,20 +316,29 @@ function ShowcaseCard({
   song: (typeof showcaseSongs)[number]
 }) {
   return (
-    <Link
-      href="/feed"
-      className="group w-[min(78vw,260px)] shrink-0 snap-start outline-none sm:w-[280px] lg:w-[300px]"
-    >
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.04] shadow-[0_24px_80px_rgba(0,0,0,0.28)] transition group-hover:-translate-y-1 group-focus-visible:ring-2 group-focus-visible:ring-saffron">
-        <DemoVideoPoster src={artwork} className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/10 to-transparent" />
-        <span className="absolute left-4 top-4 inline-flex size-10 items-center justify-center rounded-full bg-white/16 text-white opacity-0 backdrop-blur-md transition group-hover:opacity-100">
-          <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
-        </span>
-      </div>
-      <h3 className="mt-4 truncate text-lg font-black text-white">{song.title}</h3>
-      <p className="mt-1 text-sm font-bold text-white/48">{song.creator}</p>
-    </Link>
+    <div className="group w-[min(78vw,260px)] shrink-0 snap-start sm:w-[280px] lg:w-[300px]">
+      <Link
+        href="/feed"
+        className="block outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+      >
+        <div className="relative aspect-[4/5] overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.04] shadow-[0_24px_80px_rgba(0,0,0,0.28)] transition group-hover:-translate-y-1">
+          <DemoVideoPoster src={artwork} className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/10 to-transparent" />
+          <span className="absolute left-4 top-4 inline-flex size-10 items-center justify-center rounded-full bg-white/16 text-white opacity-0 backdrop-blur-md transition group-hover:opacity-100">
+            <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
+          </span>
+        </div>
+        <h3 className="mt-4 truncate text-lg font-black text-white transition group-hover:text-saffron">
+          {song.title}
+        </h3>
+      </Link>
+      <Link
+        href={profilePathForCreator(song.creator)}
+        className="mt-1 inline-block truncate text-sm font-bold text-white/48 transition hover:text-saffron"
+      >
+        {song.creator}
+      </Link>
+    </div>
   )
 }
 
@@ -386,7 +396,7 @@ function HonestFeaturesSection() {
   return (
     <section className="bg-[#111113] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
       <div className="mx-auto max-w-6xl">
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-5 lg:grid-cols-2">
           {honestFeatures.map((feature) => (
             <article
               key={feature.title}
@@ -418,19 +428,6 @@ function FeatureVisual({ type }: { type: string }) {
             </div>
           </div>
         ))}
-      </div>
-    )
-  }
-
-  if (type === "hooks") {
-    return (
-      <div className="mt-auto flex justify-center pt-8">
-        <div className="relative h-40 w-28 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(227,122,44,0.54),rgba(12,12,14,0.95))]">
-          <div className="absolute inset-x-4 bottom-5 h-16 rounded-full bg-saffron/40 blur-xl" />
-          <span className="absolute inset-x-0 bottom-4 text-center text-[11px] font-black text-white/80">
-            ▶ 0:30 clip
-          </span>
-        </div>
       </div>
     )
   }

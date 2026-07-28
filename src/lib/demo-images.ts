@@ -30,14 +30,3 @@ export function withDemoImageUrl<T extends { imageUrl?: string }>(
         imageUrl: item.imageUrl ?? getDemoImage(startIndex + index),
     }))
 }
-
-/** Assign demo image when `image` is missing (Discover clips row). */
-export function withDemoImageField<T extends { image?: string }>(
-    items: T[],
-    startIndex = 0,
-): T[] {
-    return items.map((item, index) => ({
-        ...item,
-        image: item.image ?? getDemoImage(startIndex + index),
-    }))
-}

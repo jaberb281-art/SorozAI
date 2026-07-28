@@ -29,7 +29,6 @@ export function MobileMoreMenu({ onClose }: { onClose: () => void }) {
 
     const navItems = [
         { label: "Studio", href: "/dashboard" },
-        { label: "Clips", href: "/hooks" },
         { label: "Radio", href: "/radio" },
         { label: "Labs", href: "/labs" },
         { label: "Help", href: "/terms" },

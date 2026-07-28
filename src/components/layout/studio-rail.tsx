@@ -5,8 +5,6 @@ import type { ComponentType } from "react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import {
-    Bookmark,
-    Clock3,
     Compass,
     CreditCard,
     Home,
@@ -15,7 +13,6 @@ import {
     Radio,
     SlidersHorizontal,
     Sparkles,
-    SquarePlay,
     UserRound,
     Wand2,
 } from "lucide-react"
@@ -56,12 +53,6 @@ const DISCOVER_ITEMS: RailItem[] = [
         activeWhen: ({ pathname, view }) => pathname === "/feed" && !view,
     },
     {
-        href: "/hooks",
-        label: "Clips",
-        icon: SquarePlay,
-        activeWhen: ({ pathname }) => pathname === "/hooks",
-    },
-    {
         href: "/radio",
         label: "Radio",
         icon: Radio,
@@ -74,20 +65,8 @@ const MY_SPACE_ITEMS: RailItem[] = [
         href: "/library",
         label: "My Studio",
         icon: SlidersHorizontal,
-        activeWhen: ({ pathname, space }) =>
-            (pathname === "/library" || pathname.startsWith("/song/")) && !space,
-    },
-    {
-        href: "/library?space=drafts",
-        label: "Drafts",
-        icon: Clock3,
-        activeWhen: ({ pathname, space }) => pathname === "/library" && space === "drafts",
-    },
-    {
-        href: "/library?space=saved",
-        label: "Saved",
-        icon: Bookmark,
-        activeWhen: ({ pathname, space }) => pathname === "/library" && space === "saved",
+        activeWhen: ({ pathname }) =>
+            pathname === "/library" || pathname.startsWith("/song/"),
     },
 ] as const
 

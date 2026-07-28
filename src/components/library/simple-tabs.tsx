@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import {
     ChevronDown,
     Grid3X3,
@@ -13,7 +12,6 @@ import {
 } from "lucide-react"
 
 import { MockNote, RoundIcon } from "./shared"
-import { profilePathForCreator } from "@/lib/public-profiles"
 
 // ── Voices tab ──────────────────────────────────────────────────────────────
 
@@ -123,75 +121,6 @@ export function CoverArtTab() {
 
                 {note && <MockNote text={note} />}
             </div>
-        </div>
-    )
-}
-
-// ── Hooks tab ───────────────────────────────────────────────────────────────
-
-export function HooksTab() {
-    return (
-        <div className="flex min-h-[420px] flex-col items-center justify-start pt-8 text-center">
-            <p className="text-lg font-semibold text-sand/78">
-                You have not created any clips yet. Try it out!
-            </p>
-            <Link
-                href="/hooks"
-                className="mt-6 inline-flex h-12 items-center gap-3 rounded-full bg-sand px-6 text-lg font-black text-[#151515]"
-            >
-                <Plus className="size-5" aria-hidden={true} />
-                Create clip
-            </Link>
-        </div>
-    )
-}
-
-// ── Liked Hooks tab ─────────────────────────────────────────────────────────
-
-interface HookCard {
-    id: string
-    title: string
-    creator: string
-    coverClass: string
-}
-
-const MOCK_HOOKS: HookCard[] = [
-    {
-        id: "hook-1",
-        title: "Kech Valley Loop",
-        creator: "Ruvin Dashti",
-        coverClass:
-            "bg-[linear-gradient(180deg,rgba(8,55,42,0.78),rgba(8,12,12,0.95)),radial-gradient(circle_at_50%_18%,rgba(227,122,44,0.65),transparent_12%)]",
-    },
-    {
-        id: "hook-2",
-        title: "Makran Coast Beat",
-        creator: "Karzan Beat",
-        coverClass:
-            "bg-[linear-gradient(160deg,rgba(183,62,31,0.64),rgba(22,18,28,0.95)),radial-gradient(circle_at_42%_35%,rgba(237,227,211,0.5),transparent_20%)]",
-    },
-]
-
-export function LikedHooksTab() {
-    return (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {MOCK_HOOKS.map((hook) => (
-                <article
-                    key={hook.id}
-                    className={`relative h-[410px] overflow-hidden rounded-2xl border border-white/10 ${hook.coverClass}`}
-                >
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/20 to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4">
-                        <h2 className="text-base font-black text-white">{hook.title}</h2>
-                        <Link
-                            href={profilePathForCreator(hook.creator)}
-                            className="mt-2 inline-block text-sm font-semibold text-sand/82 transition hover:text-saffron"
-                        >
-                            {hook.creator}
-                        </Link>
-                    </div>
-                </article>
-            ))}
         </div>
     )
 }
