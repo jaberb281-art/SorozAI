@@ -2,7 +2,21 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { ArrowRight, Minus, Music2, Play, Plus } from "lucide-react"
+import {
+  ArrowRight,
+  Check,
+  Flame,
+  Globe,
+  Headphones,
+  Heart,
+  Minus,
+  MoreHorizontal,
+  Music2,
+  Play,
+  Plus,
+  TrendingUp,
+  Users,
+} from "lucide-react"
 
 import { DemoVideoPoster } from "@/components/media/demo-video"
 import { getDemoImage } from "@/lib/demo-images"
@@ -293,19 +307,105 @@ function HowItWorksSection() {
 function SongShowcaseSection() {
   return (
     <section className="bg-[#0f0f11] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-      <SectionHeading
-        title="Hear what Soroz creates"
-        body="From wedding rhythms to coastal folk — real drafts shaped by Balochi instruments and dialect."
-        align="center"
-      />
+      <div className="mx-auto max-w-[1500px]">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-3xl">
+            <h2 className="flex flex-wrap items-center gap-2 text-3xl font-black leading-[1.04] tracking-[-0.03em] text-white sm:text-4xl lg:text-5xl">
+              <span>Trending on</span>
+              <span className="text-saffron">Soroz</span>
+              <TrendingUp className="size-7 text-saffron sm:size-8" aria-hidden="true" />
+            </h2>
+            <p className="mt-4 max-w-2xl text-sm font-semibold leading-6 text-white/58 sm:mt-5 sm:text-base sm:leading-7">
+              Explore the most loved AI-generated tracks right now, created by artists and listeners
+              around the world.
+            </p>
+          </div>
+          <Link
+            href="/feed"
+            className="inline-flex h-10 shrink-0 items-center gap-1.5 self-start rounded-full border border-white/12 bg-white/[0.04] px-4 text-sm font-black text-white transition hover:border-saffron/35 hover:bg-saffron/10 sm:self-auto"
+          >
+            View all
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        </div>
 
-      <div className="mx-auto mt-10 flex max-w-[1500px] snap-x gap-4 overflow-x-auto pb-4 [scrollbar-width:none] sm:mt-12 sm:gap-5 [&::-webkit-scrollbar]:hidden">
-        {showcaseSongs.map((song, index) => (
-          <ShowcaseCard key={song.id} song={song} artwork={getDemoImage(index)} />
-        ))}
+        <div className="mt-10 flex snap-x gap-4 overflow-x-auto pb-4 [scrollbar-width:none] sm:mt-12 sm:gap-5 [&::-webkit-scrollbar]:hidden">
+          {showcaseSongs.map((song, index) => (
+            <ShowcaseCard key={song.id} song={song} artwork={getDemoImage(index)} />
+          ))}
+        </div>
+
+        <div className="mt-10 grid grid-cols-2 gap-3 rounded-[1.35rem] border border-white/10 bg-white/[0.035] p-4 sm:mt-12 sm:grid-cols-4 sm:gap-2 sm:p-5">
+          {TRENDING_STATS.map((stat) => (
+            <div
+              key={stat.label}
+              className="flex items-center gap-3 rounded-2xl px-2 py-2 sm:justify-center sm:px-3"
+            >
+              <span
+                className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${stat.iconWrap}`}
+              >
+                <stat.icon className={`size-5 ${stat.iconClass}`} aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-lg font-black text-white sm:text-xl">{stat.value}</p>
+                <p className="text-xs font-bold text-white/45">{stat.label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )
+}
+
+const TRENDING_STATS = [
+  {
+    value: "50K+",
+    label: "Tracks Generated",
+    icon: Flame,
+    iconWrap: "bg-saffron/15",
+    iconClass: "text-saffron",
+  },
+  {
+    value: "120+",
+    label: "Countries",
+    icon: Globe,
+    iconWrap: "bg-sky-400/15",
+    iconClass: "text-sky-400",
+  },
+  {
+    value: "25K+",
+    label: "Active Creators",
+    icon: Users,
+    iconWrap: "bg-violet-400/15",
+    iconClass: "text-violet-400",
+  },
+  {
+    value: "2M+",
+    label: "Songs Listened",
+    icon: Headphones,
+    iconWrap: "bg-rose-400/15",
+    iconClass: "text-rose-400",
+  },
+] as const
+
+const TAG_STYLES = [
+  "border-saffron/30 bg-saffron/10 text-saffron",
+  "border-sky-400/30 bg-sky-400/10 text-sky-300",
+  "border-violet-400/30 bg-violet-400/10 text-violet-300",
+  "border-emerald-400/30 bg-emerald-400/10 text-emerald-300",
+  "border-rose-400/30 bg-rose-400/10 text-rose-300",
+] as const
+
+function formatCount(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1).replace(/\.0$/, "")}K`
+  return String(value)
+}
+
+function showcaseTags(song: (typeof showcaseSongs)[number]): string[] {
+  const tags = [song.genrePreset, song.instruments[0]].filter(Boolean)
+  return tags.slice(0, 2) as string[]
 }
 
 function ShowcaseCard({
@@ -315,30 +415,76 @@ function ShowcaseCard({
   artwork: string
   song: (typeof showcaseSongs)[number]
 }) {
+  const tags = showcaseTags(song)
+
   return (
-    <div className="group w-[min(78vw,260px)] shrink-0 snap-start sm:w-[280px] lg:w-[300px]">
+    <article className="group w-[min(78vw,240px)] shrink-0 snap-start overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#17171a] shadow-[0_24px_80px_rgba(0,0,0,0.28)] transition hover:-translate-y-1 sm:w-[260px] lg:w-[280px]">
       <Link
-        href="/feed"
-        className="block outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+        href={`/song/${song.id}`}
+        className="relative block aspect-[5/4] overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-saffron"
       >
-        <div className="relative aspect-[4/5] overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.04] shadow-[0_24px_80px_rgba(0,0,0,0.28)] transition group-hover:-translate-y-1">
-          <DemoVideoPoster src={artwork} className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/10 to-transparent" />
-          <span className="absolute left-4 top-4 inline-flex size-10 items-center justify-center rounded-full bg-white/16 text-white opacity-0 backdrop-blur-md transition group-hover:opacity-100">
-            <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
+        <DemoVideoPoster
+          src={artwork}
+          className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+        <span className="absolute right-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-black text-white backdrop-blur-sm">
+          {song.duration}
+        </span>
+        <span className="absolute inset-0 flex items-center justify-center">
+          <span className="inline-flex size-12 items-center justify-center rounded-full bg-white/18 text-white backdrop-blur-md transition group-hover:bg-saffron group-hover:text-[#171210]">
+            <Play className="ml-0.5 size-5 fill-current" aria-hidden="true" />
           </span>
-        </div>
-        <h3 className="mt-4 truncate text-lg font-black text-white transition group-hover:text-saffron">
+        </span>
+      </Link>
+
+      <div className="p-4">
+        <Link
+          href={`/song/${song.id}`}
+          className="block truncate text-base font-black text-white transition hover:text-saffron"
+        >
           {song.title}
-        </h3>
-      </Link>
-      <Link
-        href={profilePathForCreator(song.creator)}
-        className="mt-1 inline-block truncate text-sm font-bold text-white/48 transition hover:text-saffron"
-      >
-        {song.creator}
-      </Link>
-    </div>
+        </Link>
+        <Link
+          href={profilePathForCreator(song.creator)}
+          className="mt-1.5 inline-flex max-w-full items-center gap-1.5 text-sm font-bold text-white/55 transition hover:text-saffron"
+        >
+          <span className="truncate">{song.creator}</span>
+          <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-saffron text-[#171210]">
+            <Check className="size-2.5 stroke-[3]" aria-hidden="true" />
+          </span>
+        </Link>
+
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {tags.map((tag, index) => (
+            <span
+              key={tag}
+              className={`rounded-full border px-2.5 py-1 text-[10px] font-black ${TAG_STYLES[index % TAG_STYLES.length]}`}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-4 flex items-center gap-3 border-t border-white/8 pt-3 text-xs font-bold text-white/45">
+          <span className="inline-flex items-center gap-1.5">
+            <Heart className="size-3.5" aria-hidden="true" />
+            {formatCount(song.likes)}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Play className="size-3.5 fill-current" aria-hidden="true" />
+            {formatCount(song.plays)}
+          </span>
+          <button
+            type="button"
+            aria-label={`More options for ${song.title}`}
+            className="ml-auto inline-flex size-7 items-center justify-center rounded-full text-white/45 transition hover:bg-white/8 hover:text-white"
+          >
+            <MoreHorizontal className="size-4" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </article>
   )
 }
 

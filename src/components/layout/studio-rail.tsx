@@ -134,14 +134,26 @@ export function StudioRail() {
 
                 <nav
                     aria-label="Studio navigation"
-                    className="mt-5 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    className="mt-5 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
                     <div className="grid gap-1">
                         <RailLink item={HOME_ITEM} active={HOME_ITEM.activeWhen(activeContext)} />
                         <RailLink item={CREATE_ITEM} active={CREATE_ITEM.activeWhen(activeContext)} />
+                        {DISCOVER_ITEMS.map((item) => (
+                            <RailLink
+                                key={item.href}
+                                item={item}
+                                active={item.activeWhen(activeContext)}
+                            />
+                        ))}
+                        {MY_SPACE_ITEMS.map((item) => (
+                            <RailLink
+                                key={item.href}
+                                item={item}
+                                active={item.activeWhen(activeContext)}
+                            />
+                        ))}
                     </div>
-                    <RailSection title="Discover" items={DISCOVER_ITEMS} activeContext={activeContext} />
-                    <RailSection title="My Space" items={MY_SPACE_ITEMS} activeContext={activeContext} />
                 </nav>
 
                 <div className="mt-4 shrink-0 border-t border-white/[0.08] pt-3">
@@ -178,36 +190,6 @@ export function StudioRail() {
                 </div>
             </div>
         </aside>
-    )
-}
-
-function RailSection({
-    activeContext,
-    items,
-    title,
-}: {
-    activeContext: ActiveContext
-    items: readonly RailItem[]
-    title: string
-}) {
-    return (
-        <section aria-labelledby={`studio-rail-${title.toLowerCase().replace(/\s+/g, "-")}`}>
-            <h2
-                id={`studio-rail-${title.toLowerCase().replace(/\s+/g, "-")}`}
-                className="px-2 text-[10px] font-black uppercase tracking-[0.18em] text-sand/35"
-            >
-                {title}
-            </h2>
-            <div className="mt-2 grid gap-1">
-                {items.map((item) => (
-                    <RailLink
-                        key={item.href}
-                        item={item}
-                        active={item.activeWhen(activeContext)}
-                    />
-                ))}
-            </div>
-        </section>
     )
 }
 

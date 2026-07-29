@@ -64,14 +64,6 @@ const SONG_DESCRIPTION_WARNING_LENGTH = 180
 const USER_CREDITS = 75
 const LANGUAGE_OPTIONS = ["Balochi", "Urdu", "English", "Arabic", "Brahui"] as const
 type SongLanguage = (typeof LANGUAGE_OPTIONS)[number]
-const LANGUAGE_LABELS: Record<SongLanguage, string> = {
-  Balochi: "Balochi (بلوچی)",
-  Urdu: "Urdu (اردو)",
-  English: "English",
-  Arabic: "Arabic (عربي)",
-  Brahui: "Brahui (براہوئی)",
-}
-
 const RTL_LYRICS_LANGUAGES = new Set<SongLanguage>(["Balochi", "Urdu", "Arabic"])
 const LYRICS_STRUCTURE_TAGS = [
   "[Intro]",
@@ -1223,6 +1215,13 @@ function CreatePageInner() {
                   </button>
                 ))}
               </div>
+              <button
+                type="button"
+                aria-label="Language: English Balochi"
+                className="inline-flex h-10 items-center rounded-full border border-sand/10 bg-sand/[0.08] px-3.5 text-xs font-black text-sand/80 transition hover:bg-sand/[0.12] hover:text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+              >
+                English Balochi
+              </button>
             </div>
 
             {/* Input tabs — Advanced only */}
@@ -1390,10 +1389,6 @@ function CreatePageInner() {
               </div>
             )}
 
-            <LanguageSelector
-              value={selectedLanguage}
-              onChange={setSelectedLanguage}
-            />
 
             {/* Tab content */}
             {createMode === "Simple" ? (
@@ -3406,38 +3401,6 @@ function VoiceInput({
   )
 }
 
-function LanguageSelector({
-  onChange,
-  value,
-}: {
-  onChange: (language: SongLanguage) => void
-  value: SongLanguage
-}) {
-  return (
-    <div className="mt-4 rounded-[1.25rem] border border-sand/8 bg-sand/[0.045] p-3 sm:mt-5 sm:rounded-[1.35rem] sm:p-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-sm font-black text-sand/82">Language</span>
-        <div className="ml-auto flex flex-wrap gap-1.5">
-          {LANGUAGE_OPTIONS.map((language) => (
-            <button
-              key={language}
-              type="button"
-              onClick={() => onChange(language)}
-              aria-pressed={value === language}
-              className={`rounded-full px-3 py-1.5 text-xs font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron ${
-                value === language
-                  ? "bg-sand/12 text-sand"
-                  : "bg-black/10 text-sand/50 hover:text-sand/75"
-              }`}
-            >
-              {LANGUAGE_LABELS[language]}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function SongDescriptionPanel({
   actions,
