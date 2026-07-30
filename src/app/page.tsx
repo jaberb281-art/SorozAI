@@ -5,40 +5,30 @@ import { useState } from "react"
 import {
   ArrowRight,
   Check,
+  Cloud,
   Flame,
   Globe,
   Headphones,
   Heart,
+  Link2,
   Minus,
   MoreHorizontal,
   Music2,
   Play,
   Plus,
+  Sparkles,
   TrendingUp,
   Users,
+  Volume2,
 } from "lucide-react"
 
+import { LandingPrompt } from "@/components/home/landing-prompt"
 import { DemoVideoPoster } from "@/components/media/demo-video"
 import { getDemoImage } from "@/lib/demo-images"
 import { getFeedSongs } from "@/lib/mock-songs"
 import { profilePathForCreator } from "@/lib/public-profiles"
 
 const showcaseSongs = getFeedSongs().slice(0, 5)
-
-const floatingCards = [
-  {
-    title: "Makran Nightfall",
-    creator: "Zareena Sajid",
-    artwork: getDemoImage(0),
-    className: "-left-4 top-[46%] -rotate-[7deg] xl:left-[2%]",
-  },
-  {
-    title: "Doholl Wedding",
-    creator: "Meeral Gwadar",
-    artwork: getDemoImage(1),
-    className: "-right-4 top-[46%] rotate-[6deg] xl:right-[2%]",
-  },
-]
 
 const marqueeItems = [
   "Built for Balochi creators",
@@ -127,6 +117,7 @@ export default function HomePage() {
       <DriftTeaserSection />
       <HonestFeaturesSection />
       <FaqSection />
+      <MobileAppSection />
       <FinalCtaSection />
       <LandingFooter />
     </main>
@@ -172,86 +163,28 @@ function LandingNavbar() {
 
 function LandingHero() {
   return (
-    <section className="relative isolate flex min-h-[min(760px,86dvh)] items-center overflow-hidden bg-balochi-pattern-faint px-4 pb-8 pt-24 text-center sm:px-6 sm:pb-10 sm:pt-28 lg:px-8">
-      <div className="absolute inset-0 -z-30 bg-[#0c0b0b]" />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/hero/zahirok-hero-bg.png"
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 -z-20 h-full w-full object-cover opacity-30"
-      />
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_26%,rgba(227,122,44,0.3),transparent_23%),radial-gradient(circle_at_18%_18%,rgba(255,60,160,0.18),transparent_24%),radial-gradient(circle_at_84%_22%,rgba(26,58,92,0.48),transparent_30%),linear-gradient(180deg,rgba(12,12,14,0.34)_0%,rgba(12,12,14,0.72)_62%,#0d0d0f_100%)]" />
-      <div className="absolute inset-0 -z-10 opacity-[0.08] [background-image:radial-gradient(rgba(237,227,211,0.65)_1px,transparent_1px)] [background-size:3px_3px]" />
+    <section className="relative isolate flex min-h-[min(720px,88dvh)] items-center overflow-hidden px-4 pb-14 pt-28 text-center sm:px-6 sm:pb-16 sm:pt-32 lg:px-8">
+      <div className="absolute inset-0 -z-30 bg-[#09080d]" />
+      <div className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_50%_0%,rgba(88,40,120,0.35),transparent_55%),radial-gradient(circle_at_50%_40%,rgba(227,122,44,0.12),transparent_42%),radial-gradient(circle_at_80%_20%,rgba(140,60,160,0.18),transparent_35%),linear-gradient(180deg,#0c0a12_0%,#09080d_55%,#0d0d0f_100%)]" />
+      <div className="absolute inset-0 -z-10 opacity-[0.05] [background-image:radial-gradient(rgba(237,227,211,0.7)_1px,transparent_1px)] [background-size:3px_3px]" />
 
-      <div className="pointer-events-none absolute inset-0 hidden xl:block">
-        {floatingCards.map((card) => (
-          <FloatingSongCard key={card.title} {...card} />
-        ))}
-      </div>
-
-      <div className="relative z-10 mx-auto min-w-0 w-full max-w-5xl">
-        <h1 className="mx-auto max-w-4xl text-4xl font-black leading-[1.06] tracking-[-0.03em] text-white sm:text-5xl md:text-6xl xl:text-7xl">
-          The AI that knows
-          <br className="hidden sm:block" />
-          <span className="sm:whitespace-nowrap"> what a Dambora sounds like.</span>
+      <div className="relative z-10 mx-auto w-full min-w-0 max-w-5xl">
+        <h1 className="mx-auto max-w-4xl text-4xl font-black leading-[1.08] tracking-[-0.035em] text-white sm:text-5xl md:text-6xl xl:text-[4.25rem]">
+          The world&apos;s most{" "}
+          <span className="bg-[linear-gradient(135deg,#f6b13a,#e37a2c)] bg-clip-text text-transparent">
+            inclusive
+          </span>{" "}
+          AI music platform.
         </h1>
-        <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-6 text-white/72 sm:text-base sm:leading-7">
-          Soroz is the first AI music tool built for Balochi, Makkuran, and coastal folk traditions.
-          Start with a mood, a lyric, or just an instrument — and hear it become a song.
+        <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-7 text-white/58 sm:mt-6 sm:text-base sm:leading-8">
+          From bedroom producers to global artists.
+          <br className="hidden sm:block" />
+          From modern beats to ancient instruments. All in Soroz.
         </p>
 
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link
-            href="/auth/sign-up"
-            className="inline-flex h-12 w-full min-w-[180px] items-center justify-center rounded-full [background:var(--gradient-brand)] px-7 text-sm font-black text-white shadow-[0_18px_42px_rgba(227,122,44,0.28)] transition hover:[background:var(--gradient-brand-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:w-auto"
-          >
-            Join for free
-          </Link>
-          <Link
-            href="/feed"
-            className="inline-flex h-12 w-full min-w-[180px] items-center justify-center rounded-full border border-white/14 bg-white/[0.04] px-7 text-sm font-black text-white transition hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:w-auto"
-          >
-            Explore tracks
-          </Link>
-        </div>
+        <LandingPrompt />
       </div>
     </section>
-  )
-}
-
-function FloatingSongCard({
-  artwork,
-  className,
-  creator,
-  title,
-}: {
-  artwork: string
-  className: string
-  creator: string
-  title: string
-}) {
-  return (
-    <div
-      className={`absolute w-48 rounded-[1.25rem] border border-white/10 bg-white/[0.08] p-2.5 shadow-[0_24px_70px_rgba(0,0,0,0.42)] backdrop-blur-xl xl:w-52 ${className}`}
-    >
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[1.05rem]">
-        <DemoVideoPoster src={artwork} className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-        <span className="absolute left-3 top-3 inline-flex size-10 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur">
-          <Play className="ml-0.5 size-4 fill-current" aria-hidden="true" />
-        </span>
-        <div className="absolute inset-x-3 bottom-3">
-          <p className="text-sm font-black text-white">{title}</p>
-          <Link
-            href={profilePathForCreator(creator)}
-            className="mt-0.5 inline-block text-xs font-bold text-white/62 transition hover:text-saffron"
-          >
-            {creator}
-          </Link>
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -633,6 +566,119 @@ function FaqSection() {
         </div>
       </div>
     </section>
+  )
+}
+
+const MOBILE_APP_FEATURES = [
+  { label: "Create songs with AI", icon: Sparkles },
+  { label: "High quality audio", icon: Volume2 },
+  { label: "Cloud sync across devices", icon: Cloud },
+  { label: "Share and collaborate", icon: Link2 },
+] as const
+
+function MobileAppSection() {
+  return (
+    <section className="relative overflow-hidden bg-[#07080e] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-[radial-gradient(ellipse_at_50%_100%,rgba(56,120,220,0.22),transparent_58%)]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-40 opacity-40 [background-image:radial-gradient(rgba(120,180,255,0.55)_1px,transparent_1px)] [background-size:14px_14px] [mask-image:linear-gradient(to_top,black,transparent)]"
+      />
+
+      <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-10 xl:gap-16">
+        <div className="max-w-xl">
+          <h2 className="text-4xl font-black leading-[1.05] tracking-[-0.03em] text-white sm:text-5xl lg:text-[3.4rem]">
+            Your music studio.
+            <br />
+            <span className="text-[#5eb0ff]">In your pocket.</span>
+          </h2>
+          <p className="mt-5 text-sm font-semibold leading-6 text-white/70 sm:text-base sm:leading-7">
+            Create, edit, and share music on the go with the Soroz mobile app.
+          </p>
+
+          <ul className="mt-8 space-y-3.5">
+            {MOBILE_APP_FEATURES.map((feature) => (
+              <li key={feature.label} className="flex items-center gap-3 text-sm font-bold text-white sm:text-base">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/[0.04]">
+                  <feature.icon className="size-3.5 text-white/85" aria-hidden="true" />
+                </span>
+                {feature.label}
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-9 flex flex-wrap gap-3">
+            <a
+              href="#app-store"
+              aria-label="Download on the App Store"
+              className="inline-flex h-12 items-center gap-2.5 rounded-xl border border-white/12 bg-black px-4 transition hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            >
+              <AppleIcon className="size-6 text-white" />
+              <span className="text-left leading-tight">
+                <span className="block text-[9px] font-semibold uppercase tracking-[0.04em] text-white/70">
+                  Download on the
+                </span>
+                <span className="block text-sm font-black text-white">App Store</span>
+              </span>
+            </a>
+            <a
+              href="#google-play"
+              aria-label="Get it on Google Play"
+              className="inline-flex h-12 items-center gap-2.5 rounded-xl border border-white/12 bg-black px-4 transition hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            >
+              <GooglePlayIcon className="size-6" />
+              <span className="text-left leading-tight">
+                <span className="block text-[9px] font-semibold uppercase tracking-[0.04em] text-white/70">
+                  Get it on
+                </span>
+                <span className="block text-sm font-black text-white">Google Play</span>
+              </span>
+            </a>
+          </div>
+        </div>
+
+        <div className="relative mx-auto flex w-full max-w-[520px] items-end justify-center pb-4 pt-6 sm:max-w-[560px] lg:max-w-none lg:justify-end lg:pb-0">
+          <div
+            aria-hidden="true"
+            className="absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(70,130,255,0.28),transparent_68%)] blur-2xl"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/app_png/SorozApp1.png"
+            alt="Soroz mobile app create screen"
+            className="relative z-20 w-[58%] max-w-[280px] -rotate-[8deg] drop-shadow-[0_30px_60px_rgba(0,0,0,0.55)] sm:max-w-[320px]"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/app_png/SorozApp2.png"
+            alt="Soroz mobile app library screen"
+            className="relative z-10 -ml-[18%] w-[58%] max-w-[280px] rotate-[7deg] drop-shadow-[0_30px_60px_rgba(0,0,0,0.5)] sm:max-w-[320px]"
+          />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function AppleIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M16.365 1.43c0 1.14-.42 2.2-1.18 3.02-.8.86-2.12 1.52-3.28 1.43-.14-1.1.4-2.26 1.16-3.06.8-.86 2.2-1.5 3.3-1.39ZM20.9 17.3c-.55 1.26-.82 1.82-1.54 2.94-.99 1.53-2.39 3.44-4.13 3.45-1.54.02-1.94-.99-4.04-.98-2.1.01-2.54 1-4.08.98-1.74-.01-3.07-1.74-4.06-3.27C1.17 17.5.2 13.7 1.8 10.92c1.12-1.95 2.9-3.09 4.57-3.09 1.7 0 2.77 1.01 4.18 1.01 1.37 0 2.2-1.02 4.2-1.02 1.5 0 3.09.82 4.2 2.24-3.69 2.03-3.1 7.3.95 7.24Z" />
+    </svg>
+  )
+}
+
+function GooglePlayIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
+      <path fill="#EA4335" d="M3.6 2.2 13.9 12 3.6 21.8c-.7-.4-1.2-1.2-1.2-2.1V4.3c0-.9.5-1.7 1.2-2.1Z" />
+      <path fill="#FBBC04" d="m13.9 12 2.7-2.7 4.5 2.6c.8.5.8 1.7 0 2.2l-4.5 2.6L13.9 12Z" />
+      <path fill="#4285F4" d="M13.9 12 3.6 2.2c.3-.2.7-.3 1.1-.3.5 0 1 .1 1.4.4l10.5 6 2.7 2.7L13.9 12Z" />
+      <path fill="#34A853" d="m13.9 12 5.4 5.4-2.7 2.7-10.5 6c-.4.2-.9.4-1.4.4-.4 0-.8-.1-1.1-.3L13.9 12Z" />
+    </svg>
   )
 }
 
