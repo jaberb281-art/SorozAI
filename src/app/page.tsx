@@ -4,19 +4,17 @@ import Link from "next/link"
 import { useState } from "react"
 import {
   ArrowRight,
-  Check,
   Cloud,
   Flame,
   Globe,
   Headphones,
-  Heart,
   Link2,
   Minus,
-  MoreHorizontal,
   Music2,
   Play,
   Plus,
   Sparkles,
+  ThumbsUp,
   TrendingUp,
   Users,
   Volume2,
@@ -262,7 +260,7 @@ function SongShowcaseSection() {
           </Link>
         </div>
 
-        <div className="mt-10 flex snap-x gap-4 overflow-x-auto pb-4 [scrollbar-width:none] sm:mt-12 sm:gap-5 [&::-webkit-scrollbar]:hidden">
+        <div className="mt-10 flex snap-x gap-3 overflow-x-auto pb-4 [scrollbar-width:none] sm:mt-12 sm:gap-3.5 [&::-webkit-scrollbar]:hidden">
           {showcaseSongs.map((song, index) => (
             <ShowcaseCard key={song.id} song={song} artwork={getDemoImage(index)} />
           ))}
@@ -322,23 +320,10 @@ const TRENDING_STATS = [
   },
 ] as const
 
-const TAG_STYLES = [
-  "border-saffron/30 bg-saffron/10 text-saffron",
-  "border-sky-400/30 bg-sky-400/10 text-sky-300",
-  "border-violet-400/30 bg-violet-400/10 text-violet-300",
-  "border-emerald-400/30 bg-emerald-400/10 text-emerald-300",
-  "border-rose-400/30 bg-rose-400/10 text-rose-300",
-] as const
-
 function formatCount(value: number): string {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`
   if (value >= 1_000) return `${(value / 1_000).toFixed(1).replace(/\.0$/, "")}K`
   return String(value)
-}
-
-function showcaseTags(song: (typeof showcaseSongs)[number]): string[] {
-  const tags = [song.genrePreset, song.instruments[0]].filter(Boolean)
-  return tags.slice(0, 2) as string[]
 }
 
 function ShowcaseCard({
@@ -348,74 +333,54 @@ function ShowcaseCard({
   artwork: string
   song: (typeof showcaseSongs)[number]
 }) {
-  const tags = showcaseTags(song)
+  const initial = song.creator.trim().charAt(0).toUpperCase() || "S"
 
   return (
-    <article className="group w-[min(78vw,240px)] shrink-0 snap-start overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#17171a] shadow-[0_24px_80px_rgba(0,0,0,0.28)] transition hover:-translate-y-1 sm:w-[260px] lg:w-[280px]">
+    <article className="group w-[min(62vw,168px)] shrink-0 snap-start sm:w-[180px] lg:w-[196px]">
       <Link
         href={`/song/${song.id}`}
-        className="relative block aspect-[5/4] overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+        className="relative block aspect-[16/10] overflow-hidden rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-saffron"
       >
         <DemoVideoPoster
           src={artwork}
           className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-        <span className="absolute right-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-black text-white backdrop-blur-sm">
-          {song.duration}
-        </span>
-        <span className="absolute inset-0 flex items-center justify-center">
-          <span className="inline-flex size-12 items-center justify-center rounded-full bg-white/18 text-white backdrop-blur-md transition group-hover:bg-saffron group-hover:text-[#171210]">
-            <Play className="ml-0.5 size-5 fill-current" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/15" />
+        <Play
+          className="absolute left-2.5 top-2.5 size-3.5 fill-white text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.65)]"
+          aria-hidden="true"
+        />
+        <div className="absolute bottom-2 left-2 flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-1 rounded-md bg-black/55 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+            <Play className="size-2.5 fill-current" aria-hidden="true" />
+            {formatCount(song.plays)}
           </span>
-        </span>
+          <span className="inline-flex items-center gap-1 rounded-md bg-black/55 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+            <ThumbsUp className="size-2.5" aria-hidden="true" />
+            {formatCount(song.likes)}
+          </span>
+        </div>
       </Link>
 
-      <div className="p-4">
+      <div className="mt-2.5 px-0.5">
         <Link
           href={`/song/${song.id}`}
-          className="block truncate text-base font-black text-white transition hover:text-saffron"
+          className="block truncate text-[13px] font-black leading-snug text-white transition hover:text-saffron"
         >
           {song.title}
         </Link>
         <Link
           href={profilePathForCreator(song.creator)}
-          className="mt-1.5 inline-flex max-w-full items-center gap-1.5 text-sm font-bold text-white/55 transition hover:text-saffron"
+          className="mt-1.5 inline-flex max-w-full items-center gap-1.5 text-[11px] font-semibold text-white/70 transition hover:text-saffron"
         >
-          <span className="truncate">{song.creator}</span>
-          <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-saffron text-[#171210]">
-            <Check className="size-2.5 stroke-[3]" aria-hidden="true" />
-          </span>
-        </Link>
-
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {tags.map((tag, index) => (
-            <span
-              key={tag}
-              className={`rounded-full border px-2.5 py-1 text-[10px] font-black ${TAG_STYLES[index % TAG_STYLES.length]}`}
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-4 flex items-center gap-3 border-t border-white/8 pt-3 text-xs font-bold text-white/45">
-          <span className="inline-flex items-center gap-1.5">
-            <Heart className="size-3.5" aria-hidden="true" />
-            {formatCount(song.likes)}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Play className="size-3.5 fill-current" aria-hidden="true" />
-            {formatCount(song.plays)}
-          </span>
-          <button
-            type="button"
-            aria-label={`More options for ${song.title}`}
-            className="ml-auto inline-flex size-7 items-center justify-center rounded-full text-white/45 transition hover:bg-white/8 hover:text-white"
+          <span
+            aria-hidden="true"
+            className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e37a2c,#2f8f9a)] text-[9px] font-black text-white"
           >
-            <MoreHorizontal className="size-4" aria-hidden="true" />
-          </button>
-        </div>
+            {initial}
+          </span>
+          <span className="truncate">{song.creator}</span>
+        </Link>
       </div>
     </article>
   )
